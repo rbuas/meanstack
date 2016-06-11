@@ -1,7 +1,7 @@
 var synapse = require("./libs/synapse");
 
 var server = new synapse.Synapse({
-    port:3000,
+    port:8080,
     rootDir: __dirname,
     publicDir: "/public",
     routes: [
