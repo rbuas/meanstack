@@ -1,0 +1,21 @@
+{
+  "name": "projectzero",
+  "version": "1.0.0",
+  "description": "whitepaper project to start new projects",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "projectzero",
+    "basic",
+    "configs"
+  ],
+  "author": "Rodrigo Buas",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
+    "nodemon": "^1.9.2"
+  }
+}
