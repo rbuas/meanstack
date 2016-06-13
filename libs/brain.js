@@ -4,7 +4,8 @@ var Synapse = require("./synapse").Synapse;
 
 var _bodyparser = require("body-parser");
 var _express = require("express");
-var _handlebars = require("handlebars");
+//var _handlebars = require("handlebars");
+var _ejs = require('ejs');
 
 var _defaultoptions = {
     port : 3000,
@@ -14,7 +15,8 @@ var _defaultoptions = {
     publicmessage: "Public files at ",
     rootDir: "",
     publicDir: "/public",
-    viewsDir : "/skeletons",
+    viewsDir: "/skeletons",
+    viewEngine: null,
     routes : [
         {path:"/", res:"index.html", method:"get"}
     ]
@@ -30,7 +32,15 @@ function Brain (options) {
 
     console.log("Brain " + (this.options.name || "") + " started");
 
-    this.app.set("view engine", "handlebars");
+    if(this.options.viewsDir) {
+        var skeletonDir = this.path(this.options.viewsDir);
+        console.log("Brain : set skeleton path : ", skeletonDir);
+        this.app.engine('.html', _ejs.__express);
+        this.app.set("views", skeletonDir);
+    }
+    if(this.options.viewEngine) {
+        this.app.set("view engine", this.options.viewEngine);
+    }
 
     var publicpath = this.path(this.options.publicDir); 
     this.app.use(_express.static(publicpath));

@@ -1,4 +1,31 @@
-var brain = require("./libs/brain");
+var Brain = require("./libs/brain");
+var cities = {
+    "berlin" : {
+        label : "Berlin",
+        headline : "Berlin: Where love is in the air",
+        images : 4
+    },
+    "paris" : {
+        label : "Paris",
+        headline : "Paris: Good talkers are only found in Paris",
+        images : 4
+    },
+    "madrid" : {
+        label : "Madrid",
+        headline : "Madrid: Buzz, Beautiful architecture and Football",
+        images : 4
+    },
+    "london" : {
+        label : "London",
+        headline : "London: Sparkling, Still, Food, Gorgeous",
+        images : 4
+    },
+    "newyork" : {
+        label : "New York",
+        headline : "New York: Come to New York to become someone new",
+        images : 6
+    }
+};
 
 var routes = {
     quote : function(req, res) {
@@ -16,16 +43,48 @@ var routes = {
         console.log("Route to quotes");
         var filename = brain.skeleton("quote.html");
         res.sendFile(filename);
+    },
+
+    city : function(req, res) {
+        var city = req.params.city || "";
+        var viewdata = {
+            cities:cities,
+            city: city,
+            metatitle: 'iLoveMyCity',
+            title: 'iLoveMyCity',
+            headline: 'Can not found this city' + city
+        };
+        var cityObject = cities[city];
+        if(city && cityObject) {
+            viewdata.title = viewdata.title + " / " + cityObject.label;
+            viewdata.headline = cityObject.headline;
+            viewdata.cityimages = 4;
+        }
+        res.render("master.html", viewdata);
+    },
+
+    cities : function(req, res) {
+        var viewdata = {
+            cities:cities,
+            metatitle: 'iLoveMyCity',
+            title: 'iLoveMyCity',
+            headline: 'We believe that every city have something to say',
+            city:null
+        };
+        res.render("master.html", viewdata);
     }
 };
 
-var brain = new brain.Brain({
+var brain = new Brain.Brain({
     port:8080,
-    name: "NodeZero",
+    name: "NodeTemplateEJS",
     rootDir: __dirname,
+    viewEngine: "ejs",
     publicDir: "/public",
     routes: [
-        {path:"/", cb:routes.quotes},
-        {path:"/:quote", cb:routes.quote}
+        {path:"/", cb:routes.cities},
+        {path:"/:city", cb:routes.city},
+        {path:"/quotes", cb:routes.quotes},
+        {path:"/quotes/:quote", cb:routes.quote}
     ]
 });

@@ -1,0 +1,13 @@
+<%if (city && cityimages > 0) {%>
+    <div class="container">
+        <div class="row">
+            <% for(var i=1 ; i <= cityimages ; i++) {%>
+            <div class="col-md-6">
+                <div class="thumbnail">
+                    <img src="/images/<%= city %>/<%= city %>-<%= i %>.jpg"/>
+                </div>
+            </div>
+            <%}%>
+        </div>
+    </div>
+<%}%>
