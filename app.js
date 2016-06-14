@@ -72,6 +72,25 @@ var routes = {
             city:null
         };
         res.render("master.html", viewdata);
+    },
+
+    download : function(req, res) {
+        res.download("./package.json", function() {
+            console.log("download is over!");
+        });
+    },
+
+    stest : function(req, res) {
+        console.log("teqsdqsdq");
+        var test = req.params.test || "";
+        if(test) {
+            if(req.session.test) {
+                console.log("test already set : " + req.session.test + " -> " + test);
+            }
+            req.session.test = test;
+        }
+        var viewdata = {test: req.session.test, city:null, cityimages:0};
+        res.render("session.html", viewdata);
     }
 };
 
@@ -83,8 +102,11 @@ var brain = new Brain.Brain({
     publicDir: "/public",
     routes: [
         {path:"/", cb:routes.cities},
-        {path:"/:city", cb:routes.city},
+        {path:"/city/:city", cb:routes.city},
         {path:"/quotes", cb:routes.quotes},
-        {path:"/quotes/:quote", cb:routes.quote}
+        {path:"/quotes/:quote", cb:routes.quote},
+        {path:"/download", cb:routes.download},
+        {path:"/session", cb:routes.stest},
+        {path:"/session/:test", cb:routes.stest}
     ]
 });

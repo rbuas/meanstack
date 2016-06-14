@@ -4,6 +4,7 @@ var Synapse = require("./synapse").Synapse;
 
 var _bodyparser = require("body-parser");
 var _express = require("express");
+var _session = require("express-session");
 //var _handlebars = require("handlebars");
 var _ejs = require('ejs');
 
@@ -46,6 +47,7 @@ function Brain (options) {
     this.app.use(_express.static(publicpath));
     console.log(this.options.publicmessage, publicpath);
 
+    this.app.use(_session({secret:"secret", resave : true, saveUnitialized : false}));
     this.app.use(_bodyparser.json());
     this.app.use(_bodyparser.urlencoded({ extended: false }));
 

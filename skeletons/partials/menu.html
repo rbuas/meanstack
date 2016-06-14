@@ -13,7 +13,7 @@
           <ul class="nav navbar-nav">
             <% for(var city in cities) {%>
               <% if(cities.hasOwnProperty(city)) { %>
-                <li><a href="/<%= city %>"><%= cities[city].label %></a></li>
+                <li><a href="/city/<%= city %>"><%= cities[city].label %></a></li>
               <%}%>
             <%}%>
           </ul>
