@@ -5,8 +5,8 @@ var Synapse = require("./synapse").Synapse;
 var _bodyparser = require("body-parser");
 var _express = require("express");
 var _session = require("express-session");
-//var _handlebars = require("handlebars");
-var _ejs = require('ejs');
+var _exphbs  = require('express-handlebars');
+//var _ejs = require('ejs');
 
 var _defaultoptions = {
     port : 3000,
@@ -33,13 +33,16 @@ function Brain (options) {
 
     console.log("Brain " + (this.options.name || "") + " started");
 
-    if(this.options.viewsDir) {
-        var skeletonDir = this.path(this.options.viewsDir);
-        console.log("Brain : set skeleton path : ", skeletonDir);
-        this.app.engine('.html', _ejs.__express);
-        this.app.set("views", skeletonDir);
-    }
     if(this.options.viewEngine) {
+        var skeletonDir = this.path(this.options.viewsDir);
+        this.app.set("views", skeletonDir);
+        console.log("Brain : set skeleton path : ", skeletonDir);
+        this.app.engine(this.options.viewEngine, _exphbs({
+            defaultLayout: "main", 
+            extname: ".html", 
+            partialsDir: this.options.viewsDir + "/partials",
+            layoutDir: this.options.viewsDir + "/layouts"
+        }));
         this.app.set("view engine", this.options.viewEngine);
     }
 

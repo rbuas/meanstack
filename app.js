@@ -60,7 +60,7 @@ var routes = {
             viewdata.headline = cityObject.headline;
             viewdata.cityimages = 4;
         }
-        res.render("master.html", viewdata);
+        res.render("city", viewdata);
     },
 
     cities : function(req, res) {
@@ -71,7 +71,7 @@ var routes = {
             headline: 'We believe that every city have something to say',
             city:null
         };
-        res.render("master.html", viewdata);
+        res.render("cities", viewdata);
     },
 
     download : function(req, res) {
@@ -81,7 +81,6 @@ var routes = {
     },
 
     stest : function(req, res) {
-        console.log("teqsdqsdq");
         var test = req.params.test || "";
         if(test) {
             if(req.session.test) {
@@ -90,15 +89,15 @@ var routes = {
             req.session.test = test;
         }
         var viewdata = {test: req.session.test, city:null, cityimages:0};
-        res.render("session.html", viewdata);
+        res.render("session", viewdata);
     }
 };
 
 var brain = new Brain.Brain({
     port:8080,
-    name: "NodeTemplateEJS",
+    name: "NodeTemplateHB",
     rootDir: __dirname,
-    viewEngine: "ejs",
+    viewEngine: "handlebars",
     publicDir: "/public",
     routes: [
         {path:"/", cb:routes.cities},
