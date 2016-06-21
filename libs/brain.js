@@ -16,7 +16,7 @@ var _defaultoptions = {
     publicmessage: "Public files at ",
     rootDir: "",
     publicDir: "/public",
-    viewsDir: "/skeletons",
+    viewsDir: "/views",
     viewEngine: null,
     routes : [
         {path:"/", res:"index.html", method:"get"}
@@ -38,10 +38,10 @@ function Brain (options) {
         this.app.set("views", skeletonDir);
         console.log("Brain : set skeleton path : ", skeletonDir);
         this.app.engine(this.options.viewEngine, _exphbs({
-            defaultLayout: "main", 
+            defaultLayout: "master", 
             extname: ".html", 
-            partialsDir: this.options.viewsDir + "/partials",
-            layoutDir: this.options.viewsDir + "/layouts"
+            partialsDir: skeletonDir + "/partials/",
+            layoutDir: skeletonDir + "/layouts/"
         }));
         this.app.set("view engine", this.options.viewEngine);
     }

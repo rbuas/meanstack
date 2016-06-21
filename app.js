@@ -58,7 +58,7 @@ var routes = {
         if(city && cityObject) {
             viewdata.title = viewdata.title + " / " + cityObject.label;
             viewdata.headline = cityObject.headline;
-            viewdata.cityimages = 4;
+            viewdata.cityimages = [1, 2, 3, 4];
         }
         res.render("city", viewdata);
     },
@@ -68,8 +68,7 @@ var routes = {
             cities:cities,
             metatitle: 'iLoveMyCity',
             title: 'iLoveMyCity',
-            headline: 'We believe that every city have something to say',
-            city:null
+            headline: 'We believe that every city have something to say'
         };
         res.render("cities", viewdata);
     },
@@ -88,7 +87,12 @@ var routes = {
             }
             req.session.test = test;
         }
-        var viewdata = {test: req.session.test, city:null, cityimages:0};
+        var viewdata = {
+            test: req.session.test, 
+            city:null, 
+            cityimages:0,
+            layout:false
+        };
         res.render("session", viewdata);
     }
 };
@@ -97,7 +101,7 @@ var brain = new Brain.Brain({
     port:8080,
     name: "NodeTemplateHB",
     rootDir: __dirname,
-    viewEngine: "handlebars",
+    viewEngine: "html",
     publicDir: "/public",
     routes: [
         {path:"/", cb:routes.cities},
