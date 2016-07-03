@@ -1,25 +1,30 @@
-module.exports.Log = Log;
-
 var _chalk = require("chalk");
 
-var Log = {
-    error : function(message, obj) {
-        var line = _chalk.bold.red("ERROR : ") + _chalk.red(message);
-        console.log(line, obj);
-    },
+module.exports.error = function(message, obj) {
+    var line = _chalk.bold.red("ERROR : ") + _chalk.red(message);
+    module.exports.message(line, obj);
+}
 
-    warning : function(message, obj) {
-        var line = _chalk.bold.yellow("ERROR : ") + _chalk.yellow(message);
-        console.log(line, obj);
-    },
+module.exports.warning = function(message, obj) {
+    var line = _chalk.bold.yellow("ERROR : ") + _chalk.yellow(message);
+    module.exports.message(line, obj);
+}
 
-    message : function(message, obj) {
-        var line = message;
-        console.log(line, obj);
-    },
+module.exports.assert = function(condition, message, obj) {
+    if(condition)
+        return;
+    return module.exports.error(message, obj);
+}
 
-    section : function (message) {
-        var line = _chalk.bgBlack.white("SECTION - " + message);
+module.exports.message = function(message, obj) {
+    var line = message;
+    if(obj)
+        console.log(line, obj);
+    else
         console.log(line);
-    } 
+}
+
+module.exports.section = function (message) {
+    var line = _chalk.bgBlack.white("SECTION - " + message);
+    module.exports.message(line);
 }

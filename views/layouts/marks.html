@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        {{>metaheader}}
+        <link rel="icon" href="/images/marks/favicon.ico" type="image/x-icon" />
+
+        {{>preincludes}}
+    </head>
+    <body id="body-top">
+        <div class="wrapper">
+            <div class="wrapper-sidebar col-sm-3 col-xs-12">
+                {{>marks_sidebar}}
+            </div>
+            <div class="wrapper-page col-sm-9 col-xs-12">
+                <div class="container-fluid">
+                    {{{body}}}
+                </div>
+            </div>
+        </div>
+
+        {{>postincludes}}
+    </body>
+</html>

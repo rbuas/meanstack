@@ -1,0 +1,27 @@
+<div class="sidebar-nav">
+    <div class="brand">
+        <a href="/">Leave the marks !!!</a>
+    </div>
+
+    <div class="logo">
+        <img class="img-circle" src="/images/marks/logo.png"/>
+    </div>
+
+    <nav>
+        <div><a href="/stories">Stories</a></div>
+        <div><a href="/newstory">Share your own story</a></div>
+        <div><a href="/about">Tech stack</a></div>
+    </nav>
+
+    {{#if session.userlogged}}
+        <div>
+            <p>Hello {{session.username}}</p>
+            <a type="button" href="/logout" class="btn btn-danger btn-lg outline">Logout</a>
+        </div>
+    {{else}}
+        <div>
+            <a type="button" href="/login" class="btn btn-primary btn-lg outline">Login</a>
+            <a type="button" href="/register" class="btn btn-danger btn-lg outline">Sign Up</a>
+        </div>
+    {{/if}}
+</div>

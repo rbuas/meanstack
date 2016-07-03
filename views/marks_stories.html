@@ -1,0 +1,10 @@
+{{#if stories}}
+
+    {{#each stories}}
+        <h1>{{title}}</h1>
+        <h4>Created by <code>{{author}} on {{created_at}} </code></h4><br/><br/>
+        <p>{{summary}}</p>
+        <div><b>- Read the full story <a href='/stories/{{slug}}'>here</a></b></div>
+    {{/each}}
+
+{{/if}}

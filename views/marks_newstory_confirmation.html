@@ -1,0 +1,16 @@
+<p>
+    Leave the marks !!!
+</p>
+
+<blockquote>
+    {{#if error }}
+        Sorry, error while saving the story :
+        {{ error }}
+    {{else}}
+        Congratulation <code>{{session.username}}</code>, your story <a href="/stories/{{storyslug}}">{{storytitle}}</a> have been created successfully<br/>
+    {{/if}}
+</blockquote>
+
+<blockquote>
+    Please <a href="/newstory">create another story</a> or go to your <a href="/stories">story list</a>.
+</blockquote>

@@ -1,0 +1,39 @@
+<div class="col-lg-12">
+    <h1>{{story.title}}</h1>
+    <h4>Created by <code>{{story.author}} on {{ story.created_at }} </code></h4>
+    <div align="center">
+        <img src="{{story.imageLink}}" />
+    </div>
+    <div class="summary">
+        {{story.summary}}
+    </div>
+    <div class="content">
+        {{story.content}}
+    </div>
+
+    {{#if story.comments }}
+        <h1>Comments :</h1>
+
+        {{#each story.comments }}
+            <p>{{ comment }}</p>
+            <h4>Commented by <code>{{author}} on {{date}}</code></h4>
+        {{/each}}
+    {{/if}}
+
+    {{#if session.userlogged }}
+        <form method="post" action="/stories/{{story.slug}}/comment">
+            <div class="form-group">
+                <label for="message" class="col-sm-2 control-label">Add your comments: </label>
+                    <div class="col-sm-6">
+                        <textarea class="form-control" required name="comment" rows="4" placeholder="Add your commments "></textarea>
+                    </div>
+            </div>
+            <div class="form-group">
+                <div class="">
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+                </div>
+            </div>
+        </form>
+    {{/if}}
+
+</div>

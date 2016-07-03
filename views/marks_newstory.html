@@ -1,0 +1,63 @@
+<div class="row">
+    <div class="container">
+        <blockquote>
+            <h3>Hey <code>{{session.username}}</code>, you are all set to create your story. Just provide us following details</h3>
+            <ol>
+                <li>Title of your story</li>
+                <li>Upload an image to <a target="_blank" href="http://www.imgur.com">imgur</a> and provide us the direct link, we prefer a 640*360 px image</li>
+                <li>A quick summary of your story, what it's all about</li>
+                <li>Actual story content</li>
+            </ol>
+        </blockquote>
+
+        <blockquote>
+            <h3>If you are curious to see how your story will be shown take a look at this <a target="_blank" href="/stories/story-example">story</a></h3>
+        </blockquote>
+
+        <blockquote>
+            <h3>Don't have anything to share? Check these <a href="/stories">stories</a></h3>
+        </blockquote>
+    </div>
+</div>
+
+<div class="row">
+    <div class="container">
+        <div class="col-xs-10">
+            <form action="/createstory" method="post">
+                <div class="form-group col-xs-12">
+                    <label for="name" class="col-sm-2 control-label">Title</label>
+                    <div class="col-sm-6">
+                        <input type="text" name="title" required class="form-control" placeholder="Story Title"/>
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12">
+                    <label for="name" class="col-sm-2 control-label">Image Link</label>
+                    <div class="col-sm-6">
+                        <input type="text" name="imageLink" required class="form-control" placeholder="Upload the image to imgur and put the direct link here"/>
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12">
+                    <label for="message" class="col-sm-2 control-label">Summary</label>
+                    <div class="col-sm-6">
+                        <textarea class="form-control" required name="summary" rows="4" placeholder="A short description"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12">
+                    <label for="name" class="col-sm-2 control-label">Post</label>
+                    <div class="col-lg-10">
+                        <textarea name="content" class="richtext" required rows="8" class="form-control"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12">
+                    <div class="col-sm-offset-6 col-sm-6">
+                        <button type="submit" class="btn btn-primary">Submit your Story</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

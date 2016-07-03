@@ -1,0 +1,41 @@
+<div class="col-md-4 col-md-offset-4 panel panel-default">
+
+    <h1>Sign up to be the change</h1>
+    {{#if registererror }}
+        <h5 class="registererror"><code>{{registererror}}</code></h5>
+    {{/if}}
+
+    <form method="post" action="/createuser">
+        <p class="input-group">
+            <span class="input-group-addon"><span class="icon-user"></span></span>
+            <input type="text" required class="form-control input-lg" name="username" placeholder="username" value="{{username}}" />
+        </p>
+
+        <p class="input-group">
+            <span class="input-group-addon"><span class="icon-envelope"></span></span>
+            <input type="email" required class="form-control input-lg" name="email" placeholder="email address" value="{{email}}" />
+        </p>
+
+        <p class="input-group">
+            <span class="input-group-addon"><span class="icon-key"></span></span>
+            <input type="password" required class="form-control input-lg" name="password" placeholder="password" />
+        </p>
+
+        <p class="help-block text-center">
+            <small>We hate spams, so don't worrry</small>
+        </p>
+
+        <p class="text-center">
+            <button type="submit" class="btn btn-success btn-lg">Create Account</button>
+        </p>
+    </form>
+
+    <div>
+        <h5>Already registered? <a href="/login">LogIn</a></h5>
+    </div>
+
+    <div>
+        <a href="/">Go back to the Home page</a>
+    </div>
+
+</div>
