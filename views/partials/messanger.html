@@ -1,0 +1,203 @@
+<div id="messanger" class="messanger-box container-fluid navbar navbar-inverse navbar-footer navbar-fixed-bottom col-xs-12">
+
+    <div id="messanger_login_container" class="form-group text-center">
+        <p id="messanger_login_error" class="alert alert-danger" role="alert"></p>
+        <form id="messanger_login" role="form">
+            <input id="messanger_nickname" type="text" autofocus required placeholder="chose your nickname" />
+            <input class="btn btn-danger" type="submit" value="submit" />
+        </form>
+    </div>
+
+    <ul id="messanger_users" class="container">
+    </ul>
+
+    <div id="messanger_chat" class="chat container"></div>
+
+    <div id="messanger_sender_container" class="form-group container">
+        <form id="messanger_sender">
+            <textarea id="messanger_message" required autofocus rows="3" placeholder="Write your message and press enter.."></textarea>
+        </form>
+    </div>
+
+</div>
+<style>
+    .messanger-box {
+        color:white;
+        padding:10px;
+        margin:0 auto;
+    }
+    .messanger-box input:not(.btn) {
+        color:black;
+    }
+    .messanger-box li {
+        float: left;
+        padding: 1px 3px;
+        margin:2px 4px;
+        list-style: none;
+    }
+    .messanger-box textarea {
+        width:100%;
+        color:black;
+    }
+    .messanger-box .msg {
+        text-align:left;
+        color:white;
+    }
+    .messanger-box .msg-myself {
+        text-align:right;
+    }
+    .messanger-box .msg-private {
+        text-align:right;
+        color:gray;
+    }
+    .messanger-box .msg-whisper {
+        text-align:left;
+        color:gray;
+    }
+    .messanger-box .chat {
+        border:1px solid gray;
+        padding:5px;
+        margin:5px auto;
+    }
+</style>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/scripts/chatclient.js"></script>
+<script>
+(function($, ChatClient){
+    var chat = new ChatClient();
+
+    var messangerContainer = $("#messanger");
+    var messangerLoginContainer = $("#messanger_login_container");
+    var messangerLogin = $("#messanger_login");
+    var messangerLoginError = $("#messanger_login_error");
+    var messangerNickname = $("#messanger_nickname");
+    var messangerUsers = $("#messanger_users");
+    var messangerChat = $("#messanger_chat");
+    var messangerSenderContainer = $("#messanger_sender_container");
+    var messangerSender = $("#messanger_sender");
+    var messangerMessage = $("#messanger_message");
+    var originalTitle = document.title;
+
+    updateUserStatus("logout");
+
+    //view initialization
+    messangerMessage.keydown(function(event) {
+        if (event.keyCode != 13)
+            return;
+
+        $(this.form).submit();
+        return false;
+    });
+
+    messangerNickname.keydown(function(event) {
+        if (event.keyCode != 13)
+            return;
+
+        $(this.form).submit();
+        return false;
+    });
+
+    messangerLogin.submit(function(e){
+        e.preventDefault();
+
+        var nickname = messangerNickname.val();
+        if(!nickname)
+            return false;
+
+        chat.newUser(nickname, function(error){
+            if(error && error.errorcode) {
+                switch(error.errorcode) {
+                    case(1):
+                        messangerLoginError.html("Sorry, missing nickname");
+                    break;
+                    case(2):
+                        messangerLoginError.html("Sorry, nickname is already taken");
+                    break;
+                }
+                messangerLoginError.show();
+                return;
+            }
+            messangerLoginError.hide();
+            updateUserStatus("login", nickname);
+        });
+    });
+
+    messangerSender.submit(function(e){
+        e.preventDefault();
+
+        var message = messangerMessage.val();
+        if(!message)
+            return false;
+
+        chat.sendMessage(message,function(data){
+            messangerChat.append("<p>" + data + "</p>");
+        });
+        messangerMessage.val("");
+    });
+
+    //controller initialization
+    chat.userlist(function(data){
+        var html = '';
+        for( var i = 0 ; i < data.length ; i++ ) {
+            html += '<li data-user="' + data[i] + '">@' + data[i] + '</li>';
+        }
+        messangerUsers.html(html);
+    });
+
+    chat.receiveMessage(function(data){
+        if(!data) return;
+
+        if(chat.isMyself(data.origin)) {
+            messangerChat.append('<p class="msg msg-myself"><b>@' + data.origin + ' : </b>' + data.message + '</p>');
+        } else {
+            messangerChat.append('<p class="msg"><b>@' + data.origin + ' : </b>' + data.message + '</p>');
+        }
+    });
+
+    chat.receivePrivate(function(data) {
+      if(!data) return;
+
+        messangerChat.append('<p class="msg msg-private"><b>' + chat.user + '@' + data.dest + ': </b>' + data.message + '</p><br/>');
+    });
+
+    chat.receiveWhisper(function(data) {
+       if(!data) return;
+
+        messangerChat.append('<p class="msg msg-whisper"><b>' + data.origin + '@' + chat.user + ' : </b>' + data.message + '</p><br/>');
+    });
+
+    //private functions
+    function updateUserStatus (status, username) {
+        if(!status)
+            return;
+
+        messangerLoginError.hide();
+
+        switch(status) {
+            case "login" : 
+                messangerLoginContainer.hide();
+                messangerUsers.show();
+                messangerChat.show();
+                messangerSenderContainer.show();
+                document.title = "{" + username + "}" + originalTitle;
+            break;
+            case "hide" :
+                messangerLoginContainer.hide();
+                messangerUsers.hide();
+                messangerChat.hide();
+                messangerSenderContainer.hide();
+                document.title = originalTitle;
+            break;
+            case "logout" :
+            default : 
+                messangerLoginContainer.show();
+                messangerUsers.hide();
+                messangerChat.hide();
+                messangerSenderContainer.hide();
+                document.title = originalTitle;
+            break;
+        }
+    }
+
+})(jQuery, ChatClient);
+</script>

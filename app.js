@@ -4,7 +4,7 @@ global.SALT_WORK_FACTOR = 10;
 global.USING_ENCRIPT = true;
 
 var _brain = require("./libs/brain");
-var brain = module.exports.brain = new _brain.Brain({
+var brain = global.brain = module.exports.brain = new _brain.Brain({
     port:8080,
     name: "NodeTemplateHB",
     rootDir: __dirname,
@@ -17,6 +17,7 @@ var _quoteRoutes = require("./routes/quotes");
 var _citiesRoutes = require("./routes/cities");
 var _auxRoutes = require("./routes/aux");
 var _marksRoutes = require("./routes/marks");
+var _chat = require("./routes/chat");
 
 brain.get("/", _marksRoutes.marks);
 brain.get("/about", _marksRoutes.about);
@@ -37,3 +38,4 @@ brain.get("/quotes/:quote", _quoteRoutes.quote);
 brain.get("/download", _auxRoutes.download);
 brain.get("/session", _auxRoutes.stest);
 brain.get("/session/:test", _auxRoutes.stest);
+brain.socket("connection", _chat.broadcast);

@@ -6,18 +6,17 @@
 
         {{>preincludes}}
     </head>
-    <body id="body-top">
-        <div class="wrapper">
-            <div class="wrapper-sidebar col-sm-3 col-xs-12">
-                {{>marks_sidebar}}
-            </div>
-            <div class="wrapper-page col-sm-9 col-xs-12">
-                <div class="container-fluid">
-                    {{{body}}}
-                </div>
+    <body id="body-top" class="container col-xs-12">
+        <div class="sidebar col-sm-4 col-xs-12">
+            {{>marks_sidebar}}
+        </div>
+        <div class="container-page col-sm-8 col-xs-12">
+            <div class="container-fluid">
+                {{{body}}}
             </div>
         </div>
 
         {{>postincludes}}
+        {{>messanger}}
     </body>
 </html>

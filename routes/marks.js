@@ -10,6 +10,7 @@ module.exports.marks = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session: req.session
     };
     res.render("marks_landing", viewdata);
@@ -18,6 +19,7 @@ module.exports.marks = function(req, res) {
 module.exports.about = function(req, res) {
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session: req.session
     };
     res.render("marks_about", viewdata);
@@ -31,6 +33,7 @@ module.exports.login = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session: req.session,
         email:req.session.username
     };
@@ -47,6 +50,7 @@ module.exports.authenticate = function(req, res) {
     _user.Login(email, password, function(err, user) {
         var viewdata = {
             layout:"marks",
+            metatitle:"marks",
             session: req.session
         };
         if(err || !user) {
@@ -72,6 +76,7 @@ module.exports.logout = function(req, res) {
     var username = _user.Logout(req);
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         username:username
     };
     res.render("marks_logout", viewdata);
@@ -81,6 +86,7 @@ module.exports.register = function(req, res) {
     var username = req.session.user;
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         username:username
     };
     res.render("marks_register", viewdata);
@@ -93,6 +99,7 @@ module.exports.createuser = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         username:username,
         email:email
     };
@@ -118,6 +125,7 @@ module.exports.stories = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session:req.session
     };
     _story.Find({}, function(err, stories){
@@ -156,6 +164,7 @@ module.exports.newstory = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session:req.session
     };
     res.render("marks_newstory", viewdata);
@@ -173,6 +182,7 @@ module.exports.createstory = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session:req.session
     };
 
@@ -196,6 +206,7 @@ module.exports.createcomment = function(req, res) {
 
     var viewdata = {
         layout:"marks",
+        metatitle:"marks",
         session:req.session
     };
 
