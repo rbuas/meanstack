@@ -1,0 +1,27 @@
+{
+    "styleinput" : ["skin/main.less"],
+    "stylefiles" : ["skin/*.less"],
+    "styleoutput" : "static/styles/",
+    "jsfiles" : [
+        "libsclient/cortex.js",
+        "libsclient/chatclient.js"
+    ],
+    "jsoutput" : "static/scripts/",
+    "jspack" : "libs.js",
+    "ftpconfig" : {
+        "host":     "10.16.31.100",
+        "user":     "test",
+        "password": "te$t"
+    },
+    "remotepath" : {
+        "integration" : "/integration/static/",
+        "production" : "/prod/static/",
+        "preproduction" : "/preprod/static/"
+    },
+    "deployfiles" : [
+        "static/**"
+    ],
+    "subprojects" : {
+        "resourcext" : "..\\..\\resourcext"
+    }
+}
