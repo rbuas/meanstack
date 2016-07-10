@@ -4,7 +4,8 @@
   "description": "whitepaper project to start new projects",
   "main": "app.js",
   "scripts": {
-    "test": "echo== \"Error: no test specified\" && exit 1"
+    "test": "echo== \"Error: no test specified\" && exit 1",
+    "app-hapi-quotes": "app-hapi.js"
   },
   "keywords": [
     "projectzero",
@@ -21,7 +22,9 @@
     "express": "^4.13.4",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.13.0",
+    "hapi": "^13.5.0",
     "mongoose": "^4.5.1",
+    "mysql": "^2.11.1",
     "nodemon": "^1.9.2",
     "socket.io": "^1.4.8"
   },

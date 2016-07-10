@@ -3,12 +3,8 @@ module.exports.Memory = Memory;
 var _mongoose = require('mongoose');
 var _log = require("./log");
 
-function Memory (brain) {
-    console.assert(brain, "ERROR: missing a brain to the memory.");
-    console.assert(brain.app, "ERROR: missing brain application.");
-
-    this.brain = brain;
-    this.options = brain.options;
+function Memory (options) {
+    this.options = Object.assign({}, options) || {};
 
     this.connectdb();
 }

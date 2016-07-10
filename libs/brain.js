@@ -5,6 +5,7 @@ var _exphbs  = require("express-handlebars");
 var _mongoose = require("mongoose");
 var _http = require("http");
 var _socket = require("socket.io");
+var _hapi = require("hapi");
 
 var _memory = require("./memory");
 var _log = require("./log");
@@ -61,7 +62,7 @@ function Brain (options) {
     this.app.use(_bodyparser.urlencoded({extended:true}));
     this.app.use(_session({secret:this.options.encryptkey, resave : true, saveUninitialized : true}));
 
-    this.memory = new _memory.Memory(this);
+    this.memory = new _memory.Memory(this.options);
 
     this.synapsys();
     this.listen();
