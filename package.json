@@ -22,6 +22,7 @@
     "express-handlebars": "^3.0.0",
     "express-session": "^1.13.0",
     "mongoose": "^4.5.1",
+    "node-libcurl": "^1.0.0",
     "nodemon": "^1.9.2",
     "socket.io": "^1.4.8"
   },
