@@ -1,3 +1,5 @@
 node_modules/*
 data/*
 mongodb/*
+static/styles/*
+static/scripts/*
