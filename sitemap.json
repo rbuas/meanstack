@@ -1,0 +1,13 @@
+{
+    "/" : {
+        "freq":"d",
+        "last":"2016-01-05",
+        "alias":[],
+        "title":"",
+        "resume":"",
+        "priority":1
+    },
+    "/test": {
+        "title": "title test"
+    } 
+}
