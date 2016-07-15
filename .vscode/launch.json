@@ -22,6 +22,16 @@
             "outDir": null
         },
         {
+            "name": "Run load tests",
+            "type": "node",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": ["tests/basicload.js", "tests/session.js"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "env": { "NODE_ENV": "production"}
+        },
+        {
             "name": "Attacher",
             "type": "node",
             "request": "attach",

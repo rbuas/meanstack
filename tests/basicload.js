@@ -1,15 +1,15 @@
 var _expect = require("chai").expect;
 var _assert = require("chai").assert;
+var _should = require("chai").should();
 var _log = require("../libs/log");
-var _wdc = require("../libs/webdronecentral");
+var _wdc = require("../libs/webdronescraper");
 
 describe("basicload", function() {
     var wdc;
 
     before(function() {
         // runs before all tests in this block
-        _log.message("qsdqdqlkqs");
-        wdc = new _wdc.WebDroneCentral();
+        wdc = new _wdc.WebDroneScraper();
     });
 
     after(function() {
@@ -26,21 +26,33 @@ describe("basicload", function() {
     });
 
     it("loadpage google once", function(done) {
-        wdc.analyseLink("google.com", 1, function(res){
-            _log.message("loadpage stats : ", res);
-            done();
-        });
+        wdc.scrapLink(
+            {host:"www.google.com"}, 
+            function(data, stats) {
+                _log.message("loadpage stats : ", stats);
+                done();
+            }
+        );
     });
 
-    it("loadpage google many", function(done) {
-        wdc.analyseLink("google.com", 10, function(res){
-            _log.message("loadpage stats : ", res);
-            done();
-        });
+    it("loadpage session test", function(done) {
+        wdc.scrapLink(
+            {host:"localhost",port:"8080",path:"/session"}, 
+            function(data, stats) {
+                _log.message("loadpage stats : ", stats);
+                done();
+            }
+        );
     });
 
-    // it("checkdata", function() {
-    //     var result = "a";
-    //     _expect(result).to.equal("b");
-    // });
+    it("loadpage 10 times", function(done) {
+        wdc.scrapLink(
+            {host:"localhost",port:"8080",path:"/session"}, 
+            function(res) {
+                _log.message("loadpage stats : ", res);
+                done();
+            },
+            10
+        );
+    });
 });

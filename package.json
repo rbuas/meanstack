@@ -4,7 +4,8 @@
   "description": "whitepaper project to start new projects",
   "main": "app.js",
   "scripts": {
-    "test": "echo== \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "startdb": "/Users/rbuas/RBUAS/nodejs/projectzero/mongodb/bin/mongod -dbpath ./data"
   },
   "keywords": [
     "projectzero",
@@ -16,13 +17,17 @@
   "dependencies": {
     "bcrypt": "^0.8.7",
     "body-parser": "^1.15.1",
+    "casperjs": "^1.1.2",
     "chalk": "^1.1.3",
+    "cheerio": "^0.20.0",
     "ejs": "^2.4.2",
     "express": "^4.13.4",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.13.0",
+    "mocha": "^2.5.3",
     "mongoose": "^4.5.1",
     "nodemon": "^1.9.2",
+    "phantomjs-prebuilt": "^2.1.7",
     "socket.io": "^1.4.8"
   },
   "devDependencies": {
