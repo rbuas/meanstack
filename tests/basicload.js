@@ -14,7 +14,6 @@ describe("basicload", function() {
 
     after(function() {
         // runs after all tests in this block
-        _log.message("loadstats:", wdc.stats);
     });
 
     beforeEach(function() {
@@ -29,7 +28,7 @@ describe("basicload", function() {
         wdc.scrapLink(
             {host:"www.google.com"}, 
             function(data, stats) {
-                _log.message("loadpage stats : ", stats);
+                //_log.message("loadpage stats : ", stats);
                 done();
             }
         );
@@ -39,7 +38,7 @@ describe("basicload", function() {
         wdc.scrapLink(
             {host:"localhost",port:"8080",path:"/session"}, 
             function(data, stats) {
-                _log.message("loadpage stats : ", stats);
+                //_log.message("loadpage stats : ", stats);
                 done();
             }
         );
@@ -49,7 +48,7 @@ describe("basicload", function() {
         wdc.scrapLink(
             {host:"localhost",port:"8080",path:"/session"}, 
             function(res) {
-                _log.message("loadpage stats : ", res);
+                //_log.message("loadpage stats : ", res);
                 done();
             },
             10

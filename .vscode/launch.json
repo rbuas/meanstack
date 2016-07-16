@@ -26,7 +26,17 @@
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["tests/basicload.js", "tests/session.js"],
+            "args": ["tests/basicload.js", "tests/session.js", "tests/sitemap.js"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "env": { "NODE_ENV": "production"}
+        },
+        {
+            "name": "Run ui tests",
+            "type": "node",
+            "program": "${workspaceRoot}/tests/ui.js",
+            "stopOnEntry": false,
+            "args": [],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": { "NODE_ENV": "production"}

@@ -1,4 +1,5 @@
 var _chalk = require("chalk");
+var _util = require("util");
 
 module.exports.error = function(message, obj) {
     var line = _chalk.bold.red("ERROR : ") + _chalk.red(message);
@@ -17,9 +18,9 @@ module.exports.assert = function(condition, message, obj) {
 }
 
 module.exports.message = function(message, obj) {
-    var line = message;
+    var line = message; 
     if(obj)
-        console.log(line, obj);
+        console.log(line, _util.inspect(obj, {depth:null}));
     else
         console.log(line);
 }

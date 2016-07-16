@@ -72,7 +72,7 @@ WebDroneScraper.prototype = {
             self.scrapLink(target, function(data, newstats) {
                 if(target.callback) target.callback(data, newstats);
                 if(eachCallback) eachCallback(data, newstats);
-                if(--pendding == 0 && endCallback) endCallback();
+                if(--pendding == 0 && endCallback) endCallback(data, newstats);
             });
         }
     },
@@ -94,7 +94,7 @@ WebDroneScraper.prototype = {
 
         var sitemaplinks = [];
         for(var path in self.sitemap) {
-            if(!self.sitemap.hasOwnProperty(l))
+            if(!self.sitemap.hasOwnProperty(path))
                 continue;
 
             sitemaplinks.push({host:host, port:port, path:path});
