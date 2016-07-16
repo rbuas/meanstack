@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Lancer",
+            "name": "App Debug",
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/app.js",

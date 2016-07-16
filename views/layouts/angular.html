@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app="Cortex">
+    <head>
+        {{>metaheader}}
+        {{>preincludes}}
+    </head>
+    <body ng-controller="CortexController as cc">
+        {{{body}}}
+
+        {{>postincludes}}
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-resource.min.js"></script>
+        <script>
+                    var cortex = angular.module("Cortex", ["ngRoute", "ngResource"]);
+                    cortex.config(function($routeProvider, $locationProvider) {
+                        $routeProvider
+                            .when("/", {
+                                templateUrl : "pages/test.html"
+                            })
+                            .when("/test", {
+                                templateUrl : "pages/test2.html"
+                            });
+                        //$locationProvider.html5Mode(true);
+                    });
+                    cortex.controller("CortexController", [function () {
+                        var cc = this;
+                        cc.hello = "Hello World";
+                    }]);
+        </script>
+    </body>
+</html>

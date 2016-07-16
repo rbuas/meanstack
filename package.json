@@ -4,10 +4,12 @@
   "description": "whitepaper project to start new projects",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "startdb": "/Users/rbuas/RBUAS/nodejs/projectzero/mongodb/bin/mongod -dbpath ./data",
-    "unittests": "/Users/rbuas/RBUAS/nodejs/projectzero/node_modules/mocha/bin/_mocha tests",
-    "uitests": "SELENIUM_BROWSER=chrome node tests/ui.js"
+    "start-app": "node app.js",
+    "start-db": "./mongodb/bin/mongod -dbpath ./data",
+    "tests-basic": "./node_modules/mocha/bin/_mocha tests/basicload.js",
+    "tests-session": "./node_modules/mocha/bin/_mocha tests/session.js",
+    "tests-ui": "SELENIUM_BROWSER=chrome ./node_modules/mocha/bin/_mocha tests/ui.js",
+    "tests-nw": "./node_modules/.bin/nightwatch tests/nightwatch.js --verbose"
   },
   "keywords": [
     "projectzero",
