@@ -1,11 +1,20 @@
 var _mongoose = require("mongoose");
+var _bcrypt = require("bcrypt");
 var _log = require("../libs/log");
-var _bcrypt = require('bcrypt');
 
 module.exports.Shema = new _mongoose.Schema({
     username : {type:String, unique:true},
     email : {type:String, unique:true},
-    password : String
+    password : String,
+    birthday : Date,
+    status : {type:String, enum:["ON", "OFF", "CONFIRM", "BLOCK"]},
+    gender : {type:String, enum:["M", "F"]},
+    origin : String,
+    lang : String,
+    token : String,
+    passport : [],
+    favorite : [],
+    history : []
 });
 
 module.exports.Shema.methods.ComparePassword = function(candidate, callback) {
@@ -33,6 +42,8 @@ if(global.USING_ENCRIPT) {
         _bcrypt.genSalt(global.SALT_WORK_FACTOR || 10, function(err, salt) {
             if (err) return next(err);
 
+            var pendding = 2;
+
             // hash the password using our new salt
             _bcrypt.hash(user.password, salt, function(err, hash) {
                 if (err) return next(err);
@@ -40,7 +51,16 @@ if(global.USING_ENCRIPT) {
                 // override the cleartext password with the hashed one
                 user.password = hash;
                 _log.message("User password hased : " + hash);
-                next();
+                if(--pendding == 0) next();
+            });
+
+            _bcrypt.hash(user.email, salt, function(err, hash) {
+                if (err) return next(err);
+
+                // override the cleartext password with the hashed one
+                user.password = hash;
+                _log.message("User password hased : " + hash);
+                if(--pendding == 0) next();
             });
         });
     });
@@ -50,11 +70,20 @@ module.exports.Module = _mongoose.model("User", module.exports.Shema);
 
 var User = _mongoose.model("User");
 
-module.exports.Create = function(username, email, password, callback) {
+module.exports.Create = function(user, callback) {
     var newuser = new User();
-    newuser.username = username;
-    newuser.email = email;
-    newuser.password = password;
+    newuser.username = user.username;
+    newuser.email = user.email;
+    newuser.password = user.password;
+    newuser.birthday = user.birthday;
+    newuser.status = "CONFIRM";
+    newuser.gender = user.gender;
+    newuser.origin = user.origin;
+    newuser.lang = user.lang; 
+    newuser.passport = [];
+    newuser.favorite = [];
+    newuser.history = [];
+    newuser.token = "";
 
     newuser.save(callback);
 }
@@ -79,4 +108,22 @@ module.exports.Logout = function(req) {
     req.session.destroy();
 
     return username;
+}
+
+module.exports.List = function(username, email, status, callback) {
+    var querycond = {};
+    if(username) querycond.username = new RegExp(username, "i");
+    if(email) querycond.username = new RegExp(email, "i");
+    if(status) querycond.status = new RegExp(status, "i");
+
+    return User.find(
+        querycond, 
+        {password:0, token:0, history:0, __v:0}, 
+        function(err, users) {
+            if(err || !users) {
+                err = "Cant find users (" + err + ")";
+            }
+            if(callback) callback(err, users);
+        }
+    );
 }

@@ -17,16 +17,16 @@
                     cortex.config(function($routeProvider, $locationProvider) {
                         $routeProvider
                             .when("/", {
-                                templateUrl : "pages/test.html"
+                                templateUrl : "pages/home.html"
                             })
-                            .when("/test", {
-                                templateUrl : "pages/test2.html"
+                            .when("/login", {
+                                templateUrl : "pages/login.html"
                             });
                         //$locationProvider.html5Mode(true);
                     });
                     cortex.controller("CortexController", [function () {
                         var cc = this;
-                        cc.hello = "Hello World";
+                        cc.email = "";
                     }]);
         </script>
     </body>
