@@ -1,34 +1,28 @@
-<div class="col-md-4 col-md-offset-4 panel panel-default">
+<div class="col-md-4 col-md-offset-4">
 
     <h1>Login to your account</h1>
 
-    {{#if session.loginerror}}
-    <div class="loginerror">
-        <code>{{session.loginerror}}</code>
+    <div class="loginerror" ng-show="uc.loginerror != null">
+        <code>{{uc.loginerror}}</code>
     </div>
-    {{/if}}
 
-    <form action="/authenticate" method="post">
+    <form name="login" ng-submit="uc.login()">
         <p class="input-group">
             <span class="input-group-addon"><span class="icon-envelope"></span></span>
-            <input type="email" required class="form-control input-lg" ng-model="email" placeholder="email address" value="{{session.username}}" />
+            <input type="email" required class="form-control input-lg" ng-model="uc.email" placeholder="email address" />
         </p>
 
         <p class="input-group">
             <span class="input-group-addon"><span class="icon-key"></span></span>
-            <input type="password" required class="form-control input-lg" ng-model="password" placeholder="password" />
+            <input type="password" required class="form-control input-lg" ng-model="uc.password" placeholder="password" />
         </p>
 
         <p class="text-center">
-            <button type="submit" class="btn btn-success btn-lg">Get In</button>
+            <button type="submit" class="btn btn-success btn-lg" ng-disable="LoginForm.$invalid">Get In</button>
         </p>
     </form>
 
     <div class="text-center">
-        <a href="/#/register">Create {{email}} one</a>
-    </div>
-
-    <div class="text-center">
-        <a href="/">home</a>
+        <a href="/#" ng-click="uc.register()">register {{uc.email}}</a>
     </div>
 </div>

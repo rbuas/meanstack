@@ -13,21 +13,48 @@
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-resource.min.js"></script>
         <script>
-                    var cortex = angular.module("Cortex", ["ngRoute", "ngResource"]);
-                    cortex.config(function($routeProvider, $locationProvider) {
-                        $routeProvider
-                            .when("/", {
-                                templateUrl : "pages/home.html"
-                            })
-                            .when("/login", {
-                                templateUrl : "pages/login.html"
-                            });
-                        //$locationProvider.html5Mode(true);
-                    });
-                    cortex.controller("CortexController", [function () {
-                        var cc = this;
-                        cc.email = "";
-                    }]);
+            (function($, angular){
+                var cortex = angular.module("Cortex", ["ngRoute", "ngResource"]);
+                cortex.config(function($routeProvider, $locationProvider) {
+                    $routeProvider
+                        .when("/", {
+                            templateUrl : "pages/home.html",
+                            controller : "CortexController",
+                            controllerAs : "cc"
+                        })
+                        .when("/login", {
+                            templateUrl : "pages/login.html",
+                            controller : "UserController",
+                            controllerAs : "uc"
+                        });
+                    //$locationProvider.html5Mode(true);
+                });
+                cortex.controller("CortexController", ["$scope", "$http", "$location", function ($scope, $http, $location) {
+                    var cc = this;
+                }]);
+                cortex.controller("UserController", ["$scope", "$http", "$location", function ($scope, $http, $location) {
+                    var uc = this;
+                    uc.submit = function () {
+                        $http({method: "post",
+                                url: "/s/user-login",
+                                data: self.login,
+                                headers: {'Content-Type': 'application/vnd.api+json'}
+                        }).then(
+                            function(response) {
+                            if(response.data){
+                                self.message = 'Login succeessful';
+                                tservice.setLoggedIN(true);
+                                $location.path('console');
+                            }else{
+                                self.message = 'Login Failed';
+                                tservice.setLoggedIN(false);
+                            };
+                            console.log(self.message);
+                            }
+                        );
+                    }
+                }]);
+            })(jQuery, angular);
         </script>
     </body>
 </html>
