@@ -15,6 +15,14 @@
         <script>
             (function($, angular){
                 var cortex = angular.module("Cortex", ["ngRoute", "ngResource"]);
+                cortex.synapse = function($http, path, data) {
+                    return $http({
+                            method: "post",
+                            url: path,
+                            data: data,
+                            headers: {'Content-Type': 'application/vnd.api+json'}
+                    });
+                }
                 cortex.config(function($routeProvider, $locationProvider) {
                     $routeProvider
                         .when("/", {
@@ -34,24 +42,24 @@
                 }]);
                 cortex.controller("UserController", ["$scope", "$http", "$location", function ($scope, $http, $location) {
                     var uc = this;
-                    uc.submit = function () {
-                        $http({method: "post",
-                                url: "/s/user-login",
-                                data: self.login,
-                                headers: {'Content-Type': 'application/vnd.api+json'}
-                        }).then(
-                            function(response) {
-                            if(response.data){
+                    uc.login = function () {
+                        cortex.synapse($http, "/s/user-login", uc)
+                        .then(function(response) {
+                            if (response.data) {
                                 self.message = 'Login succeessful';
                                 tservice.setLoggedIN(true);
                                 $location.path('console');
-                            }else{
+                            } else {
                                 self.message = 'Login Failed';
                                 tservice.setLoggedIN(false);
-                            };
-                            console.log(self.message);
                             }
-                        );
+                            console.log(self.message);
+                        });
+                    }
+                    uc.register = function () {
+                        cortex.synapse($http, "/s/user-register", uc)
+                        .then(function(response) {
+                        });
                     }
                 }]);
             })(jQuery, angular);

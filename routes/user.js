@@ -11,7 +11,7 @@ module.exports.list = function(req, res) {
     });
 }
 
-module.exports.create = function(req, res) {
+module.exports.register = function(req, res) {
     var newuser = {
         username : req.body.username,
         email : req.body.email,
@@ -31,6 +31,7 @@ module.exports.create = function(req, res) {
         //update session
         req.session.username = response.username;
         req.session.userlogged = response.username != null;
+        response.session = req.session;
 
         res.json(response);
     });
@@ -45,30 +46,30 @@ module.exports.confirm = function(req, res) {
     //TODO
 }
 
-module.exports.authenticate = function(req, res) {
+module.exports.login = function(req, res) {
     var email = req.body.email;
     var password = req.body.password;
     _log.message("Try to authenticate user ", email);
 
-    req.session.username = email;
+    req.session.useremail = email;
+    req.session.userlogged = false;
 
     _user.Login(email, password, function(err, user) {
-        var viewdata = {
-            layout:"marks",
-            metatitle:"marks",
-            session: req.session
-        };
+        var response = {};
         if(err || !user) {
-            req.session.loginerror = "Invalid user or password";
-            res.redirect("/login");
-            return;
+            _log.message("Authentication failure to " + email);
+            response.loginerror = "Invalid user or password";
+        } else {
+            _log.message("Authentication sucessfull to " + email);
+            req.session.userlogged = true;
+            req.session.useremail = user.email;
+            req.session.username = user.username;
+            req.session.userlang = user.lang;
         }
 
-        _log.message("Authentication sucessfull to " + email);
-        req.session.loginerror = null;
-        req.session.userlogged = true;
-        viewdata.session = req.session;
-        res.redirect("/stories");
+        response.session = req.session;
+
+        res.json(response);
     });
 }
 

@@ -24,10 +24,10 @@ brain.get("/", _angular.basic);
 
 brain.get("/s/user", _userRoutes.list);
 brain.get("/s/user/:filtername", _userRoutes.list);
-brain.post("/s/user-create", _userRoutes.create);
+brain.post("/s/user-register", _userRoutes.register);
 brain.post("/s/user-confirm", _userRoutes.confirm);
 brain.get("/s/user-restartpass", _userRoutes.restartPassword);
-brain.post("/s/user-authenticate", _userRoutes.authenticate);
+brain.post("/s/user-login", _userRoutes.login);
 brain.get("/s/user-addpassport", _userRoutes.addPassport);
 brain.get("/s/user-rempassport", _userRoutes.remPassport);
 brain.get("/s/user-history", _userRoutes.history);

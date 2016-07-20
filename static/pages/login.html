@@ -6,23 +6,23 @@
         <code>{{uc.loginerror}}</code>
     </div>
 
-    <form name="login" ng-submit="uc.login()">
+    <form name="loginForm">
         <p class="input-group">
-            <span class="input-group-addon"><span class="icon-envelope"></span></span>
+            <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
             <input type="email" required class="form-control input-lg" ng-model="uc.email" placeholder="email address" />
         </p>
 
         <p class="input-group">
-            <span class="input-group-addon"><span class="icon-key"></span></span>
+            <span class="input-group-addon"><i class="fa fa-key"></i></span>
             <input type="password" required class="form-control input-lg" ng-model="uc.password" placeholder="password" />
         </p>
 
         <p class="text-center">
-            <button type="submit" class="btn btn-success btn-lg" ng-disable="LoginForm.$invalid">Get In</button>
+            <button type="submit" class="btn btn-success btn-lg" ng-disable="loginForm.$invalid" ng-click="uc.login()"><i class="fa fa-user"></i> login</button>
         </p>
     </form>
 
     <div class="text-center">
-        <a href="/#" ng-click="uc.register()">register {{uc.email}}</a>
+        <a href="/#" ng-click="uc.register()"><i class="fa fa-user-plus"></i> register {{uc.email}}</a>
     </div>
 </div>

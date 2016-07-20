@@ -10,6 +10,7 @@ module.exports.Shema = new _mongoose.Schema({
     status : {type:String, enum:["ON", "OFF", "CONFIRM", "BLOCK"]},
     gender : {type:String, enum:["M", "F"]},
     origin : String,
+    profile : {type:String, enum:["ADMIN", "EDITOR"]},
     lang : String,
     token : String,
     passport : [],
@@ -79,6 +80,7 @@ module.exports.Create = function(user, callback) {
     newuser.status = "CONFIRM";
     newuser.gender = user.gender;
     newuser.origin = user.origin;
+    newuser.profile = user.profile; 
     newuser.lang = user.lang; 
     newuser.passport = [];
     newuser.favorite = [];

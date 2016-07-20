@@ -58,6 +58,7 @@ function Brain (options) {
     _log.message("Static files at ", publicpath);
 
     this.app.use(_bodyparser.json());
+    this.app.use(_bodyparser.json({ type: 'application/vnd.api+json' })); 
     this.app.use(_bodyparser.urlencoded({extended:true}));
     this.app.use(_session({secret:this.options.encryptkey, resave : true, saveUninitialized : true}));
 
