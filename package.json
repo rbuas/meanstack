@@ -12,6 +12,7 @@
     "tests-session": "./node_modules/mocha/bin/_mocha tests/session.js",
     "tests-ui": "SELENIUM_BROWSER=chrome ./node_modules/mocha/bin/_mocha tests/ui.js",
     "tests-nw": "./node_modules/.bin/nightwatch tests/nightwatch.js --verbose",
+    "tests-pt": "/usr/local/bin/protractor ./tests/user-e2e.config.js --verbose",
     "install-drivers": "cp /Users/rbuas/RBUAS/nodejs/projectzero/drivers/ /usr/local/lib/"
   },
   "keywords": [
