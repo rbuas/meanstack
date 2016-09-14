@@ -1,0 +1,71 @@
+<div class="col-md-4 col-md-offset-4" ng-show="!uc.isLogged()">
+    <h6>Login</h6>
+
+    <div class="loginerror" ng-show="uc.loginerror != null">
+        <code>
+            <strong>{{uc.loginerror}}</strong>
+            <span ng-if="uc.loginerrorDescription != null">{{uc.loginerrorDescription}}</span>
+        </code>
+    </div>
+
+    <form name="loginForm">
+        <p class="input-group">
+            <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+            <input type="email" required class="form-control input-lg" ng-model="uc.email" placeholder="email address" />
+        </p>
+        <p class="input-group">
+            <span class="input-group-addon"><i class="fa fa-key"></i></span>
+            <input type="password" required class="form-control input-lg" ng-model="uc.password" placeholder="password" />
+        </p>
+        <p class="input-group" ng-show="uc.registering">
+            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+            <input type="text" ng-required="uc.registering" class="form-control input-lg" ng-model="uc.username" placeholder="username" />
+        </p>
+        <p class="input-group" ng-show="uc.registering">
+            <span class="input-group-addon"><i class="fa fa-tags"></i></span>
+            <input type="text" ng-required="uc.registering" class="form-control input-lg" ng-model="uc.origin" placeholder="origin" />
+        </p>
+        <p class="input-group" ng-show="uc.registering && uc.inProfile('ADMIN')">
+            <span class="input-group-addon"><i class="fa fa-users"></i></span>
+            <input type="text" ng-required="uc.registering" class="form-control input-lg" ng-model="uc.origin" placeholder="origin" />
+        </p>
+        <p class="input-group" ng-show="uc.registering">
+            <span class="input-group-addon"><i class="fa fa-birthday-cake"></i></span>
+            <input type="text" ng-required="uc.registering" class="form-control input-lg" ng-model="uc.birthday" placeholder="birthday" />
+        </p>
+
+        <div class="text-center">
+            <p class="btn-group" ng-show="uc.registering" data-toggle="buttons">
+                <label class="btn btn-secondary btn-lg active">
+                    <i class="fa fa-male"></i>
+                    <input type="radio" ng-model="uc.gender" value="M" checked />
+                </label>
+                <label class="btn btn-secondary btn-lg">
+                    <i class="fa fa-female"></i>
+                    <input type="radio" ng-model="uc.gender" value="F" />
+                </label>
+            </p>
+            <p class="btn-group" ng-show="uc.registering" data-toggle="buttons">
+                <label class="btn btn-secondary">
+                    <img src="/images/toolbar/lang-pt.png" />
+                    <input type="radio" ng-model="uc.lang" value="PT" />
+                </label>
+                <label class="btn btn-secondary">
+                    <img src="/images/toolbar/lang-fr.png" />
+                    <input type="radio" ng-model="uc.lang" value="FR" />
+                </label>
+                <label class="btn btn-secondary active">
+                    <img src="/images/toolbar/lang-en.png" />
+                    <input type="radio" ng-model="uc.lang" value="EN" checked />
+                </label>
+            </p>
+        </div>
+
+        <p class="text-center" ng-show="!uc.registering">
+            <button type="submit" class="btn btn-primary btn-lg" ng-disable="loginForm.$invalid" ng-click="uc.login()"><i class="fa fa-sign-in"></i> login</button>
+        </p>
+        <p class="text-center">
+            <button class="btn btn-link btn-lg" ng-click="uc.register()"><i class="fa fa-user-plus"></i> register {{uc.email}}</a>
+        </p>
+    </form>
+</div>

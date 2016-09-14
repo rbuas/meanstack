@@ -1,4 +1,4 @@
-var _log = require("../libs/log");
+var _log = require("../brain/log");
 var _user = require("../models/user");
 
 module.exports.list = function(req, res) {
@@ -15,7 +15,10 @@ module.exports.register = function(req, res) {
     var newuser = {
         username : req.body.username,
         email : req.body.email,
-        password : req.body.password
+        password : req.body.password,
+        gender : req.body.gender,
+        lang : req.body.lang,
+        birthday : req.body.birthday
     };
 
     _user.Create(newuser, function(err, savedUser) {
@@ -55,7 +58,7 @@ module.exports.login = function(req, res) {
     req.session.userlogged = false;
 
     _user.Login(email, password, function(err, user) {
-        var response = {};
+        var response = { session:req.session };
         if(err || !user) {
             _log.message("Authentication failure to " + email);
             response.loginerror = "Invalid user or password";
@@ -66,26 +69,23 @@ module.exports.login = function(req, res) {
             req.session.username = user.username;
             req.session.userlang = user.lang;
         }
-
-        response.session = req.session;
-
         res.json(response);
     });
 }
 
 module.exports.logout = function(req, res) {
-    if(!req.session.username || !req.session.userlogged) {
-        res.redirect("/login");
-        return;
+    var response = { session:req.session };
+    if(!req.session.useremail || !req.session.userlogged) {
+        response.error = "Logout without login";
+        _log.message(response.error, req.session.useremail);
+    } else {
+        response.username = _user.Logout(req.session.useremail);
+        response.logout = true;
+
+        req.session.destroy();
     }
 
-    var username = _user.Logout(req);
-    var viewdata = {
-        layout:"marks",
-        metatitle:"marks",
-        username:username
-    };
-    res.render("marks_logout", viewdata);
+    res.json(response);
 }
 
 module.exports.confirm = function(req, res) {

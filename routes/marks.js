@@ -1,4 +1,4 @@
-var _log = require("../libs/log");
+var _log = require("../brain/log");
 var _user = require("../models/user");
 var _story = require("../models/story");
 

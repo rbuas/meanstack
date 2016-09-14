@@ -1,0 +1,11 @@
+<div class="col-md-4 col-md-offset-4" ng-show="uc.isLogged()">
+    <div>{{cortex.session.useremail}}</div>
+
+    <div class="usermessage" ng-show="uc.usermessage != null">
+        <code>{{uc.usermessage}}</code>
+    </div>
+
+    <div class="text-center">
+        <button class="btn btn-primary btn-lg" ng-click="uc.logout()"><i class="fa fa-sign-out"></i> logout</button>
+    </div>
+</div>

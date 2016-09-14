@@ -3,11 +3,11 @@
     "stylefiles" : ["skin/*.less"],
     "styleoutput" : "static/styles/",
     "jsfiles" : [
-        "libsclient/cortex.js",
-        "libsclient/chatclient.js"
+        "cortex/cortex.js",
+        "cortex/chatclient.js"
     ],
-    "jsoutput" : "static/scripts/",
-    "jspack" : "libs.js",
+    "jsoutput" : "static/cortex/",
+    "jspack" : "pack.js",
     "ftpconfig" : {
         "host":     "10.16.31.100",
         "user":     "test",

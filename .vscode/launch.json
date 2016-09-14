@@ -32,11 +32,11 @@
             "env": { "NODE_ENV": "production"}
         },
         {
-            "name": "Run ui tests",
+            "name": "Run e2e tests",
             "type": "node",
-            "program": "${workspaceRoot}/tests/ui.js",
+            "program": "/usr/local/bin/protractor",
             "stopOnEntry": false,
-            "args": [],
+            "args": ["tests/user-e2e.config.js"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": { "NODE_ENV": "production"}

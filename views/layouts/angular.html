@@ -7,60 +7,143 @@
     <body ng-controller="CortexController as cc">
         {{{body}}}
 
+        {{>toolbar}}
+
         {{>postincludes}}
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.min.js"></script>
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-resource.min.js"></script>
         <script>
-            (function($, angular){
+            (function($, angular) {
                 var cortex = angular.module("Cortex", ["ngRoute", "ngResource"]);
+
+                cortex.broadcast = function (event, data) {
+                    var self = this;
+                    if(!self.root || !self.ready)
+                        return;
+
+                    console.log("Cortex::broadcast: ", event);
+                    self.root.$broadcast(event, data);
+                }
+
                 cortex.synapse = function($http, path, data) {
                     return $http({
                             method: "post",
-                            url: path,
+                            url: /s/ + path,
                             data: data,
-                            headers: {'Content-Type': 'application/vnd.api+json'}
+                            headers: {"Content-Type": "application/vnd.api+json"}
                     });
                 }
-                cortex.config(function($routeProvider, $locationProvider) {
-                    $routeProvider
-                        .when("/", {
-                            templateUrl : "pages/home.html",
-                            controller : "CortexController",
-                            controllerAs : "cc"
-                        })
-                        .when("/login", {
-                            templateUrl : "pages/login.html",
-                            controller : "UserController",
-                            controllerAs : "uc"
+
+                cortex.connect = function ($http) {
+                    var self = this;
+                    self.synapse($http, "connect")
+                        .then(function(response) {
+                            if (!response || !response.data) {
+                                console.log("ERROR_COMMUNICATION");
+                            } else {
+                                cortex.session = response.data.session || {};
+                                self.broadcast("session", response.data.session);
+                            }
                         });
-                    //$locationProvider.html5Mode(true);
-                });
+                }
+
+                cortex.start = function () {
+                    var self = this;
+                    self.config(["$routeProvider", "$locationProvider", function ($routeProvider, $locationProvider) {
+                        $routeProvider
+                            .when("/", {
+                                templateUrl : "pages/home.html",
+                                controller : "CortexController",
+                                controllerAs : "cc"
+                            })
+                            .otherwise({redirectTo:"/"});
+                        //$locationProvider.html5Mode(true);
+                    }]);
+                    self.run(["$rootScope", "$http", function ($rootScope, $http) {
+                        self.root = $rootScope;
+                        self.ready = true;
+                        self.connect($http);
+                    }]);
+                }
+
+                cortex.start();
+
                 cortex.controller("CortexController", ["$scope", "$http", "$location", function ($scope, $http, $location) {
                     var cc = this;
                 }]);
+
                 cortex.controller("UserController", ["$scope", "$http", "$location", function ($scope, $http, $location) {
                     var uc = this;
+
+                    uc.start = function () {
+                        uc.email = cortex.session && cortex.session.useremail ? cortex.session.useremail : null;
+
+                        if(!uc.isLogged()) {
+                            $location.path("");
+                        }
+                    }
+
+                    uc.isLogged = function () {
+                        return cortex.session != null && cortex.session.useremail != null && cortex.session.userlogged;
+                    }
+
+                    uc.loginError = function (error, description) {
+                        uc.loginerror = error;
+                        uc.loginerrorDescription = description;
+                    }
+
+                    uc.userMessage = function (message) {
+                        uc.usermessage = message;
+                    }
+
                     uc.login = function () {
-                        cortex.synapse($http, "/s/user-login", uc)
-                        .then(function(response) {
-                            if (response.data) {
-                                self.message = 'Login succeessful';
-                                tservice.setLoggedIN(true);
-                                $location.path('console');
-                            } else {
-                                self.message = 'Login Failed';
-                                tservice.setLoggedIN(false);
-                            }
-                            console.log(self.message);
-                        });
+                        cortex.synapse($http, "user-login", uc)
+                            .then(function (response) {
+                                uc.password = null;
+                                if (!response || !response.data) {
+                                    uc.loginError("ERROR_COMMUNICATION");
+                                } else if (response.data.loginerror) {
+                                    uc.loginError("ERROR_LOGIN", response.data.loginerror);
+                                } else {
+                                    uc.loginError(null, null);
+                                    uc.userMessage("LOGIN_SUCCESSFUL");
+                                    cortex.session = response.data.session || {};
+                                }
+                            });
                     }
+
+                    uc.logout = function () {
+                        cortex.synapse($http, "user-logout")
+                            .then(function (response) {
+                                cortex.session = response.data.session || {};
+                            });
+                    }
+
                     uc.register = function () {
-                        cortex.synapse($http, "/s/user-register", uc)
-                        .then(function(response) {
-                        });
+                        if(uc.registering) {
+                            cortex.synapse($http, "user-register", uc)
+                                .then(function (response) {
+                                    debugger;
+                                    if (!response || !response.data) {
+                                        uc.loginError("ERROR_COMMUNICATION");
+                                    } else {
+                                        //TODO
+                                        cortex.session = response.data.session || {};
+                                    }
+                                    uc.registering = false;
+                                });
+                        } else {
+                            uc.registering = true;
+                        }
                     }
+
+                    uc.inProfile = function (profile) {
+                        return cortex.session != null && cortex.session.userprofile != null && cortex.session.userprofile == profile;
+                    } 
+
+                    $scope.$on("session", function() { uc.start(); });
                 }]);
             })(jQuery, angular);
         </script>

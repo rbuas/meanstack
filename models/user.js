@@ -1,6 +1,6 @@
 var _mongoose = require("mongoose");
 var _bcrypt = require("bcrypt");
-var _log = require("../libs/log");
+var _log = require("../brain/log");
 
 module.exports.Shema = new _mongoose.Schema({
     username : {type:String, unique:true},
@@ -10,7 +10,7 @@ module.exports.Shema = new _mongoose.Schema({
     status : {type:String, enum:["ON", "OFF", "CONFIRM", "BLOCK"]},
     gender : {type:String, enum:["M", "F"]},
     origin : String,
-    profile : {type:String, enum:["ADMIN", "EDITOR"]},
+    profile : {type:String, enum:["ADMIN", "EDITOR", "VIEWER"]},
     lang : String,
     token : String,
     passport : [],
@@ -72,6 +72,11 @@ module.exports.Module = _mongoose.model("User", module.exports.Shema);
 var User = _mongoose.model("User");
 
 module.exports.Create = function(user, callback) {
+    if(!user || !user.email || !user.password) {
+        if(callback) callback({error:"Missing required params"});
+        return;
+    }
+
     var newuser = new User();
     newuser.username = user.username;
     newuser.email = user.email;
@@ -80,7 +85,7 @@ module.exports.Create = function(user, callback) {
     newuser.status = "CONFIRM";
     newuser.gender = user.gender;
     newuser.origin = user.origin;
-    newuser.profile = user.profile; 
+    newuser.profile = user.profile || "VIEWER"; 
     newuser.lang = user.lang; 
     newuser.passport = [];
     newuser.favorite = [];
@@ -98,18 +103,16 @@ module.exports.Login = function(email, password, callback) {
             return;
         }
         user.ComparePassword(password, function(err, match) {
+            //TODO : save into db the user status
             if(callback) callback(err, user);
         });
     });
 }
 
-module.exports.Logout = function(req) {
-    var username = req.session.username;
-
-    _log.message("Loggin out : ", username, "...");
-    req.session.destroy();
-
-    return username;
+module.exports.Logout = function(email) {
+    _log.message("Loggin out : ", email, "...");
+    //TODO : save into db the user status
+    return email;
 }
 
 module.exports.List = function(username, email, status, callback) {

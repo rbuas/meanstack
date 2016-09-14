@@ -1,4 +1,4 @@
-var _log = require("../libs/log");
+var _log = require("../brain/log");
 var _chat = require("../models/chat");
 
 module.exports.broadcast = function(socket) {

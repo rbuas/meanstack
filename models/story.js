@@ -1,5 +1,5 @@
 var _mongoose = require("mongoose");
-var _log = require("../libs/log");
+var _log = require("../brain/log");
 
 module.exports.Shema = new _mongoose.Schema({
     author:String,
