@@ -11,8 +11,14 @@ var _log = require("../brain/log");
 require("../brain/base");
 var TestCase = require("../brain/testcase").TestCase;
 
-function TestPageLogin (testcase) {
-    TestCase.call(this, testcase, { path : __dirname + "/proof/" });
+
+/////////////
+// TESTCLASS : TestPageLogin
+///////
+
+TestPageLogin.extends( TestCase );
+function TestPageLogin (tcase) {
+    TestCase.call(this, tcase, { path : __dirname + "/proof/" });
 
     // private
 
@@ -59,8 +65,12 @@ function TestPageLogin (testcase) {
         return _userMessage.getText();
     }
 }
-TestPageLogin.extends( TestCase );
 
+
+
+/////////////
+// TESTCASE : login
+///////
 
 describe("user-e2e-login", function() {
     var tc = new TestPageLogin(this);
@@ -81,11 +91,15 @@ describe("user-e2e-login", function() {
     });
 
     it("should load the page", function(done) {
-        expect(tc.email()).toEqual("");
-        tc.proof("login-pristine")
-        .then(function() {
-            done();
-        });
+        try {
+            expect(tc.email()).toEqual("");
+            tc.proof("login-pristine")
+            .then(function() {
+                done();
+            });
+        } catch(err) {
+            tc.log("login-pristine", "ERROR");
+        }
     });
     it("empty fields - should not login", function(done) {
         tc.clickLogin();
@@ -160,6 +174,12 @@ describe("user-e2e-login", function() {
         });
     });
 });
+
+
+
+/////////////
+// TESTCASE : register
+///////
 
 describe("user-e2e-register", function() {
     var tc = new TestPageLogin(this);

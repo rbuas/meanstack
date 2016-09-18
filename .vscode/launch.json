@@ -42,6 +42,15 @@
             "env": { "NODE_ENV": "production"}
         },
         {
+            "name": "Run e2e test validator",
+            "type": "node",
+            "program": "${workspaceRoot}/brain/testproofvalidator.js",
+            "stopOnEntry": false,
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "env": { "NODE_ENV": "production"}
+        },
+        {
             "name": "Attacher",
             "type": "node",
             "request": "attach",

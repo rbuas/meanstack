@@ -42,10 +42,12 @@ TestCase.prototype.proof = function(proofname) {
         return;
 
     proofname = proofname ? "." + proofname : "";
-    var title = self.suite && self.suite.getFullName() || "";
-    title = title.replace(/ /g, "-");
+    var title = self.getSuiteTitle();
+    var prooftitle = title + proofname;
     var path = self.options.path || "";
-    var filename = path + formatInt(++this.proofindex, 4) + "-" + title + proofname;
+    var filename = path;
+    this.proofindex++;//filename += formatInt(++this.proofindex, 4) + "-";
+    filename += prooftitle;
     var filetruth = filename + ".png";
     var fileproof = filename + self.options.imageproof  + ".png";
     var filediff = filename + self.options.imagediff  + ".png";
@@ -61,19 +63,42 @@ TestCase.prototype.proof = function(proofname) {
         compareProof(self, filetruth, fileproof, filediff)
         .onComplete(function(comparedata) {
             if (Number(comparedata.misMatchPercentage) <= self.options.tolerance) {
-                _fs.unlink(fileproof);
+                removeProof(fileproof);
+                removeProof(filediff);
+                self.log("Proof '" + prooftitle + "'", "OK");
             } else {
                 self.proofdiff.push({truth:filetruth, proof:fileproof, diff:filediff});
                 comparedata.getDiffImage().pack().pipe(_fs.createWriteStream(filediff));
-                console.log("Proof '" + filetruth +  "' differ " + comparedata.misMatchPercentage + "%")
+                self.log("Proof '" + filetruth +  "' differ " + comparedata.misMatchPercentage + "%", "ERROR");
             }
         });
     });
 }
 
+TestCase.prototype.getSuiteTitle = function() {
+    var self = this;
+    var title = self.suite && self.suite.getFullName() || "";
+    title = title.replace(/ /g, "-");
+    return title;
+}
+
 TestCase.prototype.diffCount = function() {
     var self = this;
     return self.proofdiff.length;
+}
+
+TestCase.prototype.log = function(entry, status) {
+    var self = this;
+    self.loglist = self.loglist || [];
+    var success = status && status == "OK";
+    status = status ? status + " : " : "";
+    var title = self.getSuiteTitle();
+    self.loglist.push(status + title + entry);
+    if(success) {
+        _log.success(title + entry);
+    } else {
+        _log.error(title + entry);
+    }
 }
 
 TestCase.prototype.saveLog = function(id) {
@@ -83,16 +108,26 @@ TestCase.prototype.saveLog = function(id) {
         title += id;
     }
     var filename = self.options.path + title + ".log";
-    var diffcontent = JSON.stringify({
-        count : self.proofindex,
-        diff : self.proofdiff
-    });
-    _fs.writeFileSync(filename, diffcontent);
+    var log = getLog(self);;
+    var logcontent = JSON.stringify(log);
+    _fs.writeFileSync(filename, logcontent);
 }
 
 
 
 //PRIVATE
+function getLog (self) {
+    if(!self)
+        return;
+
+    return {
+        status : self.proofdiff.length > 0 ? "DIFF" : "OK",
+        count : self.proofindex,
+        diffcount : self.proofdiff.length,
+        diff : self.proofdiff,
+        log : self.loglist
+    }
+}
 
 function formatInt (num, places) {
   var zero = places - num.toString().length + 1;
@@ -164,4 +199,12 @@ function compareProofPixelMatch (self, truth, proof, diff) {
         _fs.writeFileSync(diff, buffer);
     }
     return imgD.data;
+}
+
+function removeProof (file) {
+    if(!_fs.existsSync(file))
+        return false;
+
+    _fs.unlink(file);
+    return true;
 }
