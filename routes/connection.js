@@ -15,3 +15,13 @@ module.exports.connect = function(req, res) {
     };
     res.json(response);
 }
+
+module.exports.reset = function(req, res) {
+    _log.message("Reset connection");
+    req.session.destroy();
+    var response = {
+        session : req && req.session,
+        message : "Session reseted"
+    };
+    res.json(response);
+}

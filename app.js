@@ -16,13 +16,14 @@ var brain = global.brain = module.exports.brain = new _brain.Brain({
 var _quoteRoutes = require("./routes/quotes");
 //var _citiesRoutes = require("./routes/cities");
 //var _auxRoutes = require("./routes/aux");
-var _basicRoutes = require("./routes/basic");
+var _connectionRoutes = require("./routes/connection");
 var _userRoutes = require("./routes/user");
 var _chat = require("./routes/chat");
 
-brain.get("/", _basicRoutes.startpage);
+brain.get("/", _connectionRoutes.startpage);
 
-brain.post("/s/connect", _basicRoutes.connect);
+brain.post("/s/connect", _connectionRoutes.connect);
+brain.get("/s/reset", _connectionRoutes.reset);
 brain.get("/s/user", _userRoutes.list);
 brain.get("/s/user/:filtername", _userRoutes.list);
 brain.post("/s/user-register", _userRoutes.register);
