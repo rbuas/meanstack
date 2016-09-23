@@ -6,8 +6,8 @@
   "scripts": {
     "start-app": "nodemon app.js",
     "start-db": "./mongodb/bin/mongod -dbpath ./data",
-    "selenium-start": "/usr/local/bin/webdriver-manager start",
-    "db-terminal": "./mondodb/bin/mongo",
+    "start-selenium": "/usr/local/bin/webdriver-manager start",
+    "db-terminal": "./mongodb/bin/mongo",
     "test-basic": "./node_modules/mocha/bin/_mocha tests/basicload.js",
     "test-session": "./node_modules/mocha/bin/_mocha tests/session.js",
     "test-ui": "SELENIUM_BROWSER=chrome ./node_modules/mocha/bin/_mocha tests/ui.js",
@@ -60,6 +60,7 @@
     "node-resemble-js": "^0.1.1",
     "pixelmatch": "^4.0.1",
     "prompt": "^1.0.0",
+    "prompt-sync": "^4.1.4",
     "selenium-webdriver": "^2.45.0",
     "vinyl-ftp": "^0.5.0",
     "yargs": "^4.8.0"

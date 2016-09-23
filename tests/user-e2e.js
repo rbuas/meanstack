@@ -13,11 +13,11 @@ var TestCase = require("../brain/testcase").TestCase;
 
 
 /////////////
-// TESTCLASS : TestPageLogin
+// TESTCLASS : TestUserPages
 ///////
 
-TestPageLogin.extends( TestCase );
-function TestPageLogin (tcase) {
+TestUserPages.extends( TestCase );
+function TestUserPages (tcase) {
     TestCase.call(this, tcase, { path : __dirname + "/proof/" });
 
     // private
@@ -29,10 +29,18 @@ function TestPageLogin (tcase) {
     var _loginError = element(by.binding("uc.loginerror"));
     var _userMessage = element(by.binding("uc.usermessage"));
 
-    this.restart = function() {
+
+    // public 
+
+    this.start = function() {
         browser.get("http://localhost:8080/").then(function() {
             browser.waitForAngular();
         });
+    }
+
+    this.reset = function() {
+        browser.manage().deleteAllCookies();
+        //browser.get("http://localhost:8080/s/reset");
     }
 
     this.email = function(email) {
@@ -73,16 +81,17 @@ function TestPageLogin (tcase) {
 ///////
 
 describe("user-e2e-login", function() {
-    var tc = new TestPageLogin(this);
+    var tc = new TestUserPages(this);
 
     beforeAll(function() {
     });
 
     beforeEach(function() {
-        tc.restart();
+        tc.start();
     });
 
     afterEach(function() {
+        tc.reset();
     });
 
     afterAll(function() {
@@ -182,16 +191,17 @@ describe("user-e2e-login", function() {
 ///////
 
 describe("user-e2e-register", function() {
-    var tc = new TestPageLogin(this);
+    var tc = new TestUserPages(this);
 
     beforeAll(function() {
     });
 
     beforeEach(function() {
-        tc.restart();
+        tc.start();
     });
 
     afterEach(function() {
+        tc.reset();
     });
 
     afterAll(function() {
