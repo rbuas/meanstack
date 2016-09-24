@@ -15,7 +15,7 @@ var brain = global.brain = module.exports.brain = new _brain.Brain({
 
 var _quoteRoutes = require("./routes/quotes");
 //var _citiesRoutes = require("./routes/cities");
-//var _auxRoutes = require("./routes/aux");
+//var _extRoutes = require("./routes/ext");
 var _connectionRoutes = require("./routes/connection");
 var _userRoutes = require("./routes/user");
 var _chat = require("./routes/chat");
@@ -51,6 +51,6 @@ brain.socket("connection", _chat.broadcast);
 // brain.post("/createstory", _marksRoutes.createstory);
 // brain.get("/cities", _citiesRoutes.cities);
 // brain.get("/city/:city", _citiesRoutes.city);
-// brain.get("/download", _auxRoutes.download);
-// brain.get("/session", _auxRoutes.stest);
-// brain.get("/session/:test", _auxRoutes.stest);
+// brain.get("/download", _extRoutes.download);
+// brain.get("/session", _extRoutes.stest);
+// brain.get("/session/:test", _extRoutes.stest);
