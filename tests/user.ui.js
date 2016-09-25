@@ -9,16 +9,16 @@ var _assert = require("chai").assert;
 var _should = require("chai").should();
 var _log = require("../brain/log");
 require("../brain/base");
-var TestCase = require("../brain/testcase").TestCase;
+var TestProofCase = require("../brain/testproofcase").TestProofCase;
 
 
 /////////////
 // TESTCLASS : TestUserPages
 ///////
 
-TestUserPages.extends( TestCase );
+TestUserPages.extends( TestProofCase );
 function TestUserPages (tcase) {
-    TestCase.call(this, tcase, { path : __dirname + "/proof/" });
+    TestProofCase.call(this, tcase, { path : __dirname + "/proof/" });
 
     // private
 
@@ -77,7 +77,7 @@ function TestUserPages (tcase) {
 
 
 /////////////
-// TESTCASE : login
+// TESTPROOFCASE : login
 ///////
 
 describe("user-e2e-login", function() {
@@ -187,7 +187,7 @@ describe("user-e2e-login", function() {
 
 
 /////////////
-// TESTCASE : register
+// TESTPROOFCASE : register
 ///////
 
 describe("user-e2e-register", function() {

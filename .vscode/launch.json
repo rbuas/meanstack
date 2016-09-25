@@ -32,11 +32,20 @@
             "env": { "NODE_ENV": "production"}
         },
         {
+            "name": "Run unit tests",
+            "type": "node",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": ["tests/user.unit.js"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null
+        },
+        {
             "name": "Run e2e tests",
             "type": "node",
             "program": "/usr/local/bin/protractor",
             "stopOnEntry": false,
-            "args": ["tests/user-e2e.config.js"],
+            "args": ["tests/user.e2e.config.js"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": { "NODE_ENV": "production"}

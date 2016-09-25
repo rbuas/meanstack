@@ -1,12 +1,12 @@
 var _log = require("../brain/log");
-var _user = require("../models/user");
+var User = require("../models/user");
 
 module.exports.list = function(req, res) {
     var filterEmail = req.params.filtermail;
     var filterName = req.params.filtername;
     var filterStatus = req.params.filterstatus;
 
-    _user.List(filterName, filterEmail, filterStatus, function(err, users) {
+    User.List(filterName, filterEmail, filterStatus, function(err, users) {
         res.json(users);
     });
 }
@@ -21,7 +21,7 @@ module.exports.register = function(req, res) {
         birthday : req.body.birthday
     };
 
-    _user.Create(newuser, function(err, savedUser) {
+    User.Create(newuser, function(err, savedUser) {
         var response = {};
         if(err || !savedUser) {
             var error = "A user already exists with that username or email";
@@ -57,7 +57,7 @@ module.exports.login = function(req, res) {
     req.session.useremail = email;
     req.session.userlogged = false;
 
-    _user.Login(email, password, function(err, user) {
+    User.Login(email, password, function(err, user) {
         var response = { session:req.session };
         if(err || !user) {
             _log.message("Authentication failure to " + email);
@@ -79,7 +79,7 @@ module.exports.logout = function(req, res) {
         response.error = "Logout without login";
         _log.message(response.error, req.session.useremail);
     } else {
-        response.username = _user.Logout(req.session.useremail);
+        response.username = User.Logout(req.session.useremail);
         response.logout = true;
 
         req.session.destroy();

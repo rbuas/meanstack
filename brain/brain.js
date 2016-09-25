@@ -21,7 +21,6 @@ var _defaultoptions = {
     db : null,
     routes : null
 };
-_log.assert(_express, "ERROR: can not import express module")
 
 module.exports.Brain = Brain;
 

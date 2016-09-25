@@ -1,7 +1,19 @@
 var _mongoose = require("mongoose");
 var _bcrypt = require("bcrypt");
 var _log = require("../brain/log");
+var _error = require("../brain/error");
 
+var _usererror = new _error.Error({
+    "USER_WRONG_PASSWORD" : "The password not match with registered password",
+    "USER_PARAMS" : "Missing required params",
+    "USER_NOTFOUND" : "Cant find the user",
+    "USER_CONFIRMATION" : "Waiting confirmation",
+    "USER_BLOCKED" : "User blocked"
+});
+
+/*******
+ * @model UserShcema
+ */
 module.exports.Shema = new _mongoose.Schema({
     username : {type:String, unique:true},
     email : {type:String, unique:true},
@@ -18,15 +30,20 @@ module.exports.Shema = new _mongoose.Schema({
     history : []
 });
 
+/*******
+ * @function ComparePassword
+ * @param candidate string Password candidate
+ * @param callback function Callback params (error, isMatch)
+ */
 module.exports.Shema.methods.ComparePassword = function(candidate, callback) {
     if(global.USING_ENCRIPT) {
         _bcrypt.compare(candidate, this.password, function(err, isMatch) {
-            var error = !isMatch ? "Wrong password (" + (err || "") + ")": null;
+            var error = !isMatch ? _usererror.e("USER_WRONG_PASSWORD", err) : null;
             if(callback) return callback(error, isMatch);
         });
     } else {
         var isMatch = this.password == candidate;
-        var error = !isMatch ? "Wrong password" : null;
+        var error = !isMatch ? _usererror.e("USER_WRONG_PASSWORD") : null;
         if(callback) return callback(error, isMatch);
     }
     
@@ -73,7 +90,7 @@ var User = _mongoose.model("User");
 
 module.exports.Create = function(user, callback) {
     if(!user || !user.email || !user.password) {
-        if(callback) callback({error:"Missing required params"});
+        if(callback) callback(_usererror.e("USER_PARAMS"), false);
         return;
     }
 
@@ -95,24 +112,54 @@ module.exports.Create = function(user, callback) {
     newuser.save(callback);
 }
 
-module.exports.Login = function(email, password, callback) {
+module.exports.Update = function (user, callback) {
+    //TODO
+}
+
+module.exports.Remove = function () {
+    //TODO
+}
+
+module.exports.Login = function (email, password, callback) {
     return User.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            err = "Cant find the user (" + err + ")";
-            if(callback) callback(err, user);
+            if(callback) callback(_usererror.e("USER_NOTFOUND", err), user);
             return;
         }
         user.ComparePassword(password, function(err, match) {
-            //TODO : save into db the user status
+            if(err) {
+                if(callback) callback(err, user);
+                return;
+            }
+
+            switch (user.status) {
+                case "CONFIRM":
+                    err = _usererror.e("USER_CONFIRMATION");
+                    break;
+                case "BLOCK":
+                    err = _usererror.e("USER_BLOCKED");
+                    break;
+                case "OFF":
+                    user.status = "ON";
+                    user.save();
+                    break;
+                default:
+                    break;
+            }
+
             if(callback) callback(err, user);
         });
     });
 }
 
-module.exports.Logout = function(email) {
-    _log.message("Loggin out : ", email, "...");
-    //TODO : save into db the user status
-    return email;
+module.exports.Logout = function(email, callback) {
+    return User.findOne({email:email}, function(err, user) {
+        if(err || !user) {
+            if(callback) callback(_usererror.e("USER_NOTFOUND", err), user);
+            return;
+        }
+        user.status = "OFF";
+    });
 }
 
 module.exports.List = function(username, email, status, callback) {
@@ -126,7 +173,7 @@ module.exports.List = function(username, email, status, callback) {
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
             if(err || !users) {
-                err = "Cant find users (" + err + ")";
+                err = _usererror.e("USER_NOTFOUND", err);
             }
             if(callback) callback(err, users);
         }

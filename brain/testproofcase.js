@@ -4,7 +4,7 @@ var _resemble = require("node-resemble-js");
 var _log = require("./log");
 var PNG = require("pngjs").PNG;
 
-module.exports.TestCase = TestCase;
+module.exports.TestProofCase = TestProofCase;
 
 
 var _defaultoptions = {
@@ -27,7 +27,7 @@ var _defaultoptions = {
     }
 };
 
-function TestCase (suite, options) {
+function TestProofCase (suite, options) {
     var self = this;
     self.suite = suite;
     self.options = Object.assign(_defaultoptions, options) || {};
@@ -36,7 +36,7 @@ function TestCase (suite, options) {
     _resemble.outputSettings(self.options.resemble);
 }
 
-TestCase.prototype.proof = function(proofname) {
+TestProofCase.prototype.proof = function(proofname) {
     var self = this;
     if(!self.suite)
         return;
@@ -75,19 +75,19 @@ TestCase.prototype.proof = function(proofname) {
     });
 }
 
-TestCase.prototype.getSuiteTitle = function() {
+TestProofCase.prototype.getSuiteTitle = function() {
     var self = this;
     var title = self.suite && self.suite.getFullName() || "";
     title = title.replace(/ /g, "-");
     return title;
 }
 
-TestCase.prototype.diffCount = function() {
+TestProofCase.prototype.diffCount = function() {
     var self = this;
     return self.proofdiff.length;
 }
 
-TestCase.prototype.log = function(entry, status) {
+TestProofCase.prototype.log = function(entry, status) {
     var self = this;
     self.loglist = self.loglist || [];
     var success = status && status == "OK";
@@ -101,7 +101,7 @@ TestCase.prototype.log = function(entry, status) {
     }
 }
 
-TestCase.prototype.saveLog = function(id) {
+TestProofCase.prototype.saveLog = function(id) {
     var self = this;
     var title = self.suite && self.suite.getFullName() || "diff";
     if(id) {
