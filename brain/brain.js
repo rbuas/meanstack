@@ -1,3 +1,5 @@
+module.exports = Brain;
+
 var _bodyparser = require("body-parser");
 var _express = require("express");
 var _session = require("express-session");
@@ -6,7 +8,7 @@ var _mongoose = require("mongoose");
 var _http = require("http");
 var _socket = require("socket.io");
 
-var _memory = require("./memory");
+var Memory = require("./memory");
 var _log = require("./log");
 
 var _defaultoptions = {
@@ -18,11 +20,9 @@ var _defaultoptions = {
     viewsDir: "/views",
     encryptkey: "secret",
     viewEngine: null,
-    db : null,
+    memory: {db : null},
     routes : null
 };
-
-module.exports.Brain = Brain;
 
 function Brain (options) {
     this.options = Object.assign(_defaultoptions, options) || {};
@@ -61,7 +61,7 @@ function Brain (options) {
     this.app.use(_bodyparser.urlencoded({extended:true}));
     this.app.use(_session({secret:this.options.encryptkey, resave : true, saveUninitialized : true}));
 
-    this.memory = new _memory.Memory(this);
+    this.memory = new Memory(this.options.memory);
 
     this.synapsys();
     this.listen();

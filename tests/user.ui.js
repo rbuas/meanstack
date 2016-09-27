@@ -7,9 +7,10 @@ var _fs = require("fs");
 var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
+
+require("../brain/jsext");
 var _log = require("../brain/log");
-require("../brain/base");
-var TestProofCase = require("../brain/testproofcase").TestProofCase;
+var TestProofCase = require("../brain/testproofcase");
 
 
 /////////////

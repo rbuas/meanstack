@@ -3,19 +3,19 @@
 global.SALT_WORK_FACTOR = 10;
 global.USING_ENCRIPT = true;
 
-var _brain = require("./brain/brain");
-var brain = global.brain = module.exports.brain = new _brain.Brain({
+var Brain = require("./brain/brain");
+var brain = global.brain = module.exports.brain = new Brain({
     port:8080,
     name: "NodeTemplateHB",
     rootDir: __dirname,
     viewEngine: "html",
     publicDir: "/static",
-    db: "mongodb://localhost/test"
+    memory: {db: "mongodb://localhost/test"}
 });
 
 var _quoteRoutes = require("./routes/quotes");
 //var _citiesRoutes = require("./routes/cities");
-//var _extRoutes = require("./routes/ext");
+//var _resRoutes = require("./routes/resource");
 var _connectionRoutes = require("./routes/connection");
 var _userRoutes = require("./routes/user");
 var _chat = require("./routes/chat");
@@ -51,6 +51,6 @@ brain.socket("connection", _chat.broadcast);
 // brain.post("/createstory", _marksRoutes.createstory);
 // brain.get("/cities", _citiesRoutes.cities);
 // brain.get("/city/:city", _citiesRoutes.city);
-// brain.get("/download", _extRoutes.download);
-// brain.get("/session", _extRoutes.stest);
-// brain.get("/session/:test", _extRoutes.stest);
+// brain.get("/download", _resRoutes.download);
+// brain.get("/session", _resRoutes.stest);
+// brain.get("/session/:test", _resRoutes.stest);

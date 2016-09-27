@@ -3,12 +3,53 @@ var _assert = require("chai").assert;
 var _should = require("chai").should();
 var _http = require("http");
 var _cheerio = require("cheerio");
-var _log = require("../brain/log");
 
-var User = require("../models/user");
+require("../brain/jsext");
+var _log = require("../brain/log");
+var Memory = require("../brain/memory");
+
+function UTestUser () {
+    var self = this;
+    self.email = "rodrigobuas+unittest@gmail.com";
+    self.password = "123456";
+
+    self.start = function () {
+        self.memory = new Memory();
+        self.User = require("../models/user");
+        
+        return self.User;
+    }
+
+    self.clean = function() {
+        self.User.Remove({email:self.email}, function(err) {
+            if(err)
+                console.log("error when clean user ", self.email);
+        });
+    }
+
+    self.end = function() {
+        self.clean();
+        self.memory.disconnect();
+    }
+}
 
 describe("user-unit-create", function() {
-    before(function() {
+    var User;
+    var utest = new UTestUser();
+
+    before(function(done) {
+        User = utest.start();
+        done();
+    });
+
+    beforeEach(function(done) {
+        utest.clean();
+        done();
+    });
+
+    after(function(done) {
+        utest.end();
+        done();
     });
 
     it("create-user-null", function(done) {
@@ -30,7 +71,7 @@ describe("user-unit-create", function() {
         });
     });
     it("create-user-nopassword", function(done) {
-        var user =  {email:"rodrigobuas+unittest@gmail.com"};
+        var user =  {email:utest.email};
         User.Create(user, function(err, savedUser) {
             _expect(err).to.not.equal(null);
             _expect(err.code).to.equal("USER_PARAMS");
@@ -39,10 +80,11 @@ describe("user-unit-create", function() {
         });
     });
     it("create-user-success", function(done) {
-        var user =  {email:"rodrigobuas+unittest@gmail.com", password:"123456"};
+        var user =  {email:utest.email, password:utest.password};
         User.Create(user, function(err, savedUser) {
             _expect(err).to.equal(null);
-            _expect(savedUser).to.equal(true);
+            _expect(savedUser).to.not.equal(null);
+            _expect(savedUser.status).to.equal("CONFIRM");
             done();
         });
     });

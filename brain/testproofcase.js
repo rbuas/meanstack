@@ -1,11 +1,10 @@
+module.exports = TestProofCase;
+
 var _fs = require("fs");
 var _pixelmatch = require("pixelmatch");
 var _resemble = require("node-resemble-js");
 var _log = require("./log");
 var PNG = require("pngjs").PNG;
-
-module.exports.TestProofCase = TestProofCase;
-
 
 var _defaultoptions = {
     path : __dirname + "/proof/",

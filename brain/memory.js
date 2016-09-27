@@ -1,24 +1,25 @@
-module.exports.Memory = Memory;
+module.exports = Memory;
 
 var _mongoose = require('mongoose');
 var _log = require("./log");
 
-function Memory (brain) {
-    console.assert(brain, "ERROR: missing a brain to the memory.");
-    console.assert(brain.app, "ERROR: missing brain application.");
+var _defauloptions = {
+    db : "mongodb://localhost/test"
+};
 
-    this.brain = brain;
-    this.options = brain.options;
+function Memory (options) {
+    this.options = Object.assign(_defauloptions, options) || {};
 
-    this.connectdb();
+    this.connect();
 }
 Memory.prototype = {
-    connectdb : function() {
+    connect : function() {
         var self = this;
         if(!self.options.db)
             return;
 
-        _mongoose.connect(this.options.db);
+        _mongoose.connect(self.options.db);
+        _mongoose.Promise = global.Promise;
 
         _mongoose.connection.on("connected", function() {
             _log.message("Mongoose connected to " + self.options.db);
@@ -31,5 +32,8 @@ Memory.prototype = {
         _mongoose.connection.on("disconnect", function () {
             _log.message("Mongoose disconnected");
         });
+    },
+    disconnect : function() {
+        _mongoose.disconnect();
     }
 };

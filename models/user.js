@@ -116,8 +116,8 @@ module.exports.Update = function (user, callback) {
     //TODO
 }
 
-module.exports.Remove = function () {
-    //TODO
+module.exports.Remove = function (where, callback) {
+    User.remove(where, callback);
 }
 
 module.exports.Login = function (email, password, callback) {
