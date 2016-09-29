@@ -1,8 +1,5 @@
 // globals variables must to be exported before all initialization
 
-global.SALT_WORK_FACTOR = 10;
-global.USING_ENCRIPT = true;
-
 var Brain = require("./brain/brain");
 var brain = global.brain = module.exports.brain = new Brain({
     port:8080,

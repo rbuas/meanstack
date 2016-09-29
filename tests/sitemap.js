@@ -2,14 +2,14 @@ var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
 var _log = require("../libs/log");
-var _wdc = require("../libs/webdronescraper");
+var WebDroneScraper = require("../libs/webdronescraper");
 
 describe("basicload", function() {
     var wdc;
 
     before(function() {
         // runs before all tests in this block
-        wdc = new _wdc.WebDroneScraper();
+        wdc = new WebDroneScraper();
     });
     after(function() {
         _log.message("Stats: ", wdc.stats);

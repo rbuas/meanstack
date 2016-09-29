@@ -30,6 +30,7 @@
     "express": "^4.13.4",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.13.0",
+    "moment": "^2.15.1",
     "mongodb": "^2.2.10",
     "mongoose": "^4.5.1",
     "nodemon": "^1.9.2",

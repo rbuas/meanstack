@@ -7,7 +7,7 @@ var _defaultoptions = {
     //updatestats : function(newstats, stats)
 };
 
-module.exports.WebDroneScraper = WebDroneScraper;
+module.exports = WebDroneScraper;
 
 function WebDroneScraper (options) {
     var self = this;

@@ -22,8 +22,6 @@ function UTestUser () {
 
     self.clean = function() {
         self.User.Remove({email:self.email}, function(err) {
-            if(err)
-                console.log("error when clean user ", self.email);
         });
     }
 
@@ -53,7 +51,7 @@ describe("user-unit-create", function() {
     });
 
     it("create-user-null", function(done) {
-        var user =  null;
+        var user = null;
         User.Create(user, function(err, savedUser) {
             _expect(err).to.not.equal(null);
             _expect(err.code).to.equal("USER_PARAMS");
@@ -62,7 +60,7 @@ describe("user-unit-create", function() {
         });
     });
     it("create-user-empty", function(done) {
-        var user =  {};
+        var user = {};
         User.Create(user, function(err, savedUser) {
             _expect(err).to.not.equal(null);
             _expect(err.code).to.equal("USER_PARAMS");
@@ -71,7 +69,7 @@ describe("user-unit-create", function() {
         });
     });
     it("create-user-nopassword", function(done) {
-        var user =  {email:utest.email};
+        var user = {email:utest.email};
         User.Create(user, function(err, savedUser) {
             _expect(err).to.not.equal(null);
             _expect(err.code).to.equal("USER_PARAMS");
@@ -80,11 +78,81 @@ describe("user-unit-create", function() {
         });
     });
     it("create-user-success", function(done) {
-        var user =  {email:utest.email, password:utest.password};
+        var user = {email:utest.email, password:utest.password};
         User.Create(user, function(err, savedUser) {
             _expect(err).to.equal(null);
             _expect(savedUser).to.not.equal(null);
-            _expect(savedUser.status).to.equal("CONFIRM");
+            _expect(savedUser.status).to.equal(User.USERSTATUS.CONFIRM);
+            done();
+        });
+    });
+    it("create-user-duplicate", function(done) {
+        var user = {email:utest.email, password:utest.password};
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.equal(null);
+            _expect(savedUser).to.not.equal(null);
+            _expect(savedUser.status).to.equal(User.USERSTATUS.CONFIRM);
+            User.Create(user, function(err2, savedUser2) {
+                _expect(err2).to.not.equal(null);
+                _expect(err2.code).to.equal(11000);
+                done();
+            });
+        });
+    });
+    it("create-user-type-name", function(done) {
+        var user = {
+            email:utest.email, 
+            password:utest.password,
+            name : 555
+        };
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.equal(null);
+            _expect(savedUser).to.not.equal(null);
+            _expect(savedUser.status).to.equal(User.USERSTATUS.CONFIRM);
+            done();
+        });
+    });
+    it("create-user-type-genre-ko", function(done) {
+        var user = {
+            email:utest.email, 
+            password:utest.password,
+            gender : "HHH"
+        };
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.not.equal(null);
+            done();
+        });
+    });
+    it("create-user-type-genre-ok", function(done) {
+        var user = {
+            email:utest.email, 
+            password:utest.password,
+            gender : User.USERGENDER.F
+        };
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.equal(null);
+            done();
+        });
+    });
+    it("create-user-type-profile-ko", function(done) {
+        var user = {
+            email:utest.email, 
+            password:utest.password,
+            profile : "HHH"
+        };
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.not.equal(null);
+            done();
+        });
+    });
+    it("create-user-type-profile-ok", function(done) {
+        var user = {
+            email:utest.email, 
+            password:utest.password,
+            profile : User.USERPROFILE.ADMIN
+        };
+        User.Create(user, function(err, savedUser) {
+            _expect(err).to.equal(null);
             done();
         });
     });

@@ -1,4 +1,4 @@
-module.exports.Error = Error;
+module.exports = Error;
 
 /*******
  * @system Error
