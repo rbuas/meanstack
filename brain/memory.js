@@ -1,19 +1,20 @@
 module.exports = Memory;
 
 var _mongoose = require('mongoose');
-var _log = require("./log");
+var Log = require("./log");
 
 var _defauloptions = {
     db : "mongodb://localhost/test"
+    //onconnect : function to call on connection response
 };
 
 function Memory (options) {
     this.options = Object.assign(_defauloptions, options) || {};
 
-    this.connect();
+    this.connect(this.options.onconnect);
 }
 Memory.prototype = {
-    connect : function() {
+    connect : function(callback) {
         var self = this;
         if(!self.options.db)
             return;
@@ -22,18 +23,20 @@ Memory.prototype = {
         _mongoose.Promise = global.Promise;
 
         _mongoose.connection.on("connected", function() {
-            _log.message("Mongoose connected to " + self.options.db);
+            Log.message("Mongoose connected to " + self.options.db);
+            if(callback) callback();
         });
 
         _mongoose.connection.on("error", function(err) {
-            _log.error("Mongoose connection error : " + err);
+            Log.error("Mongoose connection error : " + err);
+            if(callback) callback();
         });
 
         _mongoose.connection.on("disconnect", function () {
-            _log.message("Mongoose disconnected");
+            Log.message("Mongoose disconnected");
         });
     },
-    disconnect : function() {
-        _mongoose.disconnect();
+    disconnect : function(callback) {
+        _mongoose.disconnect(callback);
     }
 };

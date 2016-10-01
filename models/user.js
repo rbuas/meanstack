@@ -2,8 +2,8 @@ var _mongoose = require("mongoose");
 var _bcrypt = require("bcrypt");
 var _moment = require("moment");
 
-var _jsext = require("../brain/jsext");
-var _log = require("../brain/log");
+var JsExt = require("../brain/jsext");
+var Log = require("../brain/log");
 var Error = require("../brain/error");
 
 global.SALT_WORK_FACTOR = 10;
@@ -40,8 +40,7 @@ var USERERRORMESSAGE = module.exports.USERERRORMESSAGE = {
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked"
 };
-
-var _usererror = new Error(USERERRORMESSAGE);
+var ES = new Error(USERERRORMESSAGE);
 
 /*******
  * @model UserSchema
@@ -53,9 +52,9 @@ module.exports.UserSchema = new _mongoose.Schema({
     name : String,
     birthday : Date,
     since : Date,
-    status : {type:String, enum:_jsext.getObjectValues(USERSTATUS)},
-    gender : {type:String, enum:_jsext.getObjectValues(USERGENDER)},
-    profile : {type:String, enum:_jsext.getObjectValues(USERPROFILE)},
+    status : {type:String, enum:JsExt.getObjectValues(USERSTATUS)},
+    gender : {type:String, enum:JsExt.getObjectValues(USERGENDER)},
+    profile : {type:String, enum:JsExt.getObjectValues(USERPROFILE)},
     origin : String,
     lang : String,
     passport : [],
@@ -71,12 +70,12 @@ module.exports.UserSchema = new _mongoose.Schema({
 module.exports.UserSchema.methods.ComparePassword = function(candidate, callback) {
     if(global.USING_ENCRIPT) {
         _bcrypt.compare(candidate, this.password, function(err, isMatch) {
-            var error = !isMatch ? _usererror.e(USERERROR.USER_WRONG_PASSWORD, err) : null;
+            var error = !isMatch ? ES.e(USERERROR.USER_WRONG_PASSWORD, err) : null;
             if(callback) return callback(error, isMatch);
         });
     } else {
         var isMatch = this.password == candidate;
-        var error = !isMatch ? _usererror.e(USERERROR.USER_WRONG_PASSWORD) : null;
+        var error = !isMatch ? ES.e(USERERROR.USER_WRONG_PASSWORD) : null;
         if(callback) return callback(error, isMatch);
     }
 }
@@ -84,13 +83,19 @@ module.exports.UserSchema.methods.ComparePassword = function(candidate, callback
 module.exports.UserSchema.pre("save", function(next) {
     var user = this;
 
-    user.since = user.since || new Date();
-    user.status = user.status || USERSTATUS.CONFIRM;
-    user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
-
-    if(user.isModified("email")) {
+    // status settings
+    if(user.isNew && user.isAnonymous) {
+        user.status = USERSTATUS.ANONYMOUS;
+    }
+    else if(user.isModified("email")) {
         user.status = USERSTATUS.CONFIRM;
     }
+    else {
+        user.status = user.status || USERSTATUS.CONFIRM;
+    }
+
+    user.since = user.since || new Date();
+    user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
 
     if(global.USING_ENCRIPT) {
         // only hash the password if it has been modified (or is new)
@@ -125,7 +130,7 @@ var User = _mongoose.model("User");
  */
 module.exports.Create = function(user, callback) {
     if(!user || !user.email || !user.password) {
-        if(callback) callback(_usererror.e(USERERROR.USER_PARAMS), false);
+        if(callback) callback(ES.e(USERERROR.USER_PARAMS), false);
         return;
     }
 
@@ -151,11 +156,11 @@ module.exports.Create = function(user, callback) {
  * @param user object
  * @param callback function Callback params (error, savedUser)
  */
-module.exports.CreateAnonymous = function(user, callback) {
+module.exports.CreateAnonymous = function(callback) {
     var newuser = new User();
     newuser.email = newuser.id + "@anonymous.com";
     newuser.password = "a";
-    newuser.status =  USERSTATUS.ANONYMOUS;
+    newuser.isAnonymous = true;
 
     newuser.save(callback);
 }
@@ -171,6 +176,11 @@ module.exports.Update = function (user, callback) {
     User.findOneAndUpdate({email:email}, user, callback);
 }
 
+/*******
+ * @function Remove
+ * @param where User properties in where syntaxe
+ * @param callback function Callback params (error)
+ */
 module.exports.Remove = function (where, callback) {
     User.remove(where, callback);
 }
@@ -178,7 +188,7 @@ module.exports.Remove = function (where, callback) {
 module.exports.Login = function (email, password, callback) {
     return User.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(_usererror.e(USERERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.ComparePassword(password, function(err, match) {
@@ -189,10 +199,10 @@ module.exports.Login = function (email, password, callback) {
 
             switch (user.status) {
                 case USERSTATUS.CONFIRM:
-                    err = _usererror.e(USERERROR.USER_CONFIRMATION);
+                    err = ES.e(USERERROR.USER_CONFIRMATION);
                     break;
                 case USERSTATUS.BLOCK:
-                    err = _usererror.e(USERERROR.USER_BLOCKED);
+                    err = ES.e(USERERROR.USER_BLOCKED);
                     break;
                 case USERSTATUS.OFF:
                     user.status = USERSTATUS.ON;
@@ -210,40 +220,48 @@ module.exports.Login = function (email, password, callback) {
 module.exports.Logout = function(email, callback) {
     return User.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(_usererror.e(USERERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.status = USERSTATUS.OFF;
     });
 }
 
-module.exports.List = function(username, email, status, callback) {
-    var querycond = {};
-    if(username) querycond.username = new RegExp(username, "i");
-    if(email) querycond.username = new RegExp(email, "i");
-    if(status) querycond.status = new RegExp(status, "i");
+/*******
+ * @function Find
+ * @param where User properties in where syntaxe
+ * @param callback function Callback params (error, users)
+ */
+module.exports.Find = function(where, callback) {
+    var querycond = where || {};
+    if(where) {
+        if(where.email) querycond.email = new RegExp(where.email, "i");
+        if(where.status) querycond.status = new RegExp(where.status, "i");
+        if(where.id) querycond.id = where.id;
+    }
 
     return User.find(
         querycond, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
             if(err || !users) {
-                err = _usererror.e(USERERROR.USER_NOTFOUND, err);
+                err = ES.e(USERERROR.USER_NOTFOUND, err);
             }
             if(callback) callback(err, users);
         }
     );
 }
 
-module.exports.PurgeAnonymous = function() {
-    var oldusers = [
-        {status:USERSTATUS.CONFIRM, since:_moment.subtract(30, "days")},
-        {status:USERSTATUS.ANONYMOUS, since:_moment.subtract(30, "days")},
-    ];
-    for(var purge in oldusers) {
-        if(!oldusers.hasOwnProperty(purge)) continue;
+module.exports.PurgeAnonymous = function(days, callback) {
+    var where = {status:USERSTATUS.ANONYMOUS};
+    if(days) where.since = _moment.subtract(days, "days");
 
-        var purgeconfig = oldusers[purge];
-        User.remove(purgeconfig);
-    }
+    User.remove(where, callback);
+}
+
+module.exports.PurgeNonConfirmed = function(days, callback) {
+    var where = {status:USERSTATUS.CONFIRM};
+    if(days) where.since = _moment.subtract(days, "days");
+
+    User.remove(where, callback);
 }

@@ -9,7 +9,7 @@ var _http = require("http");
 var _socket = require("socket.io");
 
 var Memory = require("./memory");
-var _log = require("./log");
+var Log = require("./log");
 
 var _defaultoptions = {
     port : 3000,
@@ -29,20 +29,20 @@ function Brain (options) {
     this.options.routes = this.options.routes || [];
 
     this.app = _express();
-    _log.assert(this.app, "ERROR: can not create app from express");
+    Log.assert(this.app, "ERROR: can not create app from express");
 
     this.server = _http.createServer(this.app);
-    _log.assert(this.server, "ERROR: can not create server from http");
+    Log.assert(this.server, "ERROR: can not create server from http");
 
     this.socketio = _socket(this.server);
-    _log.assert(this.socketio, "ERROR: can not start socket");
+    Log.assert(this.socketio, "ERROR: can not start socket");
 
-    _log.message("Brain " + (this.options.name || "") + " started");
+    Log.message("Brain " + (this.options.name || "") + " started");
 
     if(this.options.viewEngine) {
         var viewDir = this.path(this.options.viewsDir);
         this.app.set("views", viewDir);
-        _log.message("Brain : set view path : ", viewDir);
+        Log.message("Brain : set view path : ", viewDir);
         this.app.engine(this.options.viewEngine, _exphbs({
             defaultLayout: "master", 
             extname: ".html", 
@@ -54,7 +54,7 @@ function Brain (options) {
 
     var publicpath = this.path(this.options.publicDir); 
     this.app.use(_express.static(publicpath));
-    _log.message("Static files at ", publicpath);
+    Log.message("Static files at ", publicpath);
 
     this.app.use(_bodyparser.json());
     this.app.use(_bodyparser.json({ type: 'application/vnd.api+json' })); 
@@ -70,7 +70,7 @@ function Brain (options) {
 Brain.prototype = {
     synapsys : function() {
         var routes = this.options.routes;
-        _log.assert(routes, "ERROR: missing routes to build synapsys.");
+        Log.assert(routes, "ERROR: missing routes to build synapsys.");
 
         for(var r in routes) {
             if(!routes.hasOwnProperty(r))
@@ -82,24 +82,24 @@ Brain.prototype = {
 
     route : function(route) {
         if(!route || !route.path || !route.cb) {
-            _log.warning("WARNING: missing parameters in routes table", route);
+            Log.warning("WARNING: missing parameters in routes table", route);
             return;
         }
 
         var method = route.method || "get";
         switch(method) {
             case "post": // POST METHOD
-                _log.message("Prepare synapse (post): " + route.path);
+                Log.message("Prepare synapse (post): " + route.path);
                 this.app.post(route.path, route.cb);
             break;
 
             case "get": // GET METHOD
-                _log.message("Prepare synapse (get): " + route.path);
+                Log.message("Prepare synapse (get): " + route.path);
                 this.app.get(route.path, route.cb);
             break;
 
             case "socket":
-                _log.message("Prepare synapse (socket): " + route.path);
+                Log.message("Prepare synapse (socket): " + route.path);
                 this.socketio.on(route.path, route.cb);
             break;
         }
@@ -113,7 +113,7 @@ Brain.prototype = {
         return this.server.listen(port, function(request, response) {
             var message = "App active at " + address;
             if(port) message = message + ":" + port;
-            _log.message(message);
+            Log.message(message);
         });
     },
 

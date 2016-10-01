@@ -6,7 +6,7 @@ module.exports.list = function(req, res) {
     var filterName = req.params.filtername;
     var filterStatus = req.params.filterstatus;
 
-    User.List(filterName, filterEmail, filterStatus, function(err, users) {
+    User.Find(filterName, filterEmail, filterStatus, function(err, users) {
         res.json(users);
     });
 }
