@@ -13,6 +13,7 @@ var User = require("../models/user");
 describe("unit.user", function() {
     var _m;
     var _email = "rodrigobuas+unittest@gmail.com";
+    var _email2 = "rodrigobuas+unittest2@gmail.com";
     var _password = "123456";
 
     before(function(done) {
@@ -206,6 +207,216 @@ describe("unit.user", function() {
     });
 
     describe("update", function() {
+        beforeEach(function (done) {
+            User.Create({
+                email: _email, 
+                password: _password,
+                name: "a",
+                label: "b",
+                birthday: new Date(),
+                gender:User.USERGENDER.M,
+                profile:User.USERPROFILE.WRITER,
+                origin:"rbuas sa",
+                lang:"br"
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                done();
+            });
+        });
+        afterEach(function(done) {
+            User.Remove({email:_email}, done);
+        })
+
+        it("name", function(done) {
+            User.Update({
+                email: _email,
+                name: "aa"
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                _expect(savedUser.name).to.equal("aa");
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.name).to.equal("aa");
+                    done();
+                })
+            });
+        });
+
+        it("label", function(done) {
+            User.Update({
+                email: _email,
+                label: "bb"
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                _expect(savedUser.label).to.equal("bb");
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.label).to.equal("bb");
+                    done();
+                })
+            });
+        });
+
+        it("birthday", function(done) {
+            User.Update({
+                email: _email,
+                birthday: new Date(1982,0,1,21,45)
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    var birthday = user.birthday;
+                    _expect(birthday).to.not.equal(null);
+                    _expect(birthday.getFullYear()).to.equal(1982);
+                    _expect(birthday.getMonth()).to.equal(0);
+                    _expect(birthday.getDate()).to.equal(1);
+                    _expect(birthday.getHours()).to.equal(21);
+                    _expect(birthday.getMinutes()).to.equal(45);
+                    done();
+                })
+            });
+        });
+
+        it("status-ok", function(done) {
+            User.Update({
+                email: _email,
+                status: User.USERSTATUS.BLOCK
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.status).to.equal(User.USERSTATUS.BLOCK);
+                    done();
+                })
+            });
+        });
+
+        it("status-ko", function(done) {
+            User.Update({
+                email: _email,
+                status: "STATUS NOT VALID"
+            }, function(err, savedUser) {
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.status).to.not.equal("STATUS NOT VALID");
+                    done();
+                })
+            });
+        });
+
+        it("gender-ok", function(done) {
+            User.Update({
+                email: _email,
+                gender: User.USERGENDER.F
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.gender).to.equal(User.USERGENDER.F);
+                    done();
+                })
+            });
+        });
+
+        it("gender-ko", function(done) {
+            User.Update({
+                email: _email,
+                gender: "GENDER NOT VALID"
+            }, function(err, savedUser) {
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.status).to.not.equal("GENDER NOT VALID");
+                    done();
+                })
+            });
+        });
+
+        it("profile-ok", function(done) {
+            User.Update({
+                email: _email,
+                profile: User.USERPROFILE.ADMIN
+            }, function(err, savedUser) {
+                _expect(err).to.equal(null);
+                _expect(savedUser).to.not.equal(null);
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.profile).to.equal(User.USERPROFILE.ADMIN);
+                    done();
+                })
+            });
+        });
+
+        it("profile-ko", function(done) {
+            User.Update({
+                email: _email,
+                profile: "PROFILE NOT VALID"
+            }, function(err, savedUser) {
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.profile).to.not.equal("PROFILE NOT VALID");
+                    done();
+                })
+            });
+        });
+
+        it("origin", function(done) {
+            User.Update({
+                email: _email,
+                origin: "RBUAS CO"
+            }, function(err, savedUser) {
+                User.Get(_email, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.origin).to.equal("RBUAS CO");
+                    done();
+                })
+            });
+        });
+
+        it("email", function(done) {
+            User.Update({
+                email: _email,
+                newemail: _email2
+            }, function(err, savedUser) {
+                User.Get(_email2, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.email).to.equal(_email2);
+                    done();
+                })
+            });
+        });
+
+        it("email-forcestatus", function(done) {
+            User.Update({
+                email: _email,
+                newemail: _email2,
+                status:User.USERSTATUS.ON
+            }, function(err, savedUser) {
+                User.Get(_email2, function(err, user) {
+                    _expect(err).to.equal(null);
+                    _expect(user).to.not.equal(null);
+                    _expect(user.email).to.equal(_email2);
+                    _expect(user.status).to.equal(User.USERSTATUS.CONFIRM);
+                    done();
+                })
+            });
+        });
     });
 
     describe("login", function() {

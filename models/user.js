@@ -21,10 +21,11 @@ var USERGENDER = module.exports.USERGENDER = {
     F : "F"
 };
 var USERPROFILE = module.exports.USERPROFILE = {
-    ADMIN : "AD",
-    EDITOR : "ED",
-    VIEWER : "VW",
-    CLIENT : "CL"
+    ADMIN : "AD",   //backoffice administrator
+    EDITOR : "ED",  //middleoffice editor manager
+    WRITER : "WR",  //middleoffice writer
+    GUEST : "GS",   //middleoffice guest
+    CLIENT : "CL"   //frontoffice client
 };
 var USERERROR = module.exports.USERERROR = {
     USER_WRONG_PASSWORD : "USER_WRONG_PASSWORD",
@@ -52,15 +53,15 @@ module.exports.UserSchema = new _mongoose.Schema({
     name : String,
     birthday : Date,
     since : Date,
-    status : {type:String, enum:JsExt.getObjectValues(USERSTATUS)},
+    status : {type:String, enum:JsExt.getObjectValues(USERSTATUS), default: USERSTATUS.ANONYMOUS},
     gender : {type:String, enum:JsExt.getObjectValues(USERGENDER)},
-    profile : {type:String, enum:JsExt.getObjectValues(USERPROFILE)},
+    profile : {type:String, enum:JsExt.getObjectValues(USERPROFILE), default: USERPROFILE.CLIENT},
     origin : String,
     lang : String,
     passport : [],
     favorite : [],
     history : []
-});
+}, { strict: true });
 
 /*******
  * @function ComparePassword
@@ -168,12 +169,25 @@ module.exports.CreateAnonymous = function(callback) {
 /*******
  * @function Update
  * @param user object User with newmail possibility
- * @param callback function Callback params (error, savedUser)
+ * @param callback function Callback params (error, oldUserProperties)
  */
 module.exports.Update = function (user, callback) {
+    if(!user || !user.email) {
+        if(callback) callback(ES.e(USERERROR.USER_PARAMS), false);
+        return;
+    } 
+
     var oldmail = user.email;
-    var newemail = user.newemail || user.email;
-    User.findOneAndUpdate({email:email}, user, callback);
+    module.exports.Get(oldmail, function(err, savedUser) {
+        if(err || !savedUser) {
+            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err));
+            return;
+        }
+        var newemail = user.newemail || user.email;
+        user.email = newemail;
+        savedUser = Object.assign(savedUser, user);
+        savedUser.save(callback);
+    });
 }
 
 /*******
@@ -233,21 +247,37 @@ module.exports.Logout = function(email, callback) {
  * @param callback function Callback params (error, users)
  */
 module.exports.Find = function(where, callback) {
-    var querycond = where || {};
-    if(where) {
-        if(where.email) querycond.email = new RegExp(where.email, "i");
-        if(where.status) querycond.status = new RegExp(where.status, "i");
-        if(where.id) querycond.id = where.id;
-    }
-
     return User.find(
-        querycond, 
+        where, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
             if(err || !users) {
                 err = ES.e(USERERROR.USER_NOTFOUND, err);
             }
             if(callback) callback(err, users);
+        }
+    );
+}
+
+/*******
+ * @function Get
+ * @param email User email
+ * @param callback function Callback params (error, users)
+ */
+module.exports.Get = function(email, callback) {
+    if(!email) {
+        if(callback) callback(ES.e(USERERROR.USER_PARAMS), users);
+        return;
+    }
+
+    return User.findOne(
+        {email:email}, 
+        {password:0, token:0, history:0, __v:0}, 
+        function(err, user) {
+            if(err || !user) {
+                err = ES.e(USERERROR.USER_NOTFOUND, err);
+            }
+            if(callback) callback(err, user);
         }
     );
 }
