@@ -6,56 +6,60 @@ var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
 var Error = require("../brain/error");
 
-global.SALT_WORK_FACTOR = 10;
-global.USING_ENCRIPT = true;
+var SALT_WORK_FACTOR = 10;
+var USING_ENCRIPT = true;
 
-var USERSTATUS = module.exports.USERSTATUS = {
+module.exports = User;
+function User () {}
+
+User.STATUS = {
     ON : "ON",
     OFF : "OF",
     CONFIRM : "CF",
     BLOCK : "BL",
     ANONYMOUS : "AN"
 };
-var USERGENDER = module.exports.USERGENDER = {
+User.GENDER = {
     M : "M",
     F : "F"
 };
-var USERPROFILE = module.exports.USERPROFILE = {
+User.PROFILE = {
     ADMIN : "AD",   //backoffice administrator
     EDITOR : "ED",  //middleoffice editor manager
     WRITER : "WR",  //middleoffice writer
     GUEST : "GS",   //middleoffice guest
     CLIENT : "CL"   //frontoffice client
 };
-var USERERROR = module.exports.USERERROR = {
+User.ERROR = {
     USER_WRONG_PASSWORD : "USER_WRONG_PASSWORD",
     USER_PARAMS : "USER_PARAMS",
     USER_NOTFOUND : "USER_NOTFOUND",
     USER_CONFIRMATION : "USER_CONFIRMATION",
     USER_BLOCKED : "USER_BLOCKED"
 };
-var USERERRORMESSAGE = module.exports.USERERRORMESSAGE = {
+User.ERRORMESSAGE = {
     USER_WRONG_PASSWORD : "The password not match with registered password",
     USER_PARAMS : "Missing required params",
     USER_NOTFOUND : "Cant find the user",
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked"
 };
-var ES = new Error(USERERRORMESSAGE);
+var ES = new Error(User.ERRORMESSAGE);
 
-/*******
- * @model UserSchema
+/**
+ * User Schema
  */
-module.exports.UserSchema = new _mongoose.Schema({
+User.Schema = new _mongoose.Schema({
     email : {type:String, unique:true, required:true},
     password : {type:String, required:true},
     label : String,
     name : String,
     birthday : Date,
-    since : Date,
-    status : {type:String, enum:JsExt.getObjectValues(USERSTATUS), default: USERSTATUS.ANONYMOUS},
-    gender : {type:String, enum:JsExt.getObjectValues(USERGENDER)},
-    profile : {type:String, enum:JsExt.getObjectValues(USERPROFILE), default: USERPROFILE.CLIENT},
+    since : {type:Date, default:Date.now},
+    lastlogin : Date,
+    status : {type:String, enum:JsExt.getObjectValues(User.STATUS), default: User.STATUS.ANONYMOUS},
+    gender : {type:String, enum:JsExt.getObjectValues(User.GENDER)},
+    profile : {type:String, enum:JsExt.getObjectValues(User.PROFILE), default: User.PROFILE.CLIENT},
     origin : String,
     lang : String,
     passport : [],
@@ -68,42 +72,41 @@ module.exports.UserSchema = new _mongoose.Schema({
  * @param candidate string Password candidate
  * @param callback function Callback params (error, isMatch)
  */
-module.exports.UserSchema.methods.ComparePassword = function(candidate, callback) {
-    if(global.USING_ENCRIPT) {
+User.Schema.methods.ComparePassword = function(candidate, callback) {
+    if(USING_ENCRIPT) {
         _bcrypt.compare(candidate, this.password, function(err, isMatch) {
-            var error = !isMatch ? ES.e(USERERROR.USER_WRONG_PASSWORD, err) : null;
+            var error = !isMatch ? ES.e(User.ERROR.USER_WRONG_PASSWORD, err) : null;
             if(callback) return callback(error, isMatch);
         });
     } else {
         var isMatch = this.password == candidate;
-        var error = !isMatch ? ES.e(USERERROR.USER_WRONG_PASSWORD) : null;
+        var error = !isMatch ? ES.e(User.ERROR.USER_WRONG_PASSWORD) : null;
         if(callback) return callback(error, isMatch);
     }
 }
 
-module.exports.UserSchema.pre("save", function(next) {
+User.Schema.pre("save", function(next) {
     var user = this;
 
     // status settings
     if(user.isNew && user.isAnonymous) {
-        user.status = USERSTATUS.ANONYMOUS;
+        user.status = User.STATUS.ANONYMOUS;
     }
     else if(user.isModified("email")) {
-        user.status = USERSTATUS.CONFIRM;
+        user.status = user.forcestatus || User.STATUS.CONFIRM;
     }
     else {
-        user.status = user.status || USERSTATUS.CONFIRM;
+        user.status = user.forcestatus || user.status || User.STATUS.CONFIRM;
     }
 
-    user.since = user.since || new Date();
     user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
 
-    if(global.USING_ENCRIPT) {
+    if(USING_ENCRIPT) {
         // only hash the password if it has been modified (or is new)
         if (!user.isModified("password")) return next();
 
         // generate a salt
-        _bcrypt.genSalt(global.SALT_WORK_FACTOR || 10, function(err, salt) {
+        _bcrypt.genSalt(SALT_WORK_FACTOR || 10, function(err, salt) {
             if (err) return next(err);
 
             // hash the password using our new salt
@@ -120,31 +123,33 @@ module.exports.UserSchema.pre("save", function(next) {
     }
 });
 
-module.exports.Module = _mongoose.model("User", module.exports.UserSchema);
+var UserModel = _mongoose.model("User", User.Schema);
 
-var User = _mongoose.model("User");
-
-/*******
+/**
  * @function Create
  * @param user object
  * @param callback function Callback params (error, savedUser)
  */
-module.exports.Create = function(user, callback) {
+User.Create = function(user, callback) {
     if(!user || !user.email || !user.password) {
-        if(callback) callback(ES.e(USERERROR.USER_PARAMS), false);
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), false);
         return;
     }
 
-    var newuser = new User();
+    var newuser = new UserModel();
     newuser.email = user.email;
     newuser.label = user.label;
     newuser.password = user.password;
     newuser.name = user.name;
     newuser.birthday = user.birthday;
+    newuser.since = user.since;
+    newuser.lastlogin = user.lastlogin;
     newuser.gender = user.gender;
     newuser.origin = user.origin;
-    newuser.profile = user.profile || USERPROFILE.CLIENT; 
-    newuser.lang = user.lang; 
+    newuser.profile = user.profile;
+    newuser.lang = user.lang;
+    newuser.status = user.status;
+    newuser.forcestatus = user.forcestatus;
     newuser.passport = [];
     newuser.favorite = [];
     newuser.history = [];
@@ -152,13 +157,13 @@ module.exports.Create = function(user, callback) {
     newuser.save(callback);
 }
 
-/*******
+/**
  * @function CreateAnonymous
  * @param user object
  * @param callback function Callback params (error, savedUser)
  */
-module.exports.CreateAnonymous = function(callback) {
-    var newuser = new User();
+User.CreateAnonymous = function(callback) {
+    var newuser = new UserModel();
     newuser.email = newuser.id + "@anonymous.com";
     newuser.password = "a";
     newuser.isAnonymous = true;
@@ -166,21 +171,21 @@ module.exports.CreateAnonymous = function(callback) {
     newuser.save(callback);
 }
 
-/*******
+/**
  * @function Update
  * @param user object User with newmail possibility
  * @param callback function Callback params (error, oldUserProperties)
  */
-module.exports.Update = function (user, callback) {
+User.Update = function (user, callback) {
     if(!user || !user.email) {
-        if(callback) callback(ES.e(USERERROR.USER_PARAMS), false);
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), false);
         return;
     } 
 
     var oldmail = user.email;
-    module.exports.Get(oldmail, function(err, savedUser) {
+    User.Get(oldmail, function(err, savedUser) {
         if(err || !savedUser) {
-            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err));
+            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err));
             return;
         }
         var newemail = user.newemail || user.email;
@@ -190,19 +195,78 @@ module.exports.Update = function (user, callback) {
     });
 }
 
-/*******
+/**
  * @function Remove
  * @param where User properties in where syntaxe
  * @param callback function Callback params (error)
  */
-module.exports.Remove = function (where, callback) {
-    User.remove(where, callback);
+User.Remove = function (where, callback) {
+    UserModel.remove(where, callback);
 }
 
-module.exports.Login = function (email, password, callback) {
-    return User.findOne({email:email}, function(err, user) {
+/**
+ * @function Find
+ * @param where User properties in where syntaxe
+ * @param callback function Callback params (error, users)
+ */
+User.Find = function(where, callback) {
+    return UserModel.find(
+        where, 
+        {password:0, token:0, history:0, __v:0}, 
+        function(err, users) {
+            if(err || !users) {
+                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+            }
+            if(callback) callback(err, users);
+        }
+    );
+}
+
+/**
+ * @function Get
+ * @param email User email
+ * @param callback function Callback params (error, users)
+ */
+User.Get = function(email, callback) {
+    if(!email) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        return;
+    }
+
+    return UserModel.findOne(
+        {email:email}, 
+        {password:0, token:0, history:0, __v:0}, 
+        function(err, user) {
+            if(err || !user) {
+                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+            }
+            if(callback) callback(err, user);
+        }
+    );
+}
+
+/**
+ * Purge the users with 'status'' from 'days'
+ * 
+ * @param status enum User.STATUS option
+ * @param days number To purge all ANONYMOUS users registered more than 'days'
+ * @param callback function Callback params (error)
+ */
+User.Purge = function(days, status, callback) {
+    if(days == null || !status) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), users);
+        return;
+    }
+    var where = {status:status};
+    if(days) where.since = {$lt : _moment().subtract(days, "days")};
+
+    UserModel.remove(where, callback);
+}
+
+User.Login = function (email, password, callback) {
+    return UserModel.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.ComparePassword(password, function(err, match) {
@@ -212,14 +276,15 @@ module.exports.Login = function (email, password, callback) {
             }
 
             switch (user.status) {
-                case USERSTATUS.CONFIRM:
-                    err = ES.e(USERERROR.USER_CONFIRMATION);
+                case User.STATUS.CONFIRM:
+                    err = ES.e(User.ERROR.USER_CONFIRMATION);
                     break;
-                case USERSTATUS.BLOCK:
-                    err = ES.e(USERERROR.USER_BLOCKED);
+                case User.STATUS.BLOCK:
+                    err = ES.e(User.ERROR.USER_BLOCKED);
                     break;
-                case USERSTATUS.OFF:
-                    user.status = USERSTATUS.ON;
+                case User.STATUS.OFF:
+                    user.status = User.STATUS.ON;
+                    user.lastlogin = _moment();
                     user.save();
                     break;
                 default:
@@ -231,67 +296,12 @@ module.exports.Login = function (email, password, callback) {
     });
 }
 
-module.exports.Logout = function(email, callback) {
-    return User.findOne({email:email}, function(err, user) {
+User.Logout = function(email, callback) {
+    return UserModel.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(ES.e(USERERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
             return;
         }
-        user.status = USERSTATUS.OFF;
+        user.status = User.STATUS.OFF;
     });
-}
-
-/*******
- * @function Find
- * @param where User properties in where syntaxe
- * @param callback function Callback params (error, users)
- */
-module.exports.Find = function(where, callback) {
-    return User.find(
-        where, 
-        {password:0, token:0, history:0, __v:0}, 
-        function(err, users) {
-            if(err || !users) {
-                err = ES.e(USERERROR.USER_NOTFOUND, err);
-            }
-            if(callback) callback(err, users);
-        }
-    );
-}
-
-/*******
- * @function Get
- * @param email User email
- * @param callback function Callback params (error, users)
- */
-module.exports.Get = function(email, callback) {
-    if(!email) {
-        if(callback) callback(ES.e(USERERROR.USER_PARAMS), users);
-        return;
-    }
-
-    return User.findOne(
-        {email:email}, 
-        {password:0, token:0, history:0, __v:0}, 
-        function(err, user) {
-            if(err || !user) {
-                err = ES.e(USERERROR.USER_NOTFOUND, err);
-            }
-            if(callback) callback(err, user);
-        }
-    );
-}
-
-module.exports.PurgeAnonymous = function(days, callback) {
-    var where = {status:USERSTATUS.ANONYMOUS};
-    if(days) where.since = _moment.subtract(days, "days");
-
-    User.remove(where, callback);
-}
-
-module.exports.PurgeNonConfirmed = function(days, callback) {
-    var where = {status:USERSTATUS.CONFIRM};
-    if(days) where.since = _moment.subtract(days, "days");
-
-    User.remove(where, callback);
 }
