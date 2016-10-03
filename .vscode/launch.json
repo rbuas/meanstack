@@ -22,6 +22,15 @@
             "outDir": null
         },
         {
+            "name": "Run unit tests",
+            "type": "node",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": ["./tests/*.unit.js", "--no-timeouts", "--colors"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null
+        },
+        {
             "name": "Run load tests",
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
@@ -30,15 +39,6 @@
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": { "NODE_ENV": "production"}
-        },
-        {
-            "name": "Run unit tests",
-            "type": "node",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-            "stopOnEntry": false,
-            "args": ["tests/user.unit.js", "tests/webmailer.unit.js"],
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": null
         },
         {
             "name": "Run e2e tests",

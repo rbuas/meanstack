@@ -3,22 +3,22 @@ var _nodemailer = require("nodemailer");
 var Log = require("../brain/log");
 
 var _defaultoptions = {
-    smtp = {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // use SSL 
+    smtp : {
+        service : "MailGun",
+        domaine : "sandbox7675be11bc2a485e8ed106a5f916dfe4.mailgun.org",
+        api_key : "key-f26b43fc4e32cb9911f5bc63fe312b16",
         auth: {
-            user: 'rodrigobuas@gmail.com',
-            pass: 'pass'
+            user: 'postmaster@sandbox7675be11bc2a485e8ed106a5f916dfe4.mailgun.org',
+            pass: 'bcda9d2c8227c18bcdeec6e6a2b90a45'
         }
     }
 }
 
 module.exports = WebMailer;
-function WebMailer (server) {
+function WebMailer (options) {
     var self = this;
     self.options = Object.assign(_defaultoptions, options) || {};
-    self.transporter = nodemailer.createTransport(self.options.smtp);
+    self.transporter = _nodemailer.createTransport(self.options.smtp);
     self.templates = {};
 }
 

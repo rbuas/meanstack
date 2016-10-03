@@ -82,7 +82,7 @@ Brain.prototype.synapsys = function() {
     }
 }
 
- Brain.prototype.route = function(route) {
+Brain.prototype.route = function(route) {
     var self = this;
     if(!route || !route.path || !route.cb) {
         Log.warning("WARNING: missing parameters in routes table", route);
@@ -155,4 +155,11 @@ Brain.prototype.usocket = function(path, callback) {
     var self = this;
     var newroute = {method:"usocket", path:path, cb:callback};
     self.route(newroute);
+}
+
+Brain.prototype.draw = function(filepath, data, callback) {
+    return self.engine.render(filepath, data).then(function(result) {
+        if(callback) callback(result);
+        return result;
+    });
 }

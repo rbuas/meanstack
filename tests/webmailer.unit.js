@@ -12,7 +12,7 @@ var WebMailer = require("../brain/webmailer");
 var User = require("../models/user");
 
 
-describe("webmailer", function() {
+describe("unit.webmailer", function() {
     var wm;
 
     before(function(done) {
@@ -21,11 +21,18 @@ describe("webmailer", function() {
     });
 
     after(function(done) {
+        done();
     });
 
     describe("send", function() {
-        if("success", function(done) {
-            wm.send({}, function(err, info) {
+        it("success", function(done) {
+            wm.send({
+                to : "rodrigobuas@gmail.com",
+                subject : "test",
+                from : "test@rbuas.com",
+                mode : "TEXT",
+                data : "test test test ;-)"
+            }, function(err, info) {
                 done();
             });
         });
