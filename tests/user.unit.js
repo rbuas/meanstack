@@ -17,7 +17,7 @@ describe("unit.user", function() {
     var email2 = "rodrigobuas+unittest2@gmail.com";
     var email3 = "rodrigobuas+unittest3@gmail.com";
     var email4 = "rodrigobuas+unittest4@gmail.com";
-    var _password = "123456";
+    var password = "123456";
 
     before(function(done) {
         m = new Memory({onconnect:done});
@@ -62,7 +62,7 @@ describe("unit.user", function() {
             });
         });
         it("success", function(done) {
-            var user = {email: email1, password: _password};
+            var user = {email: email1, password: password};
             User.Create(user, function(err, savedUser) {
                 _expect(err).to.be.null;
                 _expect(savedUser).to.not.be.null;
@@ -71,7 +71,7 @@ describe("unit.user", function() {
             });
         });
         it("duplicate", function(done) {
-            var user = {email: email1, password: _password};
+            var user = {email: email1, password: password};
             User.Create(user, function(err, savedUser) {
                 _expect(err).to.be.null;
                 _expect(savedUser).to.not.be.null;
@@ -86,7 +86,7 @@ describe("unit.user", function() {
         it("type-name", function(done) {
             var user = {
                 email: email1, 
-                password:_password ,
+                password: password ,
                 name : 555
             };
             User.Create(user, function(err, savedUser) {
@@ -99,7 +99,7 @@ describe("unit.user", function() {
         it("type-genre-ko", function(done) {
             var user = {
                 email: email1, 
-                password: _password,
+                password: password,
                 gender : "HHH"
             };
             User.Create(user, function(err, savedUser) {
@@ -110,7 +110,7 @@ describe("unit.user", function() {
         it("type-genre-ok", function(done) {
             var user = {
                 email: email1, 
-                password: _password,
+                password: password,
                 gender : User.GENDER.F
             };
             User.Create(user, function(err, savedUser) {
@@ -121,7 +121,7 @@ describe("unit.user", function() {
         it("type-profile-ko", function(done) {
             var user = {
                 email: email1, 
-                password: _password,
+                password: password,
                 profile : "HHH"
             };
             User.Create(user, function(err, savedUser) {
@@ -132,7 +132,7 @@ describe("unit.user", function() {
         it("type-profile-ok", function(done) {
             var user = {
                 email: email1, 
-                password: _password,
+                password: password,
                 profile : User.PROFILE.ADMIN
             };
             User.Create(user, function(err, savedUser) {
@@ -396,7 +396,7 @@ describe("unit.user", function() {
         beforeEach(function (done) {
             User.Create({
                 email: email1, 
-                password: _password,
+                password: password,
                 name: "a",
                 label: "b",
                 birthday: new Date(),
@@ -745,8 +745,139 @@ describe("unit.user", function() {
 
 
     describe("login", function() {
+        var userid;
+
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    userid = savedUser.id;
+                    done();
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it("missingemail", function(done) {
+            User.Login(null, password, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("missingpassword", function(done) {
+            User.Login(email1, null, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("confirm", function(done) {
+            User.Login(email1, password, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_CONFIRMATION);
+                done();
+            });
+        });
+
+        it("password-ok", function(done) {
+            User.Confirm(userid, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).to.equal(User.STATUS.OFF);
+                User.Login(email1, password, function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.status).to.equal(User.STATUS.ON);
+                    done();
+                });
+            });
+        });
+
+        it("password-ko", function(done) {
+            User.Confirm(userid, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).to.equal(User.STATUS.OFF);
+                User.Login(email1, password + "dsqsdqs", function(err, savedUser) {
+                    _expect(err).to.not.be.null;
+                    _expect(err.code).to.equal(User.ERROR.USER_WRONG_PASSWORD);
+                    done();
+                });
+            });
+        });
     });
 
     describe("logout", function() {
+
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    User.Confirm(savedUser.id, function(err, savedUser) {
+                        _expect(err).to.be.null;
+                        _expect(savedUser).to.not.be.null;
+                        _expect(savedUser.status).to.equal(User.STATUS.OFF);
+                        User.Login(email1, password, function(err, savedUser) {
+                            _expect(err).to.be.null;
+                            _expect(savedUser).to.not.be.null;
+                            _expect(savedUser.status).to.equal(User.STATUS.ON);
+                            done();
+                        });
+                    });
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it("missingemail", function(done) {
+            User.Logout(null, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.Logout(email1, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).equal(User.STATUS.OFF);
+                done();
+            });
+        });
+
+        it("alreadyout", function(done) {
+            User.Logout(email1, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).equal(User.STATUS.OFF);
+                User.Logout(email1, function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.status).equal(User.STATUS.OFF);
+                    done();
+                });
+            });
+        });
+
     });
 });

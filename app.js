@@ -35,7 +35,7 @@ brain.post("/s/user-logout", _userRoutes.logout);
 brain.get("/s/quotes", _quoteRoutes.quotes);
 brain.get("/s/quotes/:quote", _quoteRoutes.quote);
 
-brain.socket("connection", _chat.broadcast);
+brain.usocket("connection", _chat.broadcast);
 
 // brain.get("/login", _marksRoutes.login);
 // brain.get("/register", _marksRoutes.register);

@@ -34,6 +34,7 @@ User.ERROR = {
     USER_WRONG_PASSWORD : "USER_WRONG_PASSWORD",
     USER_PARAMS : "USER_PARAMS",
     USER_NOTFOUND : "USER_NOTFOUND",
+    USER_UNKNOW : "USER_UNKNOW",
     USER_CONFIRMATION : "USER_CONFIRMATION",
     USER_BLOCKED : "USER_BLOCKED"
 };
@@ -41,10 +42,13 @@ User.ERRORMESSAGE = {
     USER_WRONG_PASSWORD : "The password not match with registered password",
     USER_PARAMS : "Missing required params",
     USER_NOTFOUND : "Cant find the user",
+    USER_UNKNOW : "Unknow user",
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked"
 };
+
 var ES = new Error(User.ERRORMESSAGE);
+
 
 /**
  * User Schema
@@ -254,7 +258,7 @@ User.Get = function(email, callback) {
  */
 User.Purge = function(days, status, callback) {
     if(days == null || !status) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), users);
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
         return;
     }
     var where = {status:status};
@@ -263,7 +267,44 @@ User.Purge = function(days, status, callback) {
     UserModel.remove(where, callback);
 }
 
+/**
+ * Purge the users with 'status'' from 'days'
+ * 
+ * @param status enum User.STATUS option
+ * @param days number To purge all ANONYMOUS users registered more than 'days'
+ * @param callback function Callback params (error)
+ */
+User.Confirm = function(token, callback) {
+    if(!token) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        return;
+    }
+
+    User.Find({_id:token}, function(err, users) {
+        var user = users && users.length ? users[0] : null;
+        if(!user) {
+            if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+            return;
+        }
+
+        user.status = User.STATUS.OFF;
+        user.save(callback);
+    });
+}
+
+/**
+ * Login
+ * 
+ * @param email string User email
+ * @param password string User password
+ * @param callback function Callback params (error, user)
+ */
 User.Login = function (email, password, callback) {
+    if(!email || !password) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        return;
+    }
+
     return UserModel.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
@@ -296,12 +337,25 @@ User.Login = function (email, password, callback) {
     });
 }
 
+/**
+ * Logout
+ * 
+ * @param email string User email
+ * @param password string User password
+ * @param callback function Callback params (error, user)
+ */
 User.Logout = function(email, callback) {
+     if(!email) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        return;
+    }
+
     return UserModel.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.status = User.STATUS.OFF;
+        user.save(callback);
     });
 }
