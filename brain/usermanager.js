@@ -24,7 +24,7 @@ UserManager.prototype.on = function(path, callback) {
     self.socketio.on(path, callback);
 }
 
-UserManager.emit = function(event, msg) {
+UserManager.prototype.emit = function(event, msg) {
     var self = this;
     self.socketio.emit(event, msg);
 }

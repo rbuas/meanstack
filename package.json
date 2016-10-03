@@ -8,7 +8,7 @@
     "start-db": "./mongodb/bin/mongod -dbpath ./data",
     "start-dbterminal": "./mongodb/bin/mongo",
     "start-selenium": "/usr/local/bin/webdriver-manager start",
-    "test-unit": "./node_modules/mocha/bin/_mocha tests/user.unit.js",
+    "test-unit": "./node_modules/mocha/bin/_mocha tests/user.unit.js tests/webmailer.unit.js",
     "test-ui-sl": "SELENIUM_BROWSER=chrome ./node_modules/mocha/bin/_mocha tests/ui.js",
     "test-ui-nw": "./node_modules/.bin/nightwatch tests/nightwatch.js --verbose",
     "test-ui-pt": "/usr/local/bin/protractor ./tests/user-e2e.config.js --verbose",
@@ -33,6 +33,7 @@
     "moment": "^2.15.1",
     "mongodb": "^2.2.10",
     "mongoose": "^4.5.1",
+    "nodemailer": "^2.6.4",
     "nodemon": "^1.9.2",
     "socket.io": "^1.4.8"
   },

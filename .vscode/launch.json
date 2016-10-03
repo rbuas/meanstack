@@ -36,7 +36,7 @@
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["tests/user.unit.js"],
+            "args": ["tests/user.unit.js", "tests/webmailer.unit.js"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null
         },
