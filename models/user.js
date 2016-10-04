@@ -36,7 +36,8 @@ User.ERROR = {
     USER_NOTFOUND : "USER_NOTFOUND",
     USER_UNKNOW : "USER_UNKNOW",
     USER_CONFIRMATION : "USER_CONFIRMATION",
-    USER_BLOCKED : "USER_BLOCKED"
+    USER_BLOCKED : "USER_BLOCKED",
+    USER_TOKEN : "USER_TOKEN"
 };
 User.ERRORMESSAGE = {
     USER_WRONG_PASSWORD : "The password not match with registered password",
@@ -44,7 +45,8 @@ User.ERRORMESSAGE = {
     USER_NOTFOUND : "Cant find the user",
     USER_UNKNOW : "Unknow user",
     USER_CONFIRMATION : "Waiting confirmation",
-    USER_BLOCKED : "User blocked"
+    USER_BLOCKED : "User blocked",
+    USER_TOKEN : "User token doesn't match"
 };
 
 var ES = new Error(User.ERRORMESSAGE);
@@ -127,7 +129,7 @@ User.Schema.pre("save", function(next) {
     }
 });
 
-var UserModel = _mongoose.model("User", User.Schema);
+User.DB = _mongoose.model("User", User.Schema);
 
 /**
  * @function Create
@@ -140,7 +142,7 @@ User.Create = function(user, callback) {
         return;
     }
 
-    var newuser = new UserModel();
+    var newuser = new User.DB();
     newuser.email = user.email;
     newuser.label = user.label;
     newuser.password = user.password;
@@ -167,7 +169,7 @@ User.Create = function(user, callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.CreateAnonymous = function(callback) {
-    var newuser = new UserModel();
+    var newuser = new User.DB();
     newuser.email = newuser.id + "@anonymous.com";
     newuser.password = "a";
     newuser.isAnonymous = true;
@@ -205,7 +207,7 @@ User.Update = function (user, callback) {
  * @param callback function Callback params (error)
  */
 User.Remove = function (where, callback) {
-    UserModel.remove(where, callback);
+    User.DB.remove(where, callback);
 }
 
 /**
@@ -214,7 +216,7 @@ User.Remove = function (where, callback) {
  * @param callback function Callback params (error, users)
  */
 User.Find = function(where, callback) {
-    return UserModel.find(
+    return User.DB.find(
         where, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
@@ -237,7 +239,7 @@ User.Get = function(email, callback) {
         return;
     }
 
-    return UserModel.findOne(
+    return User.DB.findOne(
         {email:email}, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, user) {
@@ -264,30 +266,87 @@ User.Purge = function(days, status, callback) {
     var where = {status:status};
     if(days) where.since = {$lt : _moment().subtract(days, "days")};
 
-    UserModel.remove(where, callback);
+    User.DB.remove(where, callback);
 }
 
 /**
  * Purge the users with 'status'' from 'days'
  * 
- * @param status enum User.STATUS option
- * @param days number To purge all ANONYMOUS users registered more than 'days'
- * @param callback function Callback params (error)
+ * @param token string token (id) to confirm user
+ * @param callback function Callback params (error, savedUser)
  */
 User.Confirm = function(token, callback) {
     if(!token) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
         return;
     }
 
     User.Find({_id:token}, function(err, users) {
         var user = users && users.length ? users[0] : null;
         if(!user) {
-            if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+            if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
             return;
         }
 
         user.status = User.STATUS.OFF;
+        user.save(callback);
+    });
+}
+
+
+
+/**
+ * GetResetToken
+ * 
+ * @param email string User email id
+ * @param callback function Callback params (error, token)
+ */
+User.GetResetToken = function(email, callback) {
+    if(!email) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
+        return;
+    }
+
+    return User.DB.findOne(
+        {email:email}, 
+        function(err, user) {
+            var token = null;
+            if(err || !user) {
+                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+            } else {
+                token = user.password;
+            }
+            if(callback) callback(err, token);
+        }
+    );
+}
+
+/**
+ * ResetPassword
+ * 
+ * @param email string User email id
+ * @param token string token (password) to reset user password
+ * @param newuser string New user password
+ * @param callback function Callback params (error)
+ */
+User.ResetPassword = function(email, token, newpassword, callback) {
+    if(!email || !token || !newpassword) {
+        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        return;
+    }
+
+    User.DB.findOne({email:email}, function(err, user) {
+        if(!user) {
+            if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+            return;
+        }
+
+        if(token != user.password) {
+            if(callback) callback(ES.e(User.ERROR.USER_TOKEN));
+            return;
+        }
+
+        user.password = newpassword;
         user.save(callback);
     });
 }
@@ -305,7 +364,7 @@ User.Login = function (email, password, callback) {
         return;
     }
 
-    return UserModel.findOne({email:email}, function(err, user) {
+    return User.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
             return;
@@ -350,7 +409,7 @@ User.Logout = function(email, callback) {
         return;
     }
 
-    return UserModel.findOne({email:email}, function(err, user) {
+    return User.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
             return;

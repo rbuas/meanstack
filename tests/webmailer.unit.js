@@ -24,17 +24,17 @@ describe("unit.webmailer", function() {
         done();
     });
 
-    describe("send", function() {
-        it("success", function(done) {
-            wm.send({
-                to : "rodrigobuas@gmail.com",
-                subject : "test",
-                from : "test@rbuas.com",
-                mode : "TEXT",
-                data : "test test test ;-)"
-            }, function(err, info) {
-                done();
-            });
-        });
-    });
+    // describe("send", function() {
+    //     it("success", function(done) {
+    //         wm.send({
+    //             to : "rodrigobuas@gmail.com",
+    //             subject : "test",
+    //             from : "test@rbuas.com",
+    //             mode : "TEXT",
+    //             data : "test test test ;-)"
+    //         }, function(err, info) {
+    //             done();
+    //         });
+    //     });
+    // });
 });

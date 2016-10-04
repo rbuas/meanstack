@@ -741,8 +741,149 @@ describe("unit.user", function() {
         });
     });
 
+    describe("confirm", function() {
+        var userid;
 
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
+                    userid = savedUser.id;
+                    done();
+                }
+            );
+        });
 
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it("missingparams", function(done) {
+            User.Confirm(null, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                _expect(savedUser).to.be.null;
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.Confirm(userid, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).to.equal(User.STATUS.OFF);
+                done();
+            });
+        });
+    });
+
+    describe("getresettoken", function() {
+        var usertoken;
+
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    usertoken = savedUser.password;
+                    done();
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it("missingemail", function(done) {
+            User.GetResetToken(null, function(err, token) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                _expect(token).to.be.null;
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.GetResetToken(email1, function(err, token) {
+                _expect(err).to.be.null;
+                _expect(token).to.not.be.null;
+                _expect(usertoken).to.equal(token);
+                done();
+            });
+        });
+    });
+
+    describe("resetpassword", function() {
+        var usertoken;
+
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    User.GetResetToken(email1, function(err, token) {
+                        _expect(err).to.be.null;
+                        _expect(token).to.not.be.null;
+                        usertoken = token;
+                        done();
+                    });
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it("missingemail", function(done) {
+            User.ResetPassword(null, usertoken, "123456", function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("missingusertoken", function(done) {
+            User.ResetPassword(email1, null, "123456", function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("missinguserpassword", function(done) {
+            User.ResetPassword(email1, usertoken, null, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.ResetPassword(email1, usertoken, "123456", function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.password).to.not.be.null;
+                _expect(savedUser.password).to.not.be.equal(usertoken);
+                done();
+            });
+        });
+    });
 
     describe("login", function() {
         var userid;
