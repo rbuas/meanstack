@@ -4,7 +4,8 @@ var _moment = require("moment");
 
 var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
-var Error = require("../brain/error");
+var System = require("../brain/system");
+var E = System.error;
 
 var SALT_WORK_FACTOR = 10;
 var USING_ENCRIPT = true;
@@ -48,8 +49,8 @@ User.ERRORMESSAGE = {
     USER_BLOCKED : "User blocked",
     USER_TOKEN : "User token doesn't match"
 };
+System.registerErrors(User.ERRORMESSAGE);
 
-var ES = new Error(User.ERRORMESSAGE);
 
 
 /**
@@ -81,12 +82,12 @@ User.Schema = new _mongoose.Schema({
 User.Schema.methods.ComparePassword = function(candidate, callback) {
     if(USING_ENCRIPT) {
         _bcrypt.compare(candidate, this.password, function(err, isMatch) {
-            var error = !isMatch ? ES.e(User.ERROR.USER_WRONG_PASSWORD, err) : null;
+            var error = !isMatch ? E(User.ERROR.USER_WRONG_PASSWORD, err) : null;
             if(callback) return callback(error, isMatch);
         });
     } else {
         var isMatch = this.password == candidate;
-        var error = !isMatch ? ES.e(User.ERROR.USER_WRONG_PASSWORD) : null;
+        var error = !isMatch ? E(User.ERROR.USER_WRONG_PASSWORD) : null;
         if(callback) return callback(error, isMatch);
     }
 }
@@ -138,7 +139,7 @@ User.DB = _mongoose.model("User", User.Schema);
  */
 User.Create = function(user, callback) {
     if(!user || !user.email || !user.password) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), false);
+        if(callback) callback(E(User.ERROR.USER_PARAMS), false);
         return;
     }
 
@@ -184,14 +185,14 @@ User.CreateAnonymous = function(callback) {
  */
 User.Update = function (user, callback) {
     if(!user || !user.email) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), false);
+        if(callback) callback(E(User.ERROR.USER_PARAMS), false);
         return;
     } 
 
     var oldmail = user.email;
     User.Get(oldmail, function(err, savedUser) {
         if(err || !savedUser) {
-            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err));
+            if(callback) callback(E(User.ERROR.USER_NOTFOUND, err));
             return;
         }
         var newemail = user.newemail || user.email;
@@ -216,12 +217,17 @@ User.Remove = function (where, callback) {
  * @param callback function Callback params (error, users)
  */
 User.Find = function(where, callback) {
+    if(where.name) where.name = new RegExp(where.name, "i");
+    if(where.label) where.label = new RegExp(where.label, "i");
+    if(where.since) where.since = {$gt : where.since};
+    if(where.lastlogin) where.lastlogin = {$gt : where.lastlogin};
+
     return User.DB.find(
         where, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
             if(err || !users) {
-                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+                err = E(User.ERROR.USER_NOTFOUND, err);
             }
             if(callback) callback(err, users);
         }
@@ -235,7 +241,7 @@ User.Find = function(where, callback) {
  */
 User.Get = function(email, callback) {
     if(!email) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
@@ -244,7 +250,7 @@ User.Get = function(email, callback) {
         {password:0, token:0, history:0, __v:0}, 
         function(err, user) {
             if(err || !user) {
-                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+                err = E(User.ERROR.USER_NOTFOUND, err);
             }
             if(callback) callback(err, user);
         }
@@ -260,7 +266,7 @@ User.Get = function(email, callback) {
  */
 User.Purge = function(days, status, callback) {
     if(days == null || !status) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
     var where = {status:status};
@@ -277,14 +283,14 @@ User.Purge = function(days, status, callback) {
  */
 User.Confirm = function(token, callback) {
     if(!token) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
+        if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
     User.Find({_id:token}, function(err, users) {
         var user = users && users.length ? users[0] : null;
         if(!user) {
-            if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
+            if(callback) callback(E(User.ERROR.USER_PARAMS), null);
             return;
         }
 
@@ -303,7 +309,7 @@ User.Confirm = function(token, callback) {
  */
 User.GetResetToken = function(email, callback) {
     if(!email) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS), null);
+        if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
@@ -312,7 +318,7 @@ User.GetResetToken = function(email, callback) {
         function(err, user) {
             var token = null;
             if(err || !user) {
-                err = ES.e(User.ERROR.USER_NOTFOUND, err);
+                err = E(User.ERROR.USER_NOTFOUND, err);
             } else {
                 token = user.password;
             }
@@ -331,18 +337,18 @@ User.GetResetToken = function(email, callback) {
  */
 User.ResetPassword = function(email, token, newpassword, callback) {
     if(!email || !token || !newpassword) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
     User.DB.findOne({email:email}, function(err, user) {
         if(!user) {
-            if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+            if(callback) callback(E(User.ERROR.USER_PARAMS));
             return;
         }
 
         if(token != user.password) {
-            if(callback) callback(ES.e(User.ERROR.USER_TOKEN));
+            if(callback) callback(E(User.ERROR.USER_TOKEN));
             return;
         }
 
@@ -360,13 +366,13 @@ User.ResetPassword = function(email, token, newpassword, callback) {
  */
 User.Login = function (email, password, callback) {
     if(!email || !password) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
     return User.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(E(User.ERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.ComparePassword(password, function(err, match) {
@@ -377,10 +383,10 @@ User.Login = function (email, password, callback) {
 
             switch (user.status) {
                 case User.STATUS.CONFIRM:
-                    err = ES.e(User.ERROR.USER_CONFIRMATION);
+                    err = E(User.ERROR.USER_CONFIRMATION);
                     break;
                 case User.STATUS.BLOCK:
-                    err = ES.e(User.ERROR.USER_BLOCKED);
+                    err = E(User.ERROR.USER_BLOCKED);
                     break;
                 case User.STATUS.OFF:
                     user.status = User.STATUS.ON;
@@ -405,13 +411,13 @@ User.Login = function (email, password, callback) {
  */
 User.Logout = function(email, callback) {
      if(!email) {
-        if(callback) callback(ES.e(User.ERROR.USER_PARAMS));
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
     return User.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
-            if(callback) callback(ES.e(User.ERROR.USER_NOTFOUND, err), user);
+            if(callback) callback(E(User.ERROR.USER_NOTFOUND, err), user);
             return;
         }
         user.status = User.STATUS.OFF;

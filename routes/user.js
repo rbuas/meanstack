@@ -1,17 +1,30 @@
-var _log = require("../brain/log");
+var System = require("../brain/system");
+var Log = require("../brain/log");
 var User = require("../models/user");
 
-module.exports.list = function(req, res) {
-    var filterEmail = req.params.filtermail;
-    var filterName = req.params.filtername;
-    var filterStatus = req.params.filterstatus;
+module.exports = UserRoute;
+function UserRoute () {}
+
+UserRoute.list = function(req, res) {
+    var criteria = {
+        status : req.body.status,
+        label : req.body.label,
+        name : req.body.name,
+        birthday : req.body.birthday,
+        since : req.body.since,
+        lastlogin : req.body.lastlogin,
+        gender : req.body.gender,
+        profile : req.body.profile,
+        origin : req.body.origin,
+        lang : req.body.lang,
+    };
 
     User.Find(filterName, filterEmail, filterStatus, function(err, users) {
         res.json(users);
     });
 }
 
-module.exports.register = function(req, res) {
+UserRoute.register = function(req, res) {
     var newuser = {
         username : req.body.username,
         email : req.body.email,
@@ -25,7 +38,7 @@ module.exports.register = function(req, res) {
         var response = {};
         if(err || !savedUser) {
             var error = "A user already exists with that username or email";
-            _log.message(error);
+            Log.message(error);
             response.error = error;
         } else {
             response.username = savedUser.username;
@@ -40,7 +53,7 @@ module.exports.register = function(req, res) {
     });
 }
 
-module.exports.confirm = function(req, res) {
+UserRoute.confirm = function(req, res) {
     if(req.session.username && req.session.userlogged) {
         res.redirect("/stories");
         return;
@@ -49,10 +62,10 @@ module.exports.confirm = function(req, res) {
     //TODO
 }
 
-module.exports.login = function(req, res) {
+UserRoute.login = function(req, res) {
     var email = req.body.email;
     var password = req.body.password;
-    _log.message("Try to authenticate user ", email);
+    Log.message("Try to authenticate user ", email);
 
     req.session.useremail = email;
     req.session.userlogged = false;
@@ -60,10 +73,10 @@ module.exports.login = function(req, res) {
     User.Login(email, password, function(err, user) {
         var response = { session:req.session };
         if(err || !user) {
-            _log.message("Authentication failure to " + email);
+            Log.message("Authentication failure to " + email);
             response.loginerror = "Invalid user or password";
         } else {
-            _log.message("Authentication sucessfull to " + email);
+            Log.message("Authentication sucessfull to " + email);
             req.session.userlogged = true;
             req.session.useremail = user.email;
             req.session.username = user.username;
@@ -73,11 +86,11 @@ module.exports.login = function(req, res) {
     });
 }
 
-module.exports.logout = function(req, res) {
+UserRoute.logout = function(req, res) {
     var response = { session:req.session };
     if(!req.session.useremail || !req.session.userlogged) {
         response.error = "Logout without login";
-        _log.message(response.error, req.session.useremail);
+        Log.message(response.error, req.session.useremail);
     } else {
         response.username = User.Logout(req.session.useremail);
         response.logout = true;
@@ -88,22 +101,22 @@ module.exports.logout = function(req, res) {
     res.json(response);
 }
 
-module.exports.confirm = function(req, res) {
+UserRoute.confirm = function(req, res) {
     //TODO
 }
 
-module.exports.restartPassword = function(req, res) {
+UserRoute.restartPassword = function(req, res) {
     //TODO
 }
 
-module.exports.addPassport = function(req, res) {
+UserRoute.addPassport = function(req, res) {
     //TODO
 }
 
-module.exports.remPassport = function(req, res) {
+UserRoute.remPassport = function(req, res) {
     //TODO
 }
 
-module.exports.history = function(req, res) {
+UserRoute.history = function(req, res) {
     //TODO
 }

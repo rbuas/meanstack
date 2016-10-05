@@ -1,6 +1,8 @@
 var _nodemailer = require("nodemailer");
 
 var Log = require("../brain/log");
+var System = require("../brain/system");
+var E = System.error;
 
 var _defaultoptions = {
     smtp : {
@@ -29,8 +31,8 @@ WebMailer.ERROR = {
 WebMailer.ERRORMESSAGE = {
     
 };
+System.registerErrors(WebMailer.ERRORMESSAGE);
 
-var ES = new Error(WebMailer.ERRORMESSAGE);
 
 /**
  * send 

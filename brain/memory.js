@@ -1,18 +1,18 @@
 var _mongoose = require('mongoose');
 var Log = require("./log");
 
-var _defauloptions = {
-    db : "mongodb://localhost/test"
-    //onconnect : function to call on connection response
-};
-
 module.exports = Memory;
 function Memory (options) {
     var self = this;
-    self.options = Object.assign(_defauloptions, options) || {};
+    self.options = Object.assign(self.defaultoptions, options) || {};
 
     self.connect(self.options.onconnect);
 }
+
+Memory.prototype.defaultoptions = {
+    db : "mongodb://localhost/test"
+    //onconnect : function to call on connection response
+};
 
 Memory.prototype.connect = function(callback) {
     var self = this;

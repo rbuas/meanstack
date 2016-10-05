@@ -14,23 +14,23 @@ var _quoteRoutes = require("./routes/quotes");
 //var _citiesRoutes = require("./routes/cities");
 //var _resRoutes = require("./routes/resource");
 var _connectionRoutes = require("./routes/connection");
-var _userRoutes = require("./routes/user");
+var UserRoute = require("./routes/user");
 var _chat = require("./routes/chat");
 
 brain.get("/", _connectionRoutes.startpage);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
-brain.get("/s/user", _userRoutes.list);
-brain.get("/s/user/:filtername", _userRoutes.list);
-brain.post("/s/user-register", _userRoutes.register);
-brain.post("/s/user-confirm", _userRoutes.confirm);
-brain.get("/s/user-restartpass", _userRoutes.restartPassword);
-brain.post("/s/user-login", _userRoutes.login);
-brain.get("/s/user-addpassport", _userRoutes.addPassport);
-brain.get("/s/user-rempassport", _userRoutes.remPassport);
-brain.get("/s/user-history", _userRoutes.history);
-brain.post("/s/user-logout", _userRoutes.logout);
+brain.get("/s/user", UserRoute.list);
+brain.get("/s/user/:filtername", UserRoute.list);
+brain.post("/s/user-register", UserRoute.register);
+brain.post("/s/user-confirm", UserRoute.confirm);
+brain.get("/s/user-restartpass", UserRoute.restartPassword);
+brain.post("/s/user-login", UserRoute.login);
+brain.get("/s/user-addpassport", UserRoute.addPassport);
+brain.get("/s/user-rempassport", UserRoute.remPassport);
+brain.get("/s/user-history", UserRoute.history);
+brain.post("/s/user-logout", UserRoute.logout);
 
 brain.get("/s/quotes", _quoteRoutes.quotes);
 brain.get("/s/quotes/:quote", _quoteRoutes.quote);
