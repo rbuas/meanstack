@@ -1,10 +1,21 @@
 var _nodemailer = require("nodemailer");
+var _hbs = require('handlebars');
+var _fs = require("fs");
 
 var Log = require("../brain/log");
 var System = require("../brain/system");
 var E = System.error;
 
-var _defaultoptions = {
+
+module.exports = WebMailer;
+function WebMailer (options) {
+    var self = this;
+    self.options = Object.assign(WebMailer.defaultoptions, options) || {};
+    self.transporter = _nodemailer.createTransport(self.options.smtp);
+    self.templates = {};
+}
+
+WebMailer.defaultoptions = {
     smtp : {
         service : "MailGun",
         domaine : "sandbox7675be11bc2a485e8ed106a5f916dfe4.mailgun.org",
@@ -13,15 +24,9 @@ var _defaultoptions = {
             user: 'postmaster@sandbox7675be11bc2a485e8ed106a5f916dfe4.mailgun.org',
             pass: 'bcda9d2c8227c18bcdeec6e6a2b90a45'
         }
-    }
-}
-
-module.exports = WebMailer;
-function WebMailer (options) {
-    var self = this;
-    self.options = Object.assign(_defaultoptions, options) || {};
-    self.transporter = _nodemailer.createTransport(self.options.smtp);
-    self.templates = {};
+    },
+    templateDir : __dirname + "/../views/",
+    fake : true
 }
 
 WebMailer.ERROR = {
@@ -49,21 +54,39 @@ System.registerErrors(WebMailer.ERRORMESSAGE);
 
 WebMailer.prototype.send = function(options , callback) {
     var self = this;
-    var sendoptions = {};
-    sendoptions.to = options.to;
-    sendoptions.from = options.from;
-    sendoptions.subject = options.subject;
+    var mail = {};
+    mail.to = options.to;
+    mail.from = options.from;
+    mail.subject = options.subject;
+
     if(options.mode == "HTML") {
-        sendoptions.html = getHTML(self, options.template, options.data);
+        mail.html = getHTML(self, options.template, options.data);
     } else {
-        sendoptions.text = options.data;
+        mail.text = options.data;
     }
-    self.transporter.sendMail(sendoptions, callback);
+
+    if(self.options.fake) {
+        console.log("FAKE WebMailer.send : ", mail);
+        if(callback) callback(null, mail);
+        return;
+    }
+    self.transporter.sendMail(mail, callback);
 }
 
 
 
 // PRIVATE
 function getHTML(self, template, data) {
-    //TODO
+    if(!self || !template) return;
+
+    var templateCompiled = self.templates && self.templates[template];
+    if(!templateCompiled) {
+        var templateContent = _fs.readFileSync(self.options.templateDir + template + ".html", 'utf8');
+        templateCompiled = self.templates[template] = _hbs.compile(templateContent);
+        if(!templateCompiled)
+            return;
+    }
+
+    var html = templateCompiled(data);
+    return html;
 }

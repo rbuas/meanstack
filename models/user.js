@@ -217,8 +217,9 @@ User.Remove = function (where, callback) {
  * @param callback function Callback params (error, users)
  */
 User.Find = function(where, callback) {
-    if(where.name) where.name = new RegExp(where.name, "i");
-    if(where.label) where.label = new RegExp(where.label, "i");
+    if(where.name) where.name = new RegExp(RegExp.escape(where.name), 'i');
+    if(where.email) where.email = new RegExp(RegExp.escape(where.email), 'i');
+    if(where.label) where.label = new RegExp(RegExp.escape(where.label), 'i');
     if(where.since) where.since = {$gt : where.since};
     if(where.lastlogin) where.lastlogin = {$gt : where.lastlogin};
 

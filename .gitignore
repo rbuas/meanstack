@@ -3,4 +3,3 @@ data/*
 mongodb/*
 static/styles/*
 static/scripts/*
-test.test

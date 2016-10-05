@@ -14,6 +14,10 @@ String.prototype.trim = function () {
     return this.replace(/^\s+|\s+$/g, "");
 }
 
+RegExp.escape = function(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
+
 module.exports.getObjectValues = function (dataObject) {
     if(!dataObject)
         return;

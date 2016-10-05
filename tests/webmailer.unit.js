@@ -16,7 +16,7 @@ describe("unit.webmailer", function() {
     var wm;
 
     before(function(done) {
-        wm = new WebMailer();
+        wm = new WebMailer({fake:true});
         done();
     });
 
@@ -24,17 +24,30 @@ describe("unit.webmailer", function() {
         done();
     });
 
-    // describe("send", function() {
-    //     it("success", function(done) {
-    //         wm.send({
-    //             to : "rodrigobuas@gmail.com",
-    //             subject : "test",
-    //             from : "test@rbuas.com",
-    //             mode : "TEXT",
-    //             data : "test test test ;-)"
-    //         }, function(err, info) {
-    //             done();
-    //         });
-    //     });
-    // });
+    describe("send", function() {
+        it("success-text", function(done) {
+            wm.send({
+                to : "rodrigobuas@gmail.com",
+                subject : "test",
+                from : "test@rbuas.com",
+                mode : "TEXT",
+                data : "test test test ;-)"
+            }, function(err, info) {
+                done();
+            });
+        });
+
+        it("success-html", function(done) {
+            wm.send({
+                to : "rodrigobuas@gmail.com",
+                subject : "test",
+                from : "test@rbuas.com",
+                mode : "HTML",
+                data : {test:"AAA", test2:"BBB"},
+                template : "mail",
+            }, function(err, info) {
+                done();
+            });
+        });
+    });
 });
