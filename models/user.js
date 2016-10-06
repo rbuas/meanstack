@@ -6,12 +6,14 @@ var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
 var System = require("../brain/system");
 var E = System.error;
+var WebMailer = require("../brain/webmailer");
+var Dictionary = require("../brain/dictionary");
+var I = Dictionary.get;
 
 var SALT_WORK_FACTOR = 10;
 var USING_ENCRIPT = true;
 
-module.exports = User;
-function User () {}
+module.exports = User = {};
 
 User.STATUS = {
     ON : "ON",
@@ -52,6 +54,7 @@ User.ERRORMESSAGE = {
 System.registerErrors(User.ERRORMESSAGE);
 
 
+User.Mailer = new WebMailer();
 
 /**
  * User Schema
@@ -101,6 +104,19 @@ User.Schema.pre("save", function(next) {
     }
     else if(user.isModified("email")) {
         user.status = user.forcestatus || User.STATUS.CONFIRM;
+        if(user.status == User.STATUS.CONFIRM) {
+            User.Mailer.send({
+                to : user.email,
+                subject : I("USER_MAILCONFIRM_SUBJECT", user.lang),
+                from : I("USER_MAILFROM", user.lang),
+                mode : "HTML",
+                data : {test:"AAA", test2:"BBB"},
+                template : "test",
+            }, function(err, info) {
+                if(err)
+                    Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email);
+            });
+        }
     }
     else {
         user.status = user.forcestatus || user.status || User.STATUS.CONFIRM;

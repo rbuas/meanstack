@@ -1,0 +1,7 @@
+{
+    "USER_MAILFROM" : "contact@grbuas.com",
+    "USER_MAILCONFIRM_SUBJECT" : {
+        "PT" : "[RBUAS] Confirmação de email",
+        "EN" : "[RBUAS] Email confirmation"
+    }
+}

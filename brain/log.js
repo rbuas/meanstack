@@ -1,8 +1,7 @@
 var _chalk = require("chalk");
 var _util = require("util");
 
-module.exports = Log;
-function Log () {}
+module.exports = Log = {};
 
 Log.error = function(message, obj) {
     var line = _chalk.bold.red("ERROR : ") + _chalk.red(message);
@@ -33,10 +32,19 @@ Log.message = function(message, obj) {
         console.log(line);
 }
 
+Log.trace = function(message, obj) {
+    Log.message(message, obj);
+    //TODO save it into file trace.log
+}
+
 Log.section = function (message) {
     var line = _chalk.bgBlack.white("SECTION - " + message);
     Log.message(line);
 }
+
+
+
+// PRIVATE
 
 function dump (obj) {
     return _util.inspect(obj, {depth:null});

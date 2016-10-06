@@ -1,7 +1,6 @@
 var _fs = require("fs");
 
-module.exports = System;
-function System () {};
+module.exports = System = {};
 
 System.errorconfig = {};
 

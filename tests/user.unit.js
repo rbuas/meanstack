@@ -8,8 +8,11 @@ var _moment = require("moment");
 var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
 var Memory = require("../brain/memory");
+var WebMailer = require("../brain/webmailer");
 var User = require("../models/user");
 
+Dictionary.load(__dirname + "/../common.json");
+WebMailer.fake(true);
 
 describe("unit.user", function() {
     var m;

@@ -9,14 +9,19 @@ var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
 var Memory = require("../brain/memory");
 var WebMailer = require("../brain/webmailer");
+var ViewEngine = require("../brain/viewengine");
+var Dictionary = require("../brain/dictionary");
 var User = require("../models/user");
 
+ViewEngine.setPath(__dirname + "/");
+Dictionary.load(__dirname + "/../common.json");
+WebMailer.fake(true);
 
 describe("unit.webmailer", function() {
     var wm;
 
     before(function(done) {
-        wm = new WebMailer({fake:true});
+        wm = new WebMailer();
         done();
     });
 
@@ -44,7 +49,7 @@ describe("unit.webmailer", function() {
                 from : "test@rbuas.com",
                 mode : "HTML",
                 data : {test:"AAA", test2:"BBB"},
-                template : "mail",
+                template : "test",
             }, function(err, info) {
                 done();
             });

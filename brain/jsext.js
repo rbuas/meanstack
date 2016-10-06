@@ -24,3 +24,11 @@ module.exports.getObjectValues = function (dataObject) {
     var dataArray = Object.keys(dataObject).map(function(k){return dataObject[k]});
     return dataArray;
 }
+
+module.exports.first = function(obj) {
+    for (var i in obj) {
+        if (obj.hasOwnProperty(i) && typeof(i) !== 'function') {
+            return obj[i];
+        }
+    }
+}
