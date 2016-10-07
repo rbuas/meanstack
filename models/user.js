@@ -10,10 +10,11 @@ var WebMailer = require("../brain/webmailer");
 var Dictionary = require("../brain/dictionary");
 var I = Dictionary.get;
 
-var SALT_WORK_FACTOR = 10;
-var USING_ENCRIPT = true;
-
 module.exports = User = {};
+
+User.SALT_WORK_FACTOR = 10;
+User.USING_ENCRIPT = true;
+User.VERBOSE = true;
 
 User.STATUS = {
     ON : "ON",
@@ -53,7 +54,6 @@ User.ERRORMESSAGE = {
 };
 System.registerErrors(User.ERRORMESSAGE);
 
-
 User.Mailer = new WebMailer();
 
 /**
@@ -83,7 +83,7 @@ User.Schema = new _mongoose.Schema({
  * @param callback function Callback params (error, isMatch)
  */
 User.Schema.methods.ComparePassword = function(candidate, callback) {
-    if(USING_ENCRIPT) {
+    if(User.USING_ENCRIPT) {
         _bcrypt.compare(candidate, this.password, function(err, isMatch) {
             var error = !isMatch ? E(User.ERROR.USER_WRONG_PASSWORD, err) : null;
             if(callback) return callback(error, isMatch);
@@ -110,11 +110,18 @@ User.Schema.pre("save", function(next) {
                 subject : I("USER_MAILCONFIRM_SUBJECT", user.lang),
                 from : I("USER_MAILFROM", user.lang),
                 mode : "HTML",
-                data : {test:"AAA", test2:"BBB"},
-                template : "test",
+                data : {
+                    useremail : user.email,
+                    username : user.name,
+                    confirmlink : "TODO",
+                    title : I("USER_MAILCONFIRM_TITLE", user.lang),
+                    pretext : I("USER_MAILCONFIRM_PRETEXT", user.lang),
+                    postext : I("USER_MAILCONFIRM_POSTEXT", user.lang),
+                },
+                template : "mail"
             }, function(err, info) {
-                if(err)
-                    Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email);
+                if(User.VERBOSE && err)
+                    Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email, err);
             });
         }
     }
@@ -124,12 +131,12 @@ User.Schema.pre("save", function(next) {
 
     user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
 
-    if(USING_ENCRIPT) {
+    if(User.USING_ENCRIPT) {
         // only hash the password if it has been modified (or is new)
         if (!user.isModified("password")) return next();
 
         // generate a salt
-        _bcrypt.genSalt(SALT_WORK_FACTOR || 10, function(err, salt) {
+        _bcrypt.genSalt(User.SALT_WORK_FACTOR || 10, function(err, salt) {
             if (err) return next(err);
 
             // hash the password using our new salt

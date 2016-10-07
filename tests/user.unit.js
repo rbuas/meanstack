@@ -9,10 +9,14 @@ var JsExt = require("../brain/jsext");
 var Log = require("../brain/log");
 var Memory = require("../brain/memory");
 var WebMailer = require("../brain/webmailer");
+var ViewEngine = require("../brain/viewengine");
 var User = require("../models/user");
 
 Dictionary.load(__dirname + "/../common.json");
-WebMailer.fake(true);
+ViewEngine.setPath(__dirname + "/");
+WebMailer.FAKE = true;
+WebMailer.SILENCE = true;
+User.VERBOSE = false;
 
 describe("unit.user", function() {
     var m;

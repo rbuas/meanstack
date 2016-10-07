@@ -15,7 +15,7 @@ var User = require("../models/user");
 
 ViewEngine.setPath(__dirname + "/");
 Dictionary.load(__dirname + "/../common.json");
-WebMailer.fake(true);
+WebMailer.FAKE = true;
 
 describe("unit.webmailer", function() {
     var wm;
@@ -49,7 +49,7 @@ describe("unit.webmailer", function() {
                 from : "test@rbuas.com",
                 mode : "HTML",
                 data : {test:"AAA", test2:"BBB"},
-                template : "test",
+                template : "mail",
             }, function(err, info) {
                 done();
             });

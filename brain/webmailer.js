@@ -28,9 +28,7 @@ WebMailer.defaultoptions = {
 }
 
 WebMailer.FAKE = false;
-WebMailer.fake = function(active) {
-    WebMailer.FAKE = active;
-}
+WebMailer.SILENCE = false;
 
 WebMailer.ERROR = {};
 WebMailer.ERRORMESSAGE = {};
@@ -50,7 +48,9 @@ WebMailer.prototype.send = function(options , callback) {
     }
 
     if(WebMailer.FAKE) {
-        console.log("FAKE WebMailer.send : ", mail);
+        if(!WebMailer.SILENCE) {
+            console.log("FAKE WebMailer.send : ", mail);
+        }
         if(callback) callback(null, mail);
         return;
     }
