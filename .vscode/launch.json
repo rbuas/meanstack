@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "App Debug",
+            "name": "Backbone Debug",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/app.js",
+            "program": "${workspaceRoot}/backbone.js",
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
@@ -26,7 +26,7 @@
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["./tests/*.unit.js", "--no-timeouts", "--colors"],
+            "args": ["./tests/*.unit.js", /*"--no-timeouts",*/ "--colors"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null
         },
@@ -35,7 +35,7 @@
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["./tests/*.unit.js", "--no-timeouts", "--colors"],
+            "args": ["./tests/*.api.js", "--no-timeouts", "--colors"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null
         },

@@ -2,58 +2,76 @@ var System = require("../brain/system");
 var Log = require("../brain/log");
 var User = require("../models/user");
 
-module.exports = UserRoute;
-function UserRoute () {}
-
-UserRoute.list = function(req, res) {
-    var criteria = {
-        status : req.body.status,
-        label : req.body.label,
-        name : req.body.name,
-        birthday : req.body.birthday,
-        since : req.body.since,
-        lastlogin : req.body.lastlogin,
-        gender : req.body.gender,
-        profile : req.body.profile,
-        origin : req.body.origin,
-        lang : req.body.lang,
-    };
-
-    User.Find(filterName, filterEmail, filterStatus, function(err, users) {
-        res.json(users);
-    });
-}
+module.exports = UserRoute = {};
 
 UserRoute.register = function(req, res) {
     var newuser = {
-        username : req.body.username,
         email : req.body.email,
         password : req.body.password,
+        label : req.body.label,
+        name : req.body.name,
         gender : req.body.gender,
         lang : req.body.lang,
-        birthday : req.body.birthday
+        birthday : req.body.birthday,
+        origin : req.body.origin,
+        profile : req.body.profile
     };
 
     User.Create(newuser, function(err, savedUser) {
         var response = {};
+
         if(err || !savedUser) {
-            var error = "A user already exists with that username or email";
-            Log.message(error);
-            response.error = error;
+            Log.message("User.Register failure", err);
+            response.error = err;
+            req.session.user = newuser;
+            delete(req.session.user.password);
         } else {
-            response.username = savedUser.username;
-            response.userstatus = savedUser.status;
+            response.success = User.MESSAGE.USER_SUCCESS;
+            req.session.user = {
+                label : savedUser.label,
+                name : savedUser.name,
+                status : savedUser.status,
+                email : savedUser.email,
+                logged : savedUser.status == User.STATUS.ON
+            };
         }
-        //update session
-        req.session.username = response.username;
-        req.session.userlogged = response.username != null;
+
         response.session = req.session;
 
         res.json(response);
     });
 }
 
-UserRoute.confirm = function(req, res) {
+UserRoute.unregister = function (req, res) {
+    var userkiller = {
+        email : req.body.email,
+        password : req.body.password
+    };
+    User.Unregister(userkiller, function(err, savedUser) {
+        var response = {};
+
+        if(err || !savedUser) {
+            Log.message("User.Register failure", err);
+            response.error = err;
+            req.session.user = newuser;
+            delete(req.session.user.password);
+        } else {
+            response.success = User.MESSAGE.USER_SUCCESS;
+            req.session.user = {
+                name : savedUser.name,
+                status : savedUser.status,
+                email : savedUser.email,
+                logged : savedUser.status == User.STATUS.ON
+            };
+        }
+
+        response.session = req.session;
+
+        res.json(response);
+    });
+}
+
+UserRoute.confirm = function (req, res) {
     if(req.session.username && req.session.userlogged) {
         res.redirect("/stories");
         return;
@@ -62,7 +80,7 @@ UserRoute.confirm = function(req, res) {
     //TODO
 }
 
-UserRoute.login = function(req, res) {
+UserRoute.login = function (req, res) {
     var email = req.body.email;
     var password = req.body.password;
     Log.message("Try to authenticate user ", email);
@@ -101,10 +119,6 @@ UserRoute.logout = function(req, res) {
     res.json(response);
 }
 
-UserRoute.confirm = function(req, res) {
-    //TODO
-}
-
 UserRoute.restartPassword = function(req, res) {
     //TODO
 }
@@ -119,4 +133,23 @@ UserRoute.remPassport = function(req, res) {
 
 UserRoute.history = function(req, res) {
     //TODO
+}
+
+UserRoute.list = function(req, res) {
+    var criteria = {
+        status : req.body.status,
+        label : req.body.label,
+        name : req.body.name,
+        birthday : req.body.birthday,
+        since : req.body.since,
+        lastlogin : req.body.lastlogin,
+        gender : req.body.gender,
+        profile : req.body.profile,
+        origin : req.body.origin,
+        lang : req.body.lang,
+    };
+
+    User.Find(filterName, filterEmail, filterStatus, function(err, users) {
+        res.json(users);
+    });
 }

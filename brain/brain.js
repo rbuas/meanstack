@@ -114,7 +114,7 @@ Brain.prototype.listen = function() {
     var address = self.options.address || "";
 
     return self.server.listen(port, function(request, response) {
-        var message = "App active at " + address;
+        var message = "Backbone active at " + address;
         if(port) message = message + ":" + port;
         Log.message(message);
     });

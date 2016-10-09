@@ -21,11 +21,14 @@ User.STATUS = {
     OFF : "OF",
     CONFIRM : "CF",
     BLOCK : "BL",
-    ANONYMOUS : "AN"
+    ANONYMOUS : "AN",
+    REMOVED : "RM"
 };
 User.GENDER = {
     M : "M",
-    F : "F"
+    MALE : "M",
+    F : "F",
+    FAMALE : "F"
 };
 User.PROFILE = {
     ADMIN : "AD",   //backoffice administrator
@@ -34,25 +37,19 @@ User.PROFILE = {
     GUEST : "GS",   //middleoffice guest
     CLIENT : "CL"   //frontoffice client
 };
-User.ERROR = {
-    USER_WRONG_PASSWORD : "USER_WRONG_PASSWORD",
-    USER_PARAMS : "USER_PARAMS",
-    USER_NOTFOUND : "USER_NOTFOUND",
-    USER_UNKNOW : "USER_UNKNOW",
-    USER_CONFIRMATION : "USER_CONFIRMATION",
-    USER_BLOCKED : "USER_BLOCKED",
-    USER_TOKEN : "USER_TOKEN"
-};
-User.ERRORMESSAGE = {
+User.ERROR = System.registerErrors({
     USER_WRONG_PASSWORD : "The password not match with registered password",
     USER_PARAMS : "Missing required params",
     USER_NOTFOUND : "Cant find the user",
     USER_UNKNOW : "Unknow user",
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked",
+    USER_REMOVED : "User removed",
     USER_TOKEN : "User token doesn't match"
-};
-System.registerErrors(User.ERRORMESSAGE);
+});
+User.MESSAGE = System.registerMessages({
+    USER_SUCCESS : "Operation success"
+})
 
 User.Mailer = new WebMailer();
 
@@ -77,8 +74,8 @@ User.Schema = new _mongoose.Schema({
     history : []
 }, { strict: true });
 
-/*******
- * @function ComparePassword
+/**
+ * ComparePassword
  * @param candidate string Password candidate
  * @param callback function Callback params (error, isMatch)
  */
@@ -97,6 +94,7 @@ User.Schema.methods.ComparePassword = function(candidate, callback) {
 
 User.Schema.pre("save", function(next) {
     var user = this;
+    var mustConfirm = false;
 
     // status settings
     if(user.isNew && user.isAnonymous) {
@@ -105,28 +103,16 @@ User.Schema.pre("save", function(next) {
     else if(user.isModified("email")) {
         user.status = user.forcestatus || User.STATUS.CONFIRM;
         if(user.status == User.STATUS.CONFIRM) {
-            User.Mailer.send({
-                to : user.email,
-                subject : I("USER_MAILCONFIRM_SUBJECT", user.lang),
-                from : I("USER_MAILFROM", user.lang),
-                mode : "HTML",
-                data : {
-                    useremail : user.email,
-                    username : user.name,
-                    confirmlink : "TODO",
-                    title : I("USER_MAILCONFIRM_TITLE", user.lang),
-                    pretext : I("USER_MAILCONFIRM_PRETEXT", user.lang),
-                    postext : I("USER_MAILCONFIRM_POSTEXT", user.lang),
-                },
-                template : "mail"
-            }, function(err, info) {
-                if(User.VERBOSE && err)
-                    Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email, err);
-            });
+            mustConfirm = true;
         }
     }
     else {
         user.status = user.forcestatus || user.status || User.STATUS.CONFIRM;
+    }
+
+    if(user.isModified("birthday")) {
+        var inputBirthday = user.birthday;
+
     }
 
     user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
@@ -151,18 +137,39 @@ User.Schema.pre("save", function(next) {
     } else {
         next();
     }
+
+    if(mustConfirm) {
+        User.Mailer.send({
+            to : user.email,
+            subject : I("USER_MAILCONFIRM_SUBJECT", user.lang),
+            from : I("USER_MAILFROM", user.lang),
+            mode : "HTML",
+            data : {
+                useremail : user.email,
+                username : user.name,
+                confirmlink : "TODO",
+                title : I("USER_MAILCONFIRM_TITLE", user.lang),
+                pretext : I("USER_MAILCONFIRM_PRETEXT", user.lang),
+                postext : I("USER_MAILCONFIRM_POSTEXT", user.lang),
+            },
+            template : "mail_confirm"
+        }, function(err, info) {
+            if(User.VERBOSE && err)
+                Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email, err);
+        });
+    }
 });
 
 User.DB = _mongoose.model("User", User.Schema);
 
 /**
- * @function Create
+ * Create
  * @param user object
  * @param callback function Callback params (error, savedUser)
  */
 User.Create = function(user, callback) {
     if(!user || !user.email || !user.password) {
-        if(callback) callback(E(User.ERROR.USER_PARAMS), false);
+        if(callback) callback(E(User.ERROR.USER_PARAMS, user), null);
         return;
     }
 
@@ -171,7 +178,7 @@ User.Create = function(user, callback) {
     newuser.label = user.label;
     newuser.password = user.password;
     newuser.name = user.name;
-    newuser.birthday = user.birthday;
+    newuser.birthday = user.birthday && _moment.utc(user.birthday, "MM-DD-YYYY");
     newuser.since = user.since;
     newuser.lastlogin = user.lastlogin;
     newuser.gender = user.gender;
@@ -187,8 +194,9 @@ User.Create = function(user, callback) {
     newuser.save(callback);
 }
 
+
 /**
- * @function CreateAnonymous
+ * CreateAnonymous
  * @param user object
  * @param callback function Callback params (error, savedUser)
  */
@@ -201,8 +209,9 @@ User.CreateAnonymous = function(callback) {
     newuser.save(callback);
 }
 
+
 /**
- * @function Update
+ * Update
  * @param user object User with newmail possibility
  * @param callback function Callback params (error, oldUserProperties)
  */
@@ -225,8 +234,9 @@ User.Update = function (user, callback) {
     });
 }
 
+
 /**
- * @function Remove
+ * Remove
  * @param where User properties in where syntaxe
  * @param callback function Callback params (error)
  */
@@ -234,8 +244,64 @@ User.Remove = function (where, callback) {
     User.DB.remove(where, callback);
 }
 
+
 /**
- * @function Find
+ * SoftRemove Remove user from the system but keep in memory.
+ * 
+ * @param token string token (id) to confirm user
+ * @param callback function Callback params (error, savedUser)
+ */
+User.SoftRemove = function(email, password, callback) {
+    if(!email || !password) {
+        if(callback) callback(E(User.ERROR.USER_PARAMS), null);
+        return;
+    }
+
+    User.DB.findOne({email:email}, function(err, user) {
+        if(!user) {
+            if(callback) callback(E(User.ERROR.USER_UNKNOW), null);
+            return;
+        }
+
+        user.ComparePassword(password, function(err, match) {
+            if(err) {
+                if(callback) callback(err, user);
+                return;
+            }
+
+            user.status = User.STATUS.REMOVED;
+            user.save(callback);
+        });
+    });
+}
+
+
+/**
+ * Restore Restore a soft removed user.
+ * 
+ * @param token string token (id) to confirm user
+ * @param callback function Callback params (error, savedUser)
+ */
+User.Restore = function(email, callback) {
+    if(!email) {
+        if(callback) callback(E(User.ERROR.USER_PARAMS), null);
+        return;
+    }
+
+    User.DB.findOne({email:email}, function(err, user) {
+        if(!user) {
+            if(callback) callback(E(User.ERROR.USER_UNKNOW), null);
+            return;
+        }
+
+        user.status = User.STATUS.OFF;
+        user.save(callback);
+    });
+}
+
+
+/**
+ * Find
  * @param where User properties in where syntaxe
  * @param callback function Callback params (error, users)
  */
@@ -258,8 +324,9 @@ User.Find = function(where, callback) {
     );
 }
 
+
 /**
- * @function Get
+ * Get
  * @param email User email
  * @param callback function Callback params (error, users)
  */
@@ -281,6 +348,7 @@ User.Get = function(email, callback) {
     );
 }
 
+
 /**
  * Purge the users with 'status'' from 'days'
  * 
@@ -299,8 +367,9 @@ User.Purge = function(days, status, callback) {
     User.DB.remove(where, callback);
 }
 
+
 /**
- * Purge the users with 'status'' from 'days'
+ * Confirm the users with 'status'' from 'days'
  * 
  * @param token string token (id) to confirm user
  * @param callback function Callback params (error, savedUser)
@@ -322,7 +391,6 @@ User.Confirm = function(token, callback) {
         user.save(callback);
     });
 }
-
 
 
 /**
@@ -350,6 +418,7 @@ User.GetResetToken = function(email, callback) {
         }
     );
 }
+
 
 /**
  * ResetPassword
@@ -380,6 +449,7 @@ User.ResetPassword = function(email, token, newpassword, callback) {
         user.save(callback);
     });
 }
+
 
 /**
  * Login
@@ -412,6 +482,9 @@ User.Login = function (email, password, callback) {
                 case User.STATUS.BLOCK:
                     err = E(User.ERROR.USER_BLOCKED);
                     break;
+                case User.STATUS.REMOVED:
+                    err = E(User.ERROR.USER_REMOVED);
+                    break;
                 case User.STATUS.OFF:
                     user.status = User.STATUS.ON;
                     user.lastlogin = _moment();
@@ -425,6 +498,7 @@ User.Login = function (email, password, callback) {
         });
     });
 }
+
 
 /**
  * Logout

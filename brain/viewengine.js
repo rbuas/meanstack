@@ -12,9 +12,7 @@ ViewEngine.path = __dirname + "/../views/";
 ViewEngine.ext = "html";
 ViewEngine.templates = {};
 
-ViewEngine.ERROR = {};
-ViewEngine.ERRORMESSAGE = {};
-System.registerErrors(ViewEngine.ERRORMESSAGE);
+ViewEngine.ERROR = System.registerErrors({});
 
 ViewEngine.setPath = function (path) {
     ViewEngine.path = path;

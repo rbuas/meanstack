@@ -1,3 +1,8 @@
+
+module.exports = JsExt = {};
+
+// JS Type Extensions
+
 Function.prototype.extends = function(ParentClass) {
     if(ParentClass.constructor == Function) {
         this.prototype = new ParentClass;
@@ -18,17 +23,46 @@ RegExp.escape = function(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 };
 
-module.exports.getObjectValues = function (dataObject) {
+
+// Extension's functions
+
+JsExt.getObjectValues = function (dataObject) {
     if(!dataObject)
         return;
     var dataArray = Object.keys(dataObject).map(function(k){return dataObject[k]});
     return dataArray;
 }
 
-module.exports.first = function(obj) {
+JsExt.serializeDictionary = function (obj, connector) {
+    if(!obj)
+        return;
+
+    connector = connector || ",";
+    var builder = [];
     for (var i in obj) {
-        if (obj.hasOwnProperty(i) && typeof(i) !== 'function') {
-            return obj[i];
-        }
+        if (!obj.hasOwnProperty(i) || typeof(i) === 'function') continue;
+
+        builder.push(i + "=" + obj[i]);
+    }
+    return builder.join(connector);
+}
+
+JsExt.buildUrl = function (link, params, paramStarter, connector) {
+    connector = connector || "";
+    var serializedParams = JsExt.serializeDictionary(params, connector);
+    var url = link || "";
+    if(serializedParams) {
+        paramStarter = paramStarter || "";
+        url += connector + serializedParams;
+    }
+
+    return url;
+}
+
+JsExt.first = function(obj) {
+    for (var i in obj) {
+        if (!obj.hasOwnProperty(i) || typeof(i) === 'function') continue;
+
+        return obj[i];
     }
 }

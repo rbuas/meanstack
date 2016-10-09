@@ -13,7 +13,6 @@ var ViewEngine = require("../brain/viewengine");
 var User = require("../models/user");
 
 Dictionary.load(__dirname + "/../common.json");
-ViewEngine.setPath(__dirname + "/");
 WebMailer.FAKE = true;
 WebMailer.SILENCE = true;
 User.VERBOSE = false;
@@ -46,7 +45,7 @@ describe("unit.user", function() {
             User.Create(user, function(err, savedUser) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal("USER_PARAMS");
-                _expect(savedUser).to.equal(false);
+                _expect(savedUser).to.be.null;
                 done();
             });
         });
@@ -55,7 +54,7 @@ describe("unit.user", function() {
             User.Create(user, function(err, savedUser) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal("USER_PARAMS");
-                _expect(savedUser).to.equal(false);
+                _expect(savedUser).to.be.null;
                 done();
             });
         });
@@ -64,7 +63,7 @@ describe("unit.user", function() {
             User.Create(user, function(err, savedUser) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal("USER_PARAMS");
-                _expect(savedUser).to.equal(false);
+                _expect(savedUser).to.be.null;
                 done();
             });
         });
@@ -75,6 +74,37 @@ describe("unit.user", function() {
                 _expect(savedUser).to.not.be.null;
                 _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
                 done();
+            });
+        });
+        it("full", function(done) {
+            var user = {
+                email : email1,
+                password : password,
+                label : "testlabel",
+                name : "testname",
+                gender : User.GENDER.M,
+                lang : "PT",
+                birthday : "01/01/1982",
+                origin : "testorigin",
+                profile : User.PROFILE.CLIENT
+            };
+            User.Create(user, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+               User.Get(email1, function(err2, savedUser2) {
+                    _expect(err2).to.be.null;
+                    _expect(savedUser2.email).to.be.equal(user.email);
+                    _expect(savedUser2.label).to.be.equal(user.label);
+                    _expect(savedUser2.name).to.be.equal(user.name);
+                    _expect(savedUser2.status).to.be.equal(User.STATUS.CONFIRM);
+                    _expect(savedUser2.gender).to.be.equal(user.gender);
+                    _expect(savedUser2.lang).to.be.equal(user.lang);
+                    _expect(savedUser2.birthday).to.not.be.null;
+                    _expect(_moment(savedUser2.birthday).format("DD/MM/YYYY")).to.be.equal(user.birthday);
+                    _expect(savedUser2.origin).to.be.equal(user.origin);
+                    _expect(savedUser2.profile).to.be.equal(user.profile);
+                    done();
+                });
             });
         });
         it("duplicate", function(done) {
@@ -395,6 +425,86 @@ describe("unit.user", function() {
                     _expect(err2).to.be.null;
                     done();
                 });
+            });
+        });
+    });
+
+    describe("softremove", function() {
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.Create({email: email1, password: password}, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
+                User.SoftRemove(email1, password, function(err2, savedUser2) {
+                    _expect(err2).to.be.null;
+                    _expect(savedUser2).to.not.be.null;
+                    _expect(savedUser2.status).to.be.equal(User.STATUS.REMOVED);
+                    User.Find({email: email1}, function(err3, users) {
+                        _expect(err3).to.be.null;
+                        _expect(users).to.not.be.null;
+                        _expect(users.length).to.equal(1);
+                        var user = users[0];
+                        _expect(user.status).to.be.equal(User.STATUS.REMOVED);
+                        done();
+                    });
+                });
+            });
+        });
+        it("notfound", function(done) {
+            User.SoftRemove(email1, password, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.be.equal(User.ERROR.USER_UNKNOW);
+                _expect(savedUser).to.be.null;
+                done();
+            });
+        });
+    });
+
+
+    describe("restore", function() {
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            User.Create({email: email1, password: password}, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
+                User.SoftRemove(email1, password, function(err2, savedUser2) {
+                    _expect(err2).to.be.null;
+                    _expect(savedUser2).to.not.be.null;
+                    _expect(savedUser2.status).to.be.equal(User.STATUS.REMOVED);
+                    User.Find({email: email1}, function(err3, users) {
+                        _expect(err3).to.be.null;
+                        _expect(users).to.not.be.null;
+                        _expect(users.length).to.equal(1);
+                        var user = users[0];
+                        _expect(user.status).to.be.equal(User.STATUS.REMOVED);
+                        User.Restore(email1, function(err4, savedUser4) {
+                            _expect(err4).to.be.null;
+                            _expect(savedUser4).to.not.be.null;
+                            _expect(savedUser4.status).to.be.equal(User.STATUS.OFF);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+        it("notfound", function(done) {
+            User.Restore(email1, function(err, savedUser) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.be.equal(User.ERROR.USER_UNKNOW);
+                _expect(savedUser).to.be.null;
+                done();
             });
         });
     });

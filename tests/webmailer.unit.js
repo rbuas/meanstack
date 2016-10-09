@@ -13,7 +13,6 @@ var ViewEngine = require("../brain/viewengine");
 var Dictionary = require("../brain/dictionary");
 var User = require("../models/user");
 
-ViewEngine.setPath(__dirname + "/");
 Dictionary.load(__dirname + "/../common.json");
 WebMailer.FAKE = true;
 
@@ -49,7 +48,7 @@ describe("unit.webmailer", function() {
                 from : "test@rbuas.com",
                 mode : "HTML",
                 data : {test:"AAA", test2:"BBB"},
-                template : "mail",
+                template : "mail_confirm",
             }, function(err, info) {
                 done();
             });

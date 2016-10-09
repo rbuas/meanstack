@@ -1,8 +1,10 @@
 var _fs = require("fs");
+var _util = require("util");
 
 module.exports = System = {};
 
 System.errorconfig = {};
+System.messageconfig = {};
 
 /**
  * registerErrors
@@ -10,7 +12,31 @@ System.errorconfig = {};
  */
 System.registerErrors = function (errorconfig) {
     System.errorconfig = Object.assign(System.errorconfig, errorconfig);
+    var objDefs = {};
+    for(var e in errorconfig) {
+        if(!errorconfig.hasOwnProperty(e)) continue;
+
+        objDefs[e] = e;
+    }
+    return objDefs;
 }
+
+
+/**
+ * registerMessages
+ * @param messageconfig table MESSAGE_CODE : MESSAGE_DESCRIPTION
+ */
+System.registerMessages = function (messageconfig) {
+    System.messageconfig = Object.assign(System.messageconfig, messageconfig);
+    var objDefs = {};
+    for(var e in messageconfig) {
+        if(!messageconfig.hasOwnProperty(e)) continue;
+
+        objDefs[e] = e;
+    }
+    return objDefs;
+}
+
 
 /**
  * error
@@ -21,7 +47,7 @@ System.error = function (code, detail) {
     var error = System.errorconfig[code];
     var message = error || "";
     if(detail)
-        message += "(" + detail + ")";
+        message += "(" + _util.inspect(detail) + ")";
 
     return {code:code, detail:message};
 }

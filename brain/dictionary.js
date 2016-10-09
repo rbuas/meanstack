@@ -10,9 +10,7 @@ module.exports = Dictionary = {};
 
 Dictionary.data = {};
 
-Dictionary.ERROR = {};
-Dictionary.ERRORMESSAGE = {};
-System.registerErrors(Dictionary.ERRORMESSAGE);
+Dictionary.ERROR = System.registerErrors({});
 
 Dictionary.load = function (file) {
     var filecontent = _fs.readFileSync(file, 'utf8');
