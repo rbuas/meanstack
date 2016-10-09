@@ -492,7 +492,7 @@ describe("unit.user", function() {
                         User.Restore(email1, function(err4, savedUser4) {
                             _expect(err4).to.be.null;
                             _expect(savedUser4).to.not.be.null;
-                            _expect(savedUser4.status).to.be.equal(User.STATUS.OFF);
+                            _expect(savedUser4.status).to.be.equal(User.STATUS.CONFIRM);
                             done();
                         });
                     });

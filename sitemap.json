@@ -6,8 +6,5 @@
         "title":"",
         "resume":"",
         "priority":1
-    },
-    "/test": {
-        "title": "title test"
-    } 
+    }
 }

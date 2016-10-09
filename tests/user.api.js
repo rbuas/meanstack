@@ -25,12 +25,18 @@ TestUserApi.extends( TestRouteApi );
 function TestUserApi (options) {
     TestRouteApi.call(this, options);
 }
+
 TestUserApi.prototype.register = function (data, callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-register", method:forcemethod || "POST", data:data}, callback);
+    self.request({path : "/s/user-register", method : forcemethod || "POST", data : data}, callback);
 }
 
-describe("unit.user", function() {
+TestUserApi.prototype.unregister = function (email, password, callback, forcemethod) {
+    var self = this;
+    self.request({path : "/s/user-unregister", method : forcemethod || "POST", data : {email : email, password : password}}, callback);
+}
+
+describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
     var email2 = "rodrigobuas+unittest2@gmail.com";
@@ -168,5 +174,88 @@ describe("unit.user", function() {
             );
         });
 
+    });
+
+    describe("uregister", function() {
+        beforeEach(function(done) {
+            User.Create({email: email1, password: password}, function() {
+                done();
+            });
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                done();
+            });
+        });
+
+        it("method-ko", function(done) {
+            test.unregister(null, null, function(err, info, data) {
+                _expect(err).to.not.be.null;
+                _expect(err.code).to.be.equal(TestRouteApi.ERROR.TEST_JSONPARSE);
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(404);
+                done();
+            }, "GET");
+        });
+
+        it("method-ok", function(done) {
+            test.unregister(null, null, function(err, info, data) {
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                done();
+            }, "POST");
+        });
+
+        it("missingparams", function(done) {
+            test.unregister(null, null, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_PARAMS);
+                done();
+            });
+        });
+
+        it("unregistered", function(done) {
+            test.unregister(email2, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_UNKNOW);
+                done();
+            });
+        });
+
+        it("wrongpassword", function(done) {
+            test.unregister(email1, password + "kkk", function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_WRONG_PASSWORD);
+                done();
+            });
+        });
+
+
+        it("success", function(done) {
+            test.unregister(email1, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.session).to.not.be.null;
+                _expect(data.session.user).to.not.be.null;
+                _expect(data.session.user.email).to.be.equal(email1);
+                done();
+            });
+        });
     });
 });

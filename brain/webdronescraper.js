@@ -1,7 +1,7 @@
 var _http = require("http");
 var _cheerio = require("cheerio");
 
-var _log = require("./log");
+var Log = require("./log");
 
 module.exports = WebDroneScraper;
 
@@ -84,7 +84,7 @@ WebDroneScraper.prototype.sitemap = function (mapfile, host, port, eachCallback,
     self.mapfile = mapfile;
     self.sitemap = require(self.mapfile);
     if(!self.sitemap) {
-        _log.error("Can not load sitemap from : " + mapfile);
+        Log.error("Can not load sitemap from : " + mapfile);
         if(endCallback) endCallback();
         return;
     }
@@ -98,7 +98,7 @@ WebDroneScraper.prototype.sitemap = function (mapfile, host, port, eachCallback,
     }
 
     if(sitemaplinks.length == 0) {
-        _log.message("No links into sitemap");
+        Log.message("No links into sitemap");
         if(endCallback) endCallback();
         return;
     }
@@ -106,6 +106,17 @@ WebDroneScraper.prototype.sitemap = function (mapfile, host, port, eachCallback,
     return self.scrap(sitemaplinks, eachCallback, endCallback);
 }
 
+WebDroneScraper.prototype.getStatsUrl = function (stats) {
+    if(!stats || !stats.link)
+        return;
+
+    var url = stats.link.hostname || stats.link.host || "";
+    if(stats.link.port) {
+        url += ":" + stats.link.port;
+    }
+    url += stats.link.path;
+    return url;
+}
 
 // PRIVATE
 
@@ -128,7 +139,7 @@ function generatStatsId (link) {
 
 function stockStats (stats, link, res, duration, droneinfo) {
     if(!stats) {
-        _log.error("Missing stats object to stock info into it");
+        Log.error("Missing stats object to stock info into it");
         return false;
     }
 
@@ -148,7 +159,7 @@ function stockStats (stats, link, res, duration, droneinfo) {
             cacheControl : res.headers && res.headers["cache-control"],
             contentType : res.headers && res.headers["content-type"],
             connection : res.headers && res.headers["connection"],
-            contentLength : res.headers && res.headers["content-length"],
+            contentLength : parseInt(res.headers && res.headers["content-length"]),
             droneinfo : droneinfo
         };
     }
@@ -159,7 +170,7 @@ function stockStats (stats, link, res, duration, droneinfo) {
 
 function sendUpdateStats (self, newstats) {
     if(!self) {
-        _log.error("Missing main object");
+        Log.error("Missing main object");
         return;
     }
     if(self.updatestats) self.updatestats(newstats, self.stats);

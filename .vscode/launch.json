@@ -22,6 +22,15 @@
             "outDir": null
         },
         {
+            "name": "Run tests",
+            "type": "node",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": ["./tests/*.unit.js", "./tests/*.api.js", "./tests/sitemap.js", /*"--no-timeouts",*/ "--colors"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null
+        },
+        {
             "name": "Run unit tests",
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
@@ -35,7 +44,7 @@
             "type": "node",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["./tests/*.api.js", "--no-timeouts", "--colors"],
+            "args": ["./tests/*.api.js", /*"--no-timeouts",*/ "--colors"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null
         },

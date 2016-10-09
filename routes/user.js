@@ -21,7 +21,7 @@ UserRoute.register = function(req, res) {
         var response = {};
 
         if(err || !savedUser) {
-            Log.message("User.Register failure", err);
+            Log.message("user.register failure", err);
             response.error = err;
             req.session.user = newuser;
             delete(req.session.user.password);
@@ -43,27 +43,18 @@ UserRoute.register = function(req, res) {
 }
 
 UserRoute.unregister = function (req, res) {
-    var userkiller = {
-        email : req.body.email,
-        password : req.body.password
-    };
-    User.Unregister(userkiller, function(err, savedUser) {
+    User.SoftRemove(req.body.email, req.body.password, function(err, savedUser) {
         var response = {};
 
         if(err || !savedUser) {
-            Log.message("User.Register failure", err);
+            Log.message("user.unregister failure", err);
             response.error = err;
-            req.session.user = newuser;
-            delete(req.session.user.password);
         } else {
             response.success = User.MESSAGE.USER_SUCCESS;
-            req.session.user = {
-                name : savedUser.name,
-                status : savedUser.status,
-                email : savedUser.email,
-                logged : savedUser.status == User.STATUS.ON
-            };
         }
+        req.session.user = {
+            email : req.body.email
+        };
 
         response.session = req.session;
 

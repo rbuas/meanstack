@@ -1,18 +1,20 @@
 var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
-var _log = require("../libs/log");
-var WebDroneScraper = require("../libs/webdronescraper");
+
+var Log = require("../brain/log");
+var WebDroneScraper = require("../brain/webdronescraper");
 
 describe("basicload", function() {
     var wdc;
 
-    before(function() {
+    before(function(done) {
         // runs before all tests in this block
         wdc = new WebDroneScraper();
+        done();
     });
     after(function() {
-        _log.message("Stats: ", wdc.stats);
+        //Log.message("Stats: ", wdc.stats);
     });
 
     it("load sitemap", function(done) {
@@ -20,8 +22,25 @@ describe("basicload", function() {
             "../sitemap.json",
             "localhost",
             "8080",
-            null,
-            function(data, stats) {
+            function (data, stats) {
+                _expect(data).to.be.not.null;
+                _expect(stats).to.not.be.null;
+
+                var url = wdc.getStatsUrl(stats) || "";
+                Log.message("SITEMAP::" + url);
+
+                _expect(stats.complete).to.be.equal(true);
+                _expect(stats.statusCode).to.be.equal(200);
+
+                if(stats.duration > 1000) {
+                    Log.warning("Exceeding load time limits");
+                }
+                if(stats.contentLength > 500000) {
+                    Log.warning("Exceeding load size limits");
+                }
+            },
+            function (data, stats) {
+                Log.message("Stats: ", stats);
                 done();
             }
         );

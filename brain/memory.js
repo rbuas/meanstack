@@ -21,15 +21,22 @@ Memory.prototype.connect = function(callback) {
 
     _mongoose.connect(self.options.db);
     _mongoose.Promise = global.Promise;
+    self.callbackCalled = false;
 
     _mongoose.connection.on("connected", function() {
         Log.message("Mongoose connected to " + self.options.db);
-        if(callback) callback();
+        if(callback && !self.callbackCalled) {
+            callback();
+            self.callbackCalled = true;
+        }
     });
 
     _mongoose.connection.on("error", function(err) {
         Log.error("Mongoose connection error : " + err);
-        if(callback) callback();
+        if(callback && !self.callbackCalled) {
+            callback();
+            self.callbackCalled = true;
+        }
     });
 
     _mongoose.connection.on("disconnect", function () {

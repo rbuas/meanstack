@@ -94,7 +94,6 @@ User.Schema.methods.ComparePassword = function(candidate, callback) {
 
 User.Schema.pre("save", function(next) {
     var user = this;
-    var mustConfirm = false;
 
     // status settings
     if(user.isNew && user.isAnonymous) {
@@ -102,17 +101,9 @@ User.Schema.pre("save", function(next) {
     }
     else if(user.isModified("email")) {
         user.status = user.forcestatus || User.STATUS.CONFIRM;
-        if(user.status == User.STATUS.CONFIRM) {
-            mustConfirm = true;
-        }
     }
     else {
         user.status = user.forcestatus || user.status || User.STATUS.CONFIRM;
-    }
-
-    if(user.isModified("birthday")) {
-        var inputBirthday = user.birthday;
-
     }
 
     user.label = user.label || user.email && user.email.substr(0, user.email.indexOf("@"));
@@ -138,7 +129,7 @@ User.Schema.pre("save", function(next) {
         next();
     }
 
-    if(mustConfirm) {
+    if(user.status == User.STATUS.CONFIRM) {
         User.Mailer.send({
             to : user.email,
             subject : I("USER_MAILCONFIRM_SUBJECT", user.lang),
@@ -294,7 +285,7 @@ User.Restore = function(email, callback) {
             return;
         }
 
-        user.status = User.STATUS.OFF;
+        user.status = User.STATUS.CONFIRM;
         user.save(callback);
     });
 }
