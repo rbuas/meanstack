@@ -4,6 +4,11 @@ var User = require("../models/user");
 
 module.exports = UserRoute = {};
 
+UserRoute.verifyLogged = function(req) {
+    var logged = req.session && req.session.user && req.session.user.logged;
+    return logged;
+}
+
 UserRoute.register = function(req, res) {
     var newuser = {
         email : req.body.email,
@@ -63,13 +68,22 @@ UserRoute.unregister = function (req, res) {
 }
 
 UserRoute.confirm = function (req, res) {
-    if(req.session.username && req.session.userlogged) {
-        res.redirect("/stories");
-        return;
-    }
+    var token = req.params.token;
 
-    //TODO
+    User.Confirm(token, function (err, savedUser) {
+        var response = {};
+
+        if(err || !savedUser) {
+            Log.message("user.register failure", err);
+            response.error = err;
+        }
+
+        res.json(response);
+    });
 }
+
+
+
 
 UserRoute.login = function (req, res) {
     var email = req.body.email;

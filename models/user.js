@@ -138,7 +138,7 @@ User.Schema.pre("save", function(next) {
             data : {
                 useremail : user.email,
                 username : user.name,
-                confirmlink : "TODO",
+                confirmlink : "/s/user-confirm/" + user._id,
                 title : I("USER_MAILCONFIRM_TITLE", user.lang),
                 pretext : I("USER_MAILCONFIRM_PRETEXT", user.lang),
                 postext : I("USER_MAILCONFIRM_POSTEXT", user.lang),
@@ -329,7 +329,7 @@ User.Get = function(email, callback) {
 
     return User.DB.findOne(
         {email:email}, 
-        {password:0, token:0, history:0, __v:0}, 
+        {password:0, history:0, __v:0}, 
         function(err, user) {
             if(err || !user) {
                 err = E(User.ERROR.USER_NOTFOUND, err);
@@ -374,7 +374,7 @@ User.Confirm = function(token, callback) {
     User.Find({_id:token}, function(err, users) {
         var user = users && users.length ? users[0] : null;
         if(!user) {
-            if(callback) callback(E(User.ERROR.USER_PARAMS), null);
+            if(callback) callback(E(User.ERROR.USER_TOKEN), null);
             return;
         }
 

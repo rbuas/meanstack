@@ -36,6 +36,11 @@ TestUserApi.prototype.unregister = function (email, password, callback, forcemet
     self.request({path : "/s/user-unregister", method : forcemethod || "POST", data : {email : email, password : password}}, callback);
 }
 
+TestUserApi.prototype.confirm = function (token, callback) {
+    var self = this;
+    self.request({path : "/s/user-confirm/" + token || "", method : "GET"}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -243,7 +248,6 @@ describe("api.user", function() {
             });
         });
 
-
         it("success", function(done) {
             test.unregister(email1, password, function(err, info, data) {
                 _expect(err).to.be.null;
@@ -257,5 +261,78 @@ describe("api.user", function() {
                 done();
             });
         });
+    });
+
+    describe("confirm", function() {
+        var token;
+
+        beforeEach(function(done) {
+            User.Create({email: email1, password: password}, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.id).to.not.be.null;
+                _expect(savedUser.status).to.be.equal(User.STATUS.CONFIRM);
+                token = savedUser.id;
+                done();
+            });
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            test.confirm(token, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email1, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.OFF);
+                    _expect(user.id).to.be.equal(token);
+                    done();
+                });
+            });
+        });
+
+        it("missingtoken", function(done) {
+            test.confirm(null, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_TOKEN);
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email1, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.CONFIRM);
+                    _expect(user.id).to.be.equal(token);
+                    done();
+                });
+            });
+        });
+
+        it("wrongtoken", function(done) {
+            test.confirm("aaa", function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_TOKEN);
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email1, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.CONFIRM);
+                    _expect(user.id).to.be.equal(token);
+                    done();
+                });
+            });
+        });
+
     });
 });
