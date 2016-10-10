@@ -1,3 +1,4 @@
+// call : ./node_modules/.bin/nightwatch tests/demo/nightwatch.js --verbose
 module.exports = {
   'step one' : function (browser) {
     browser

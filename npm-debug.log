@@ -1,46 +1,43 @@
 0 info it worked if it ends with ok
-1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'run', 'test-api' ]
-2 info using npm@3.10.3
-3 info using node@v5.10.0
-4 verbose run-script [ 'pretest-api', 'test-api', 'posttest-api' ]
-5 info lifecycle projectzero@1.0.0~pretest-api: projectzero@1.0.0
-6 silly lifecycle projectzero@1.0.0~pretest-api: no script for pretest-api, continuing
-7 info lifecycle projectzero@1.0.0~test-api: projectzero@1.0.0
-8 verbose lifecycle projectzero@1.0.0~test-api: unsafe-perm in lifecycle true
-9 verbose lifecycle projectzero@1.0.0~test-api: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/rbuas/RBUAS/weblabs/nodezero/node_modules/.bin:/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rbuas/RBUAS/nodejs/projectzero/drivers
-10 verbose lifecycle projectzero@1.0.0~test-api: CWD: /Users/rbuas/RBUAS/weblabs/nodezero
-11 silly lifecycle projectzero@1.0.0~test-api: Args: [ '-c',
-11 silly lifecycle   './node_modules/mocha/bin/_mocha ./tests/*.api.js --colors' ]
-12 silly lifecycle projectzero@1.0.0~test-api: Returned: code: 1  signal: null
-13 info lifecycle projectzero@1.0.0~test-api: Failed to exec test-api script
-14 verbose stack Error: projectzero@1.0.0 test-api: `./node_modules/mocha/bin/_mocha ./tests/*.api.js --colors`
-14 verbose stack Exit status 1
-14 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:242:16)
-14 verbose stack     at emitTwo (events.js:100:13)
-14 verbose stack     at EventEmitter.emit (events.js:185:7)
-14 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:40:14)
-14 verbose stack     at emitTwo (events.js:100:13)
-14 verbose stack     at ChildProcess.emit (events.js:185:7)
-14 verbose stack     at maybeClose (internal/child_process.js:850:16)
-14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:215:5)
-15 verbose pkgid projectzero@1.0.0
-16 verbose cwd /Users/rbuas/RBUAS/weblabs/nodezero
-17 error Darwin 15.6.0
-18 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "run" "test-api"
-19 error node v5.10.0
-20 error npm  v3.10.3
-21 error code ELIFECYCLE
-22 error projectzero@1.0.0 test-api: `./node_modules/mocha/bin/_mocha ./tests/*.api.js --colors`
-22 error Exit status 1
-23 error Failed at the projectzero@1.0.0 test-api script './node_modules/mocha/bin/_mocha ./tests/*.api.js --colors'.
-23 error Make sure you have the latest version of node.js and npm installed.
-23 error If you do, this is most likely a problem with the projectzero package,
-23 error not with npm itself.
-23 error Tell the author that this fails on your system:
-23 error     ./node_modules/mocha/bin/_mocha ./tests/*.api.js --colors
-23 error You can get information on how to open an issue for this project with:
-23 error     npm bugs projectzero
-23 error Or if that isn't available, you can get their info via:
-23 error     npm owner ls projectzero
-23 error There is likely additional logging output above.
-24 verbose exit [ 1, true ]
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'run',
+1 verbose cli   'tests' ]
+2 info using npm@2.15.9
+3 info using node@v4.5.0
+4 verbose run-script [ 'pretests', 'tests', 'posttests' ]
+5 info pretests projectzero@1.0.0
+6 info tests projectzero@1.0.0
+7 verbose unsafe-perm in lifecycle true
+8 info projectzero@1.0.0 Failed to exec tests script
+9 verbose stack Error: projectzero@1.0.0 tests: `./node_modules/mocha/bin/_mocha ./tests/*.unit.js ./tests/*.api.js ./tests/*.load.js --colors`
+9 verbose stack Exit status 1
+9 verbose stack     at EventEmitter.<anonymous> (C:\Program Files\nodejs\node_modules\npm\lib\utils\lifecycle.js:217:16)
+9 verbose stack     at emitTwo (events.js:87:13)
+9 verbose stack     at EventEmitter.emit (events.js:172:7)
+9 verbose stack     at ChildProcess.<anonymous> (C:\Program Files\nodejs\node_modules\npm\lib\utils\spawn.js:24:14)
+9 verbose stack     at emitTwo (events.js:87:13)
+9 verbose stack     at ChildProcess.emit (events.js:172:7)
+9 verbose stack     at maybeClose (internal/child_process.js:829:16)
+9 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
+10 verbose pkgid projectzero@1.0.0
+11 verbose cwd C:\TF\nodezero
+12 error Windows_NT 6.1.7601
+13 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "run" "tests"
+14 error node v4.5.0
+15 error npm  v2.15.9
+16 error code ELIFECYCLE
+17 error projectzero@1.0.0 tests: `./node_modules/mocha/bin/_mocha ./tests/*.unit.js ./tests/*.api.js ./tests/*.load.js --colors`
+17 error Exit status 1
+18 error Failed at the projectzero@1.0.0 tests script './node_modules/mocha/bin/_mocha ./tests/*.unit.js ./tests/*.api.js ./tests/*.load.js --colors'.
+18 error This is most likely a problem with the projectzero package,
+18 error not with npm itself.
+18 error Tell the author that this fails on your system:
+18 error     ./node_modules/mocha/bin/_mocha ./tests/*.unit.js ./tests/*.api.js ./tests/*.load.js --colors
+18 error You can get information on how to open an issue for this project with:
+18 error     npm bugs projectzero
+18 error Or if that isn't available, you can get their info via:
+18 error
+18 error     npm owner ls projectzero
+18 error There is likely additional logging output above.
+19 verbose exit [ 1, true ]

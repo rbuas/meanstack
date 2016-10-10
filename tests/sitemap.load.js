@@ -5,7 +5,7 @@ var _should = require("chai").should();
 var Log = require("../brain/log");
 var WebDroneScraper = require("../brain/webdronescraper");
 
-describe("basicload", function() {
+describe("load", function() {
     var wdc;
 
     before(function(done) {
@@ -17,7 +17,7 @@ describe("basicload", function() {
         //Log.message("Stats: ", wdc.stats);
     });
 
-    it("load sitemap", function(done) {
+    it("sitemap-once", function(done) {
         wdc.sitemap(
             "../sitemap.json",
             "localhost",

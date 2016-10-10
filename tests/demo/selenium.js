@@ -1,3 +1,5 @@
+// call : SELENIUM_BROWSER=chrome ./node_modules/mocha/bin/_mocha tests/selenium.js
+
 var _selenium = require('selenium-webdriver');
 var _by = require('selenium-webdriver').By;
 var _until = require('selenium-webdriver').until;
@@ -6,7 +8,6 @@ var _firefox = require('selenium-webdriver/firefox');
 var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
-var _log = require("../brain/log");
 
 describe("user-e2e", function() {
 
