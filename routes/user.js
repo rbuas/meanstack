@@ -1,4 +1,5 @@
 var System = require("../brain/system");
+var E = System.error;
 var Log = require("../brain/log");
 var User = require("../models/user");
 
@@ -92,10 +93,10 @@ UserRoute.login = function (req, res) {
     req.session.user = { mail : email, logged : false };
 
     User.Login(email, password, function(err, user) {
-        var response = { session:req.session };
+        var response = {};
         if(err || !user) {
             Log.message("Authentication failure to " + email, err);
-            response.loginerror = "Invalid user or password";
+            response.error = err;
         } else {
             Log.message("Authentication sucessfull to " + email);
             response.success = User.MESSAGE.USER_SUCCESS;
@@ -108,27 +109,40 @@ UserRoute.login = function (req, res) {
                 logged : user.status == User.STATUS.ON
             };
         }
+        response.session = req.session;
         res.json(response);
     });
 }
 
-
-
-
 UserRoute.logout = function(req, res) {
-    var response = { session:req.session };
-    if(!req.session.useremail || !req.session.userlogged) {
-        response.error = "Logout without login";
-        Log.message(response.error, req.session.useremail);
+    var response = {};
+    if(!req.session.user || !req.session.user.email || !req.session.user.logged) {
+        response.error = E(User.ERROR.USER_NOTLOGGED, req.session.user);
+        Log.message("Logout without login", req.session.user);
     } else {
-        response.username = User.Logout(req.session.useremail);
-        response.logout = true;
-
-        req.session.destroy();
+        User.Logout(req.session.user.email, function(err, user) {
+            if(err) {
+                Log.message("Logout failure to " + email, err);
+                response.error = err;
+            } else {
+                response.success = User.MESSAGE.USER_SUCCESS;
+                req.session.user = {
+                    label : user.label,
+                    name : user.name,
+                    status : user.status,
+                    email : user.email,
+                    lang : user.lang,
+                    logged : user.status == User.STATUS.ON
+                };
+            }
+            res.json(response);
+        });
     }
-
-    res.json(response);
 }
+
+
+
+
 
 UserRoute.restartPassword = function(req, res) {
     //TODO

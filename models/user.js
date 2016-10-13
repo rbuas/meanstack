@@ -42,6 +42,7 @@ User.ERROR = System.registerErrors({
     USER_PARAMS : "Missing required params",
     USER_NOTFOUND : "Cant find the user",
     USER_UNKNOW : "Unknow user",
+    USER_NOTLOGGED : "User not logged",
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked",
     USER_REMOVED : "User removed",

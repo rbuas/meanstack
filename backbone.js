@@ -23,6 +23,7 @@ brain.post("/s/user-register", UserRoute.register);
 brain.post("/s/user-unregister", UserRoute.unregister);
 brain.get("/s/user-confirm/:token", UserRoute.confirm);
 brain.post("/s/user-login", UserRoute.login);
+brain.post("/s/user-logout", UserRoute.logout);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
@@ -32,7 +33,7 @@ brain.get("/s/user-restartpass", UserRoute.restartPassword);
 brain.get("/s/user-addpassport", UserRoute.addPassport);
 brain.get("/s/user-rempassport", UserRoute.remPassport);
 brain.get("/s/user-history", UserRoute.history);
-brain.post("/s/user-logout", UserRoute.logout);
+
 
 brain.get("/s/quotes", _quoteRoutes.quotes);
 brain.get("/s/quotes/:quote", _quoteRoutes.quote);

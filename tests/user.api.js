@@ -46,6 +46,11 @@ TestUserApi.prototype.login = function (email, password, callback, forcemethod) 
     self.request({path : "/s/user-login/", method : forcemethod || "POST", data : {email:email, password:password}}, callback);
 }
 
+TestUserApi.prototype.logout = function (callback, forcemethod) {
+    var self = this;
+    self.request({path : "/s/user-logout", method : forcemethod || "POST"}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -371,6 +376,20 @@ describe("api.user", function() {
         });
 
         it("success", function(done) {
+            test.login(email2, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email2, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.ON);
+                    done();
+                });
+            });
+        });
+
+        it("confirm", function(done) {
             test.login(email1, password, function(err, info, data) {
                 _expect(err).to.be.null;
                 _expect(info).to.not.be.null;
@@ -378,11 +397,96 @@ describe("api.user", function() {
                 User.Get(email1, function (err, user) {
                     _expect(err).to.be.null;
                     _expect(user).to.not.be.null;
-                    _expect(user.status).to.be.equal(User.STATUS.OFF);
-                    _expect(user.id).to.be.equal(token);
+                    _expect(user.status).to.be.equal(User.STATUS.CONFIRM);
                     done();
                 });
             });
+        });
+
+        it("wrongpassword", function(done) {
+            test.login(email2, password + "aaa", function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_WRONG_PASSWORD);
+                done();
+            });
+        });
+
+        it("unknow", function(done) {
+            test.login(email3, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.not.be.null;
+                _expect(data.error).to.not.be.null;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_NOTFOUND);
+                done();
+            });
+        });
+    });
+
+    describe("logout", function() {
+
+        beforeEach(function(done) {
+            User.Create({email: email1, password: password}, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.id).to.not.be.null;
+                _expect(savedUser.status).to.be.equal(User.STATUS.CONFIRM);
+                User.Create(
+                    {email: email2, password: password, forcestatus:User.STATUS.OFF}, 
+                    function(err, savedUser) {
+                        _expect(err).to.be.null;
+                        _expect(savedUser).to.not.be.null;
+                        _expect(savedUser.id).to.not.be.null;
+                        _expect(savedUser.status).to.be.equal(User.STATUS.OFF);
+                        User.Login(email2, password, function(err, user) {
+                            _expect(err).to.be.null;
+                            _expect(user).to.not.be.null;
+                            _expect(user.email).to.be.equal(email2);
+                            _expect(user.status).to.be.equal(User.STATUS.ON);
+                            done();
+                        });
+                    }
+                );
+            });
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                User.Remove({email: email2}, function() {
+                    done();
+                });
+            });
+        });
+
+        it("success", function(done) {
+            test.logout(function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email2, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.OFF);
+                    done();
+                });
+            });
+        });
+
+        it("confirm", function(done) {
+            done();//TODO
+        });
+
+        it("wrongpassword", function(done) {
+            done();//TODO
+        });
+
+        it("unknow", function(done) {
+            done();//TODO
         });
     });
 });
