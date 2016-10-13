@@ -30,6 +30,7 @@ UserRoute.register = function(req, res) {
             response.error = err;
             req.session.user = newuser;
             delete(req.session.user.password);
+            req.session.user.logged = false;
         } else {
             response.success = User.MESSAGE.USER_SUCCESS;
             req.session.user = {
@@ -37,6 +38,7 @@ UserRoute.register = function(req, res) {
                 name : savedUser.name,
                 status : savedUser.status,
                 email : savedUser.email,
+                lang : savedUser.lang,
                 logged : savedUser.status == User.STATUS.ON
             };
         }
@@ -82,32 +84,36 @@ UserRoute.confirm = function (req, res) {
     });
 }
 
-
-
-
 UserRoute.login = function (req, res) {
     var email = req.body.email;
     var password = req.body.password;
-    Log.message("Try to authenticate user ", email);
 
-    req.session.useremail = email;
-    req.session.userlogged = false;
+    Log.message("Try to authenticate user ", email);
+    req.session.user = { mail : email, logged : false };
 
     User.Login(email, password, function(err, user) {
         var response = { session:req.session };
         if(err || !user) {
-            Log.message("Authentication failure to " + email);
+            Log.message("Authentication failure to " + email, err);
             response.loginerror = "Invalid user or password";
         } else {
             Log.message("Authentication sucessfull to " + email);
-            req.session.userlogged = true;
-            req.session.useremail = user.email;
-            req.session.username = user.username;
-            req.session.userlang = user.lang;
+            response.success = User.MESSAGE.USER_SUCCESS;
+            req.session.user = {
+                label : user.label,
+                name : user.name,
+                status : user.status,
+                email : user.email,
+                lang : user.lang,
+                logged : user.status == User.STATUS.ON
+            };
         }
         res.json(response);
     });
 }
+
+
+
 
 UserRoute.logout = function(req, res) {
     var response = { session:req.session };

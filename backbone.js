@@ -22,13 +22,13 @@ brain.get("/", _connectionRoutes.startpage);
 brain.post("/s/user-register", UserRoute.register);
 brain.post("/s/user-unregister", UserRoute.unregister);
 brain.get("/s/user-confirm/:token", UserRoute.confirm);
+brain.post("/s/user-login", UserRoute.login);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
 brain.get("/s/user", UserRoute.list);
 brain.get("/s/user/:filtername", UserRoute.list);
 brain.get("/s/user-restartpass", UserRoute.restartPassword);
-brain.post("/s/user-login", UserRoute.login);
 brain.get("/s/user-addpassport", UserRoute.addPassport);
 brain.get("/s/user-rempassport", UserRoute.remPassport);
 brain.get("/s/user-history", UserRoute.history);

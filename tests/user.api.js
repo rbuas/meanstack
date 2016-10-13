@@ -41,6 +41,11 @@ TestUserApi.prototype.confirm = function (token, callback) {
     self.request({path : "/s/user-confirm/" + token || "", method : "GET"}, callback);
 }
 
+TestUserApi.prototype.login = function (email, password, callback, forcemethod) {
+    var self = this;
+    self.request({path : "/s/user-login/", method : forcemethod || "POST", data : {email:email, password:password}}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -334,5 +339,50 @@ describe("api.user", function() {
             });
         });
 
+    });
+
+    describe("login", function() {
+
+        beforeEach(function(done) {
+            User.Create({email: email1, password: password}, function(err, savedUser) {
+                _expect(err).to.be.null;
+                _expect(savedUser).to.not.be.null;
+                _expect(savedUser.id).to.not.be.null;
+                _expect(savedUser.status).to.be.equal(User.STATUS.CONFIRM);
+                User.Create(
+                    {email: email2, password: password, forcestatus:User.STATUS.OFF}, 
+                    function(err, savedUser) {
+                        _expect(err).to.be.null;
+                        _expect(savedUser).to.not.be.null;
+                        _expect(savedUser.id).to.not.be.null;
+                        _expect(savedUser.status).to.be.equal(User.STATUS.OFF);
+                        done();
+                    }
+                );
+            });
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                User.Remove({email: email2}, function() {
+                    done();
+                });
+            });
+        });
+
+        it("success", function(done) {
+            test.login(email1, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.not.be.null;
+                _expect(info.statusCode).to.be.equal(200);
+                User.Get(email1, function (err, user) {
+                    _expect(err).to.be.null;
+                    _expect(user).to.not.be.null;
+                    _expect(user.status).to.be.equal(User.STATUS.OFF);
+                    _expect(user.id).to.be.equal(token);
+                    done();
+                });
+            });
+        });
     });
 });
