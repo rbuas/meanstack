@@ -1,13 +1,16 @@
 var _mongoose = require("mongoose");
 var _bcrypt = require("bcrypt");
 var _moment = require("moment");
+var _querystring = require("querystring");
+var _crypto = require("crypto");
 
-var JsExt = require("../brain/jsext");
-var Log = require("../brain/log");
-var System = require("../brain/system");
+var JsExt = require(ROOT_DIR + "/brain/jsext");
+var Log = require(ROOT_DIR + "/brain/log");
+var System = require(ROOT_DIR + "/brain/system");
+var Config = require(ROOT_DIR + "/brain/config");
 var E = System.error;
-var WebMailer = require("../brain/webmailer");
-var Dictionary = require("../brain/dictionary");
+var WebMailer = require(ROOT_DIR + "/brain/webmailer");
+var Dictionary = require(ROOT_DIR + "/brain/dictionary");
 var I = Dictionary.get;
 
 module.exports = User = {};
@@ -40,6 +43,7 @@ User.PROFILE = {
 User.ERROR = System.registerErrors({
     USER_WRONG_PASSWORD : "The password not match with registered password",
     USER_PARAMS : "Missing required params",
+    USER_DATA : "Missing user data",
     USER_NOTFOUND : "Cant find the user",
     USER_UNKNOW : "Unknow user",
     USER_NOTLOGGED : "User not logged",
@@ -60,10 +64,11 @@ User.Mailer = new WebMailer();
 User.Schema = new _mongoose.Schema({
     email : {type:String, unique:true, required:true},
     password : {type:String, required:true},
+    token : {type:String},
     label : String,
     name : String,
     birthday : Date,
-    since : {type:Date, default:Date.now},
+    since : {type:Date, default:Date.now()},
     lastlogin : Date,
     status : {type:String, enum:JsExt.getObjectValues(User.STATUS), default: User.STATUS.ANONYMOUS},
     gender : {type:String, enum:JsExt.getObjectValues(User.GENDER)},
@@ -117,7 +122,7 @@ User.Schema.pre("save", function(next) {
         _bcrypt.genSalt(User.SALT_WORK_FACTOR || 10, function(err, salt) {
             if (err) return next(err);
 
-            // hash the password using our new salt
+            // hash the password using the new salt
             _bcrypt.hash(user.password, salt, function(err, hash) {
                 if (err) return next(err);
 
@@ -139,12 +144,12 @@ User.Schema.pre("save", function(next) {
             data : {
                 useremail : user.email,
                 username : user.name,
-                confirmlink : "/s/user-confirm/" + user._id,
+                confirmlink : siteLink("/s/user-confirm/" + user._id),
                 title : I("USER_MAILCONFIRM_TITLE", user.lang),
                 pretext : I("USER_MAILCONFIRM_PRETEXT", user.lang),
-                postext : I("USER_MAILCONFIRM_POSTEXT", user.lang),
+                postext : I("USER_MAILCONFIRM_POSTEXT", user.lang)
             },
-            template : "mail_confirm"
+            template : "user_mail_confirm"
         }, function(err, info) {
             if(User.VERBOSE && err)
                 Log.trace("USER.SCHEMA.PRESAVE : error on send mail to " + user.email, err);
@@ -169,9 +174,10 @@ User.Create = function(user, callback) {
     newuser.email = user.email;
     newuser.label = user.label;
     newuser.password = user.password;
+    newuser.token = _crypto.randomBytes(16).toString('hex');
     newuser.name = user.name;
     newuser.birthday = user.birthday && _moment.utc(user.birthday, "MM-DD-YYYY");
-    newuser.since = user.since;
+    newuser.since = user.since || Date.now();
     newuser.lastlogin = user.lastlogin;
     newuser.gender = user.gender;
     newuser.origin = user.origin;
@@ -240,7 +246,6 @@ User.Remove = function (where, callback) {
 /**
  * SoftRemove Remove user from the system but keep in memory.
  * 
- * @param token string token (id) to confirm user
  * @param callback function Callback params (error, savedUser)
  */
 User.SoftRemove = function(email, password, callback) {
@@ -271,7 +276,6 @@ User.SoftRemove = function(email, password, callback) {
 /**
  * Restore Restore a soft removed user.
  * 
- * @param token string token (id) to confirm user
  * @param callback function Callback params (error, savedUser)
  */
 User.Restore = function(email, callback) {
@@ -320,7 +324,7 @@ User.Find = function(where, callback) {
 /**
  * Get
  * @param email User email
- * @param callback function Callback params (error, users)
+ * @param callback function Callback params (error, user)
  */
 User.Get = function(email, callback) {
     if(!email) {
@@ -333,7 +337,7 @@ User.Get = function(email, callback) {
         {password:0, history:0, __v:0}, 
         function(err, user) {
             if(err || !user) {
-                err = E(User.ERROR.USER_NOTFOUND, err);
+                err = E(User.ERROR.USER_NOTFOUND, {error:err, email:email, user:user});
             }
             if(callback) callback(err, user);
         }
@@ -404,7 +408,7 @@ User.GetResetToken = function(email, callback) {
             if(err || !user) {
                 err = E(User.ERROR.USER_NOTFOUND, err);
             } else {
-                token = user.password;
+                token = user.token;
             }
             if(callback) callback(err, token);
         }
@@ -432,7 +436,7 @@ User.ResetPassword = function(email, token, newpassword, callback) {
             return;
         }
 
-        if(token != user.password) {
+        if(token != user.token) {
             if(callback) callback(E(User.ERROR.USER_TOKEN));
             return;
         }
@@ -440,6 +444,56 @@ User.ResetPassword = function(email, token, newpassword, callback) {
         user.password = newpassword;
         user.save(callback);
     });
+}
+
+/**
+ * AskResetPassword
+ * 
+ * @param email string User email id
+ * @param token string token (password) to reset user password
+ * @param newuser string New user password
+ * @param callback function Callback params (error)
+ */
+User.AskResetPassword = function(email, callback) {
+    if(!email)
+        return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
+
+    User.DB.findOne(
+        {email:email},
+        function(err, user) {
+            if(err || !user)
+                return System.callback(callback, [err]);
+
+            var userid = user._id;
+            var token = user.token;
+            if(!userid || !token)
+                return System.callback(callback, [E(User.ERROR.USER_DATA, {userid:userid,token:token})]);
+
+            User.Mailer.send(
+                {
+                    to : email,
+                    subject : I("USER_RESETPASS_SUBJECT", user.lang),
+                    from : I("USER_MAILFROM", user.lang),
+                    mode : "HTML",
+                    data : {
+                        useremail : user.email,
+                        username : user.name,
+                        confirmlink : siteLink("/resetpassword/" + userid + "/" + token),
+                        title : I("USER_RESETPASS_TITLE", user.lang),
+                        pretext : I("USER_RESETPASS_PRETEXT", user.lang),
+                        postext : I("USER_RESETPASS_POSTEXT", user.lang)
+                    },
+                    template : "user_password_reset"
+                }, 
+                function(err, info) {
+                    if(User.VERBOSE && err)
+                        Log.trace("USER.ASKRESETPASSWORD : error on send mail to " + user.email, err);
+
+                    System.callback(callback);
+                }
+            );
+        }
+    );
 }
 
 
@@ -513,4 +567,14 @@ User.Logout = function(email, callback) {
         user.status = User.STATUS.OFF;
         user.save(callback);
     });
+}
+
+// PRIVATE
+
+function siteLink (path) {
+    var host = Config.get("SITE_URL") || "";
+    if(!host)
+        return path;
+
+    return "//" + host + path;
 }

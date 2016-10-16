@@ -59,3 +59,13 @@ System.version = function() {
     var version = JSON.parse(_fs.readFileSync('version.json', 'utf8'));
     return version;
 }
+
+/**
+ * call callback if it exists
+ */
+System.callback = function(callback, args) {
+    if(!callback)
+        return;
+
+    return callback.apply(null, args || []);
+}

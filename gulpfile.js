@@ -14,7 +14,7 @@ var _exec = require("child_process").exec;
 var _argv = require("yargs").argv;
 
 var builder = {
-    CONFIG : require("./config.json"),
+    CONFIG : require("./gulpconfig.json"),
     VERSION : require("./version.json"),
     actions : {
         "default" : {

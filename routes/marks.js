@@ -1,6 +1,6 @@
-var _log = require("../brain/log");
-var _user = require("../models/user");
-var _story = require("../models/story");
+var _log = require(ROOT_DIR + "/brain/log");
+var _user = require(ROOT_DIR + "/models/user");
+var _story = require(ROOT_DIR + "/models/story");
 
 module.exports.marks = function(req, res) {
     if(req.session.username && req.session.userlogged) {

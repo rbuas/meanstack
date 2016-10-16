@@ -1,4 +1,4 @@
-var _log = require("../brain/log");
+var _log = require(ROOT_DIR + "/brain/log");
 
 module.exports.startpage = function(req, res) {
     var viewdata = {

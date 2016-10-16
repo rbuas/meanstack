@@ -1,10 +1,10 @@
 var _nodemailer = require("nodemailer");
 var _fs = require("fs");
 
-var Log = require("../brain/log");
-var System = require("../brain/system");
+var Log = require(ROOT_DIR + "/brain/log");
+var System = require(ROOT_DIR + "/brain/system");
 var E = System.error;
-var ViewEngine = require("../brain/viewengine");
+var ViewEngine = require(ROOT_DIR + "/brain/viewengine");
 
 
 module.exports = WebMailer;
@@ -28,7 +28,7 @@ WebMailer.defaultoptions = {
 }
 
 WebMailer.FAKE = false;
-WebMailer.SILENCE = false;
+WebMailer.VERBOSE = true;
 
 WebMailer.ERROR = {};
 WebMailer.ERRORMESSAGE = {};
@@ -47,12 +47,11 @@ WebMailer.prototype.send = function(options , callback) {
         mail.text = options.data;
     }
 
+    if(WebMailer.VERBOSE) Log.message("WebMailer.send : ", mail, "yellow");
+
     if(WebMailer.FAKE) {
-        if(!WebMailer.SILENCE) {
-            console.log("FAKE WebMailer.send : ", mail);
-        }
-        if(callback) callback(null, mail);
-        return;
+        Log.message("WebMailer.FAKE send mail", mail.to, "cyan");
+        return System.callback(callback, [null, mail]);
     }
     self.transporter.sendMail(mail, callback);
 }

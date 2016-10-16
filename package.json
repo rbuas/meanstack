@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start-backbone": "nodemon backbone.js",
+    "start-backbone-test": "nodemon backbone.js webmailer=fake",
     "start-db": "./mongodb/bin/mongod -dbpath ./data",
     "start-dbterminal": "./mongodb/bin/mongo",
     "start-selenium": "/usr/local/bin/webdriver-manager start",
@@ -65,6 +66,7 @@
     "prompt": "^1.0.0",
     "prompt-sync": "^4.1.4",
     "selenium-webdriver": "^2.45.0",
+    "supertest": "^2.0.0",
     "vinyl-ftp": "^0.5.0",
     "yargs": "^4.8.0"
   }

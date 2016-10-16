@@ -48,7 +48,7 @@ describe("unit.webmailer", function() {
                 from : "test@rbuas.com",
                 mode : "HTML",
                 data : {test:"AAA", test2:"BBB"},
-                template : "mail_confirm",
+                template : "user_mail_confirm",
             }, function(err, info) {
                 done();
             });

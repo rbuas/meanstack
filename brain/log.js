@@ -24,10 +24,10 @@ Log.assert = function(condition, message, obj) {
     return Log.error(message, obj);
 }
 
-Log.message = function(message, obj) {
-    var line = message; 
+Log.message = function(message, obj, color) {
+    var line = colorize(message, color);
     if(obj)
-        console.log(line, dump(obj));
+        console.log(line, colorize(dump(obj), color));
     else
         console.log(line);
 }
@@ -48,4 +48,15 @@ Log.section = function (message) {
 
 function dump (obj) {
     return _util.inspect(obj, {depth:null});
+}
+
+function colorize (text, color) {
+    if(!color || !text)
+        return text;
+
+    var colorFunc = _chalk[color];
+    if(!colorFunc)
+        return text;
+
+    return colorFunc(text);
 }

@@ -5,16 +5,18 @@ var _http = require("http");
 var _cheerio = require("cheerio");
 var _moment = require("moment");
 
-var JsExt = require("../brain/jsext");
-var Log = require("../brain/log");
-var Memory = require("../brain/memory");
-var WebMailer = require("../brain/webmailer");
-var ViewEngine = require("../brain/viewengine");
-var User = require("../models/user");
+global.ROOT_DIR = __dirname + "/..";
 
-Dictionary.load(__dirname + "/../common.json");
+var JsExt = require(ROOT_DIR + "/brain/jsext");
+var Log = require(ROOT_DIR + "/brain/log");
+var Memory = require(ROOT_DIR + "/brain/memory");
+var WebMailer = require(ROOT_DIR + "/brain/webmailer");
+var ViewEngine = require(ROOT_DIR + "/brain/viewengine");
+var User = require(ROOT_DIR + "/models/user");
+
+Dictionary.load(ROOT_DIR + "/common.json");
 WebMailer.FAKE = true;
-WebMailer.SILENCE = true;
+WebMailer.VERBOSE = false;
 User.VERBOSE = false;
 
 describe("unit.user", function() {
@@ -912,7 +914,7 @@ describe("unit.user", function() {
                     _expect(err).to.be.null;
                     _expect(savedUser).to.not.be.null;
                     _expect(savedUser.email).to.equal(email1);
-                    usertoken = savedUser.password;
+                    usertoken = savedUser.token;
                     done();
                 }
             );

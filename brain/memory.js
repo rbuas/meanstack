@@ -1,5 +1,6 @@
 var _mongoose = require('mongoose');
-var Log = require("./log");
+
+var Log = require(ROOT_DIR + "/brain/log");
 
 module.exports = Memory;
 function Memory (options) {

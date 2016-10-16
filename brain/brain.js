@@ -8,27 +8,19 @@ var _mongoose = require("mongoose");
 var _http = require("http");
 var _socket = require("socket.io");
 
-var Memory = require("./memory");
-var Log = require("./log");
-var UserManager = require("./usermanager");
+global.ROOT_DIR = process.env.PWD;
 
-var _defaultoptions = {
-    port : 3000,
-    name : "",
-    address : "localhost",
-    rootDir: "",
-    publicDir: "/public",
-    viewsDir: "/views",
-    encryptkey: "secret",
-    viewEngine: null,
-    memory: {db : null},
-    routes : null
-};
+var Memory = require(ROOT_DIR + "/brain/memory");
+var Log = require(ROOT_DIR + "/brain/log");
+var UserManager = require(ROOT_DIR + "/brain/usermanager");
+var WebMailer = require(ROOT_DIR + "/brain/webmailer");
 
 function Brain (options) {
     var self = this;
-    self.options = Object.assign(_defaultoptions, options) || {};
+    self.options = Object.assign(self.defaultoptions, options) || {};
     self.options.routes = self.options.routes || [];
+
+    self.processSuperParams();
 
     self.app = _express();
     Log.assert(self.app, "ERROR: can not create app from express");
@@ -67,6 +59,42 @@ function Brain (options) {
 
     self.synapsys();
     self.listen();
+}
+
+Brain.prototype.defaultoptions = {
+    port : 3000,
+    name : "",
+    address : "localhost",
+    rootDir: "",
+    publicDir: "/public",
+    viewsDir: "/views",
+    encryptkey: "secret",
+    viewEngine: null,
+    memory: {db : null},
+    routes : null,
+    superparams : {
+        "webmailer" : function(val) { if(val && val.toUpperCase() == "FAKE") { WebMailer.FAKE = true; }}
+    }
+};
+
+Brain.prototype.processSuperParams = function() {
+    var self = this;
+    if(!self.options.superparams)
+        return;
+
+    var args = process.argv.slice(2);
+    args.forEach(function (val, index, array) {
+        var argd = val.split("=");
+        var key = argd && argd.length > 0 ? argd[0] : null;
+        var value = argd && argd.length > 1 ? argd[1] : null;
+        if(!key) return;
+
+        var superaction = self.options.superparams[key];
+        if(!superaction) return;
+
+        Log.message("SuperParams detected : " + key + "=" + value || "", superaction);
+        superaction(value);
+    });
 }
 
 Brain.prototype.synapsys = function() {

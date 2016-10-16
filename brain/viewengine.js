@@ -1,8 +1,8 @@
 var _hbs = require("handlebars");
 var _fs = require("fs");
 
-var Log = require("../brain/log");
-var System = require("../brain/system");
+var Log = require(ROOT_DIR + "/brain/log");
+var System = require(ROOT_DIR + "/brain/system");
 var E = System.error;
 
 

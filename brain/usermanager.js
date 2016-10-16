@@ -1,7 +1,7 @@
 var _socket = require("socket.io");
 
-var Log = require("../brain/log");
-var User = require("../models/user");
+var Log = require(ROOT_DIR + "/brain/log");
+var User = require(ROOT_DIR + "/models/user");
 
 module.exports = UserManager;
 function UserManager (server) {

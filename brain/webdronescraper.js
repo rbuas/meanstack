@@ -1,7 +1,7 @@
 var _http = require("http");
 var _cheerio = require("cheerio");
 
-var Log = require("./log");
+var Log = require(ROOT_DIR + "/brain/log");
 
 module.exports = WebDroneScraper;
 

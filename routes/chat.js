@@ -1,5 +1,5 @@
-var _log = require("../brain/log");
-var _chat = require("../models/chat");
+var _log = require(ROOT_DIR + "/brain/log");
+var _chat = require(ROOT_DIR + "/models/chat");
 
 module.exports.broadcast = function(socket) {
     _log.message("Chat::client was connect");
