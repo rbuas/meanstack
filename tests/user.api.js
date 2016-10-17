@@ -57,6 +57,22 @@ TestUserApi.prototype.askResetPassword = function (email, callback, forcemethod)
     self.request({path : "/s/user-askresetpassword", method : forcemethod || "POST", data : {email : email}}, callback);
 }
 
+TestUserApi.prototype.resetPassword = function (userid, token, newpassword, callback, forcemethod) {
+    var self = this;
+    self.request(
+        {
+            path : "/s/user-resetpassword", 
+            method : forcemethod || "POST", 
+            data : {
+                userid : userid, 
+                token : token, 
+                newpassword : newpassword
+            }
+        }, 
+        callback
+    );
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -552,6 +568,53 @@ describe("api.user", function() {
                 _expect(data.error).to.not.be.null;
                 _expect(data.error.code).to.be.equal(User.ERROR.USER_PARAMS);
                 done();
+            });
+        });
+
+    });
+
+    describe("resetpassword", function() {
+        var userid;
+        var token;
+
+        beforeEach(function(done) {
+            User.Create(
+                {email: email1, password: "aaa", forcestatus:User.STATUS.OFF}, 
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.id).to.not.be.null;
+                    _expect(savedUser.status).to.be.equal(User.STATUS.OFF);
+                    userid = savedUser.id;
+                    token = savedUser.token;
+                    done();
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                done();
+            });
+        });
+
+        it("success", function(done) {
+            test.resetPassword(userid, token, password, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.email).to.be.equal(email1);
+                User.Login(email1, "aaa", function(err, user) {
+                    _expect(err).to.be.ok;
+                    _expect(err.code).to.be.equal(User.ERROR.USER_WRONG_PASSWORD);
+                     User.Login(email1, password, function(err, user) {
+                        _expect(err).to.be.null;
+                        _expect(user).to.be.ok;
+                        _expect(user.email).to.be.equal(email1);
+                        done();
+                    })
+                });
             });
         });
 

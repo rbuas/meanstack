@@ -25,7 +25,7 @@ brain.get("/s/user-confirm/:token", UserRoute.confirm);
 brain.post("/s/user-login", UserRoute.login);
 brain.post("/s/user-logout", UserRoute.logout);
 brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
-brain.get("/s/user-resetpassword", UserRoute.resetPassword);
+brain.post("/s/user-resetpassword", UserRoute.resetPassword);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);

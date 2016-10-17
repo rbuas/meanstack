@@ -141,16 +141,17 @@ UserRoute.resetPassword = function(req, res) {
     var token = req.body.token;
     var newpassword = req.body.newpassword;
     var response = {};
-    User.ResetPassword(userid, token, newpassword, function(err) {
+    User.ResetPassword(userid, token, newpassword, function(err, user) {
         if(err) {
-            Log.message("user.resetpassword failure to " + email, err);
+            Log.message("user.resetpassword failure to " + userid, err);
             response.error = err;
         } else {
-            Log.message("user.resetpassword success to " + email);
-            UserRoute.saveUserSession(req, {email:email});
+            Log.message("user.resetpassword success to " + userid);
+            UserRoute.saveUserSession(req, {email:user.email});
             response.success = User.MESSAGE.USER_SUCCESS;
             response.user = req.session.user;
         }
+        res.json(response);
     });
 }
 

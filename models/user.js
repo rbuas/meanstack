@@ -422,24 +422,18 @@ User.GetResetToken = function(email, callback) {
  * @param email string User email id
  * @param token string token (password) to reset user password
  * @param newuser string New user password
- * @param callback function Callback params (error)
+ * @param callback function Callback params (error, user)
  */
-User.ResetPassword = function(email, token, newpassword, callback) {
-    if(!email || !token || !newpassword) {
-        if(callback) callback(E(User.ERROR.USER_PARAMS));
-        return;
-    }
+User.ResetPassword = function(userid, token, newpassword, callback) {
+    if(!userid || !token || !newpassword)
+        return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-    User.DB.findOne({email:email}, function(err, user) {
-        if(!user) {
-            if(callback) callback(E(User.ERROR.USER_PARAMS));
-            return;
-        }
+    User.DB.findOne({_id:userid}, function(err, user) {
+        if(!user)
+            return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-        if(token != user.token) {
-            if(callback) callback(E(User.ERROR.USER_TOKEN));
-            return;
-        }
+        if(token != user.token)
+            return System.callback(callback, [E(User.ERROR.USER_TOKEN)]);
 
         user.password = newpassword;
         user.save(callback);
