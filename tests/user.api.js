@@ -73,6 +73,11 @@ TestUserApi.prototype.resetPassword = function (userid, token, newpassword, call
     );
 }
 
+TestUserApi.prototype.find = function (criteria, callback) {
+    var self = this;
+    self.request({path : "/s/user-find", method : "GET", data : criteria}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -619,4 +624,94 @@ describe("api.user", function() {
         });
 
     });
+
+    describe("find", function() {
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : "a",
+                    forcestatus : User.STATUS.ANONYMOUS
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.status).to.equal(User.STATUS.ANONYMOUS);
+                    _expect(savedUser.email).to.equal(email1);
+                    User.Create({
+                        email : email2,
+                        password : "a",
+                        forcestatus : User.STATUS.ANONYMOUS
+                    },
+                    function(err2, savedUser2) {
+                            _expect(err2).to.be.null;
+                            _expect(savedUser2).to.not.be.null;
+                            _expect(savedUser2.email).to.equal(email2);
+                            _expect(savedUser2.status).to.equal(User.STATUS.ANONYMOUS);
+                            User.Create({
+                                    email : email3,
+                                    password : "a",
+                                    forcestatus : User.STATUS.CONFIRM
+                                },
+                                function(err3, savedUser3) {
+                                    _expect(err3).to.be.null;
+                                    _expect(savedUser3).to.not.be.null;
+                                    _expect(savedUser3.email).to.equal(email3);
+                                    _expect(savedUser3.status).to.equal(User.STATUS.CONFIRM);
+                                    done();
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, function() {
+                User.Remove({email: email2}, function() {
+                    User.Remove({email: email3}, done);
+                });
+            });
+        });
+
+        it.only("found", function(done) {
+            test.find({email:email1}, function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(users[0].email).to.equal(email1);
+                done();
+            });
+        });
+
+        /*
+        it("notfound", function(done) {
+            User.Find({email:email4}, function(err, users) {
+                _expect(err).to.be.null;
+                _expect(users).to.not.be.null;
+                _expect(users.length).to.equal(0);
+                done();
+            });
+        });
+
+        it("multiples", function(done) {
+            User.Find({status : User.STATUS.ANONYMOUS}, function(err, users) {
+                _expect(err).to.be.null;
+                _expect(users).to.not.be.null;
+                _expect(users.length).to.be.at.least(2);
+                done();
+            });
+        });
+
+        it("all", function(done) {
+            User.Find({}, function(err, users) {
+                _expect(err).to.be.null;
+                _expect(users).to.not.be.null;
+                _expect(users.length).to.be.at.least(3);
+                done();
+            });
+        });
+        */
+    });
+
 });

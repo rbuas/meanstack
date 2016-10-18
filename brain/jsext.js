@@ -1,3 +1,4 @@
+var _querystring = require("querystring");
 
 module.exports = JsExt = {};
 
@@ -47,13 +48,16 @@ JsExt.serializeDictionary = function (obj, connector) {
     return builder.join(connector);
 }
 
-JsExt.buildUrl = function (link, params, paramStarter, connector) {
-    connector = connector || "";
-    var serializedParams = JsExt.serializeDictionary(params, connector);
+JsExt.buildUrl = function (link, params, starter) {
+    var serializedParams = typeof(params) == "string" ? params : _querystring.stringify(params);
     var url = link || "";
     if(serializedParams) {
-        paramStarter = paramStarter || "";
-        url += connector + serializedParams;
+        starter = starter || "?";
+        if(url.indexOf(starter) < 0) {
+            url += starter + serializedParams;
+        } else {
+            url = url.endsWith("&") ? url + serializedParams : url + "&" + serializedParams;
+        }
     }
 
     return url;

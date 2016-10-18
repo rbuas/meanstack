@@ -5,11 +5,6 @@ var User = require(ROOT_DIR + "/models/user");
 
 module.exports = UserRoute = {};
 
-UserRoute.verifyLogged = function(req) {
-    var logged = req.session && req.session.user && req.session.user.logged;
-    return logged;
-}
-
 UserRoute.saveUserSession = function(req, user) {
     if(!req || !user)
         return;
@@ -175,7 +170,15 @@ UserRoute.askResetPassword = function(req, res) {
 
 // ADMIN ROUTES
 
-UserRoute.list = function(req, res) {
+UserRoute.find = function(req, res) {
+    var response = {};
+    if(User.VerifyProfile(req, User.PROFILE.ADMIN)) {
+        Log.message("user.list not authorized user", req.session.user);
+        response.error = E(User.ERROR.USER_NOTAUTHORIZED, req.session.user);
+        res.json(response);
+        return;
+    }
+
     var criteria = {
         status : req.body.status,
         label : req.body.label,

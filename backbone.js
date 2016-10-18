@@ -26,10 +26,10 @@ brain.post("/s/user-login", UserRoute.login);
 brain.post("/s/user-logout", UserRoute.logout);
 brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
 brain.post("/s/user-resetpassword", UserRoute.resetPassword);
+brain.get("/s/user-find", UserRoute.find);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
-brain.get("/s/user", UserRoute.list);
 brain.get("/s/user/:filtername", UserRoute.list);
 brain.get("/s/user-addpassport", UserRoute.addPassport);
 brain.get("/s/user-rempassport", UserRoute.remPassport);

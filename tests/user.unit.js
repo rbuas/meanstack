@@ -945,6 +945,7 @@ describe("unit.user", function() {
 
     describe("resetpassword", function() {
         var usertoken;
+        var userid;
 
         beforeEach(function(done) {
             User.Create({
@@ -955,6 +956,8 @@ describe("unit.user", function() {
                     _expect(err).to.be.null;
                     _expect(savedUser).to.not.be.null;
                     _expect(savedUser.email).to.equal(email1);
+                    _expect(savedUser.id).to.be.ok;
+                    userid = savedUser.id;
                     User.GetResetToken(email1, function(err, token) {
                         _expect(err).to.be.null;
                         _expect(token).to.not.be.null;
@@ -978,7 +981,7 @@ describe("unit.user", function() {
         });
 
         it("missingusertoken", function(done) {
-            User.ResetPassword(email1, null, "123456", function(err, savedUser) {
+            User.ResetPassword(userid, null, "123456", function(err, savedUser) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
                 done();
@@ -986,7 +989,7 @@ describe("unit.user", function() {
         });
 
         it("missinguserpassword", function(done) {
-            User.ResetPassword(email1, usertoken, null, function(err, savedUser) {
+            User.ResetPassword(userid, usertoken, null, function(err, savedUser) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
                 done();
@@ -994,7 +997,7 @@ describe("unit.user", function() {
         });
 
         it("success", function(done) {
-            User.ResetPassword(email1, usertoken, "123456", function(err, savedUser) {
+            User.ResetPassword(userid, usertoken, "123456", function(err, savedUser) {
                 _expect(err).to.be.null;
                 _expect(savedUser).to.not.be.null;
                 _expect(savedUser.password).to.not.be.null;

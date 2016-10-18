@@ -1,7 +1,6 @@
 var _http = require("http");
 var _cheerio = require("cheerio");
 var _querystring = require("querystring");
-var _require = require("supertest");
 
 var JsExt = require(ROOT_DIR + "/brain/jsext");
 var System = require(ROOT_DIR + "/brain/system");
@@ -54,7 +53,10 @@ TestRouteApi.prototype.request = function (options, callback) {
 
     var method = options.method || "GET";
     var querystring = _querystring.stringify(options.data);
-    var path = method == "GET" ? options.path + querystring : options.path;
+    var path = options.path;
+    if(method == "GET") {
+        path = JsExt.buildUrl(path, querystring);
+    }
     var info = {
         startTime : new Date(),
         request : {

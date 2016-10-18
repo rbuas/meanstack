@@ -47,6 +47,7 @@ User.ERROR = System.registerErrors({
     USER_NOTFOUND : "Cant find the user",
     USER_UNKNOW : "Unknow user",
     USER_NOTLOGGED : "User not logged",
+    USER_NOTAUTHORIZED : "User not authorized",
     USER_CONFIRMATION : "Waiting confirmation",
     USER_BLOCKED : "User blocked",
     USER_REMOVED : "User removed",
@@ -561,6 +562,24 @@ User.Logout = function(email, callback) {
         user.status = User.STATUS.OFF;
         user.save(callback);
     });
+}
+
+User.VerifyLogged = function(req) {
+    var logged = req && req.session && req.session.user && req.session.user.logged;
+    return logged ? req.session.user : null;
+}
+
+User.VerifyProfile = function(req, profile) {
+    var user = User.VerifyLogged(req);
+    if(!user)
+        return false;
+
+    var userProfile = user.profile;
+    if(typeof(profile) == "string") {
+        return profile == userProfile;
+    }
+
+    return profile.indexOf(profile) >= 0;
 }
 
 // PRIVATE

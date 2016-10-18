@@ -50,7 +50,7 @@ WebMailer.prototype.send = function(options , callback) {
     if(WebMailer.VERBOSE) Log.message("WebMailer.send : ", mail, "yellow");
 
     if(WebMailer.FAKE) {
-        Log.message("WebMailer.FAKE send mail", mail.to, "cyan");
+        if(WebMailer.VERBOSE) Log.message("WebMailer.FAKE send mail", mail.to, "cyan");
         return System.callback(callback, [null, mail]);
     }
     self.transporter.sendMail(mail, callback);
