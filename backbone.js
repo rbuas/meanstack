@@ -30,11 +30,8 @@ brain.get("/s/user-find", UserRoute.find);
 
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
-brain.get("/s/user/:filtername", UserRoute.list);
 brain.get("/s/user-addpassport", UserRoute.addPassport);
 brain.get("/s/user-rempassport", UserRoute.remPassport);
-brain.get("/s/user-history", UserRoute.history);
-
 
 brain.get("/s/quotes", _quoteRoutes.quotes);
 brain.get("/s/quotes/:quote", _quoteRoutes.quote);

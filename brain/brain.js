@@ -8,7 +8,7 @@ var _mongoose = require("mongoose");
 var _http = require("http");
 var _socket = require("socket.io");
 
-global.ROOT_DIR = process.env.PWD;
+global.ROOT_DIR = process.cwd() || "";
 
 var Memory = require(ROOT_DIR + "/brain/memory");
 var Log = require(ROOT_DIR + "/brain/log");

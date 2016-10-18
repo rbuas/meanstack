@@ -629,17 +629,20 @@ describe("api.user", function() {
         beforeEach(function(done) {
             User.Create({
                     email : email1,
-                    password : "a",
-                    forcestatus : User.STATUS.ANONYMOUS
+                    password : password,
+                    profile : User.PROFILE.ADMIN,
+                    forcestatus : User.STATUS.OFF
                 },
                 function(err, savedUser) {
                     _expect(err).to.be.null;
                     _expect(savedUser).to.not.be.null;
-                    _expect(savedUser.status).to.equal(User.STATUS.ANONYMOUS);
+                    _expect(savedUser.profile).to.equal(User.PROFILE.ADMIN);
+                    _expect(savedUser.status).to.equal(User.STATUS.OFF);
                     _expect(savedUser.email).to.equal(email1);
                     User.Create({
                         email : email2,
-                        password : "a",
+                        password : password,
+                        profile : User.PROFILE.EDITOR,
                         forcestatus : User.STATUS.ANONYMOUS
                     },
                     function(err2, savedUser2) {
@@ -649,14 +652,15 @@ describe("api.user", function() {
                             _expect(savedUser2.status).to.equal(User.STATUS.ANONYMOUS);
                             User.Create({
                                     email : email3,
-                                    password : "a",
-                                    forcestatus : User.STATUS.CONFIRM
+                                    password : password,
+                                    profile : User.PROFILE.WRITER,
+                                    forcestatus : User.STATUS.ANONYMOUS
                                 },
                                 function(err3, savedUser3) {
                                     _expect(err3).to.be.null;
                                     _expect(savedUser3).to.not.be.null;
                                     _expect(savedUser3.email).to.equal(email3);
-                                    _expect(savedUser3.status).to.equal(User.STATUS.CONFIRM);
+                                    _expect(savedUser3.status).to.equal(User.STATUS.ANONYMOUS);
                                     done();
                                 }
                             );
@@ -674,44 +678,87 @@ describe("api.user", function() {
             });
         });
 
-        it.only("found", function(done) {
+        it("notauthorized", function(done) {
             test.find({email:email1}, function(err, info, data) {
                 _expect(err).to.be.null;
                 _expect(info).to.be.ok;
                 _expect(info.statusCode).to.be.equal(200);
-                _expect(users[0].email).to.equal(email1);
+                _expect(data).to.be.ok;
+                _expect(data.error).to.be.ok;
+                _expect(data.error.code).to.be.equal(User.ERROR.USER_NOTAUTHORIZED);
+                _expect(data.users).to.be.not.ok;
                 done();
             });
         });
 
-        /*
+        it("found", function(done) {
+            test.setKeepSession(true);
+            test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                test.find({email:email1}, function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.users).to.be.ok;
+                    _expect(data.users.length).to.be.equal(1);
+                    _expect(data.users[0].email).to.be.equal(email1);
+                    test.resetSession();
+                    test.setKeepSession(false);
+                    done();
+                });
+            });
+        });
+
         it("notfound", function(done) {
-            User.Find({email:email4}, function(err, users) {
-                _expect(err).to.be.null;
-                _expect(users).to.not.be.null;
-                _expect(users.length).to.equal(0);
-                done();
+            test.setKeepSession(true);
+            test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                test.find({email:email4}, function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.users).to.be.ok;
+                    _expect(data.users.length).to.be.equal(0);
+                    test.resetSession();
+                    test.setKeepSession(false);
+                    done();
+                });
             });
         });
 
         it("multiples", function(done) {
-            User.Find({status : User.STATUS.ANONYMOUS}, function(err, users) {
-                _expect(err).to.be.null;
-                _expect(users).to.not.be.null;
-                _expect(users.length).to.be.at.least(2);
-                done();
+            test.setKeepSession(true);
+            test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                test.find({status : User.STATUS.ANONYMOUS}, function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.users).to.be.ok;
+                    _expect(data.users.length).to.be.equal(2);
+                    test.resetSession();
+                    test.setKeepSession(false);
+                    done();
+                });
             });
         });
 
         it("all", function(done) {
-            User.Find({}, function(err, users) {
-                _expect(err).to.be.null;
-                _expect(users).to.not.be.null;
-                _expect(users.length).to.be.at.least(3);
-                done();
+            test.setKeepSession(true);
+            test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                test.find({}, function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.users).to.be.ok;
+                    _expect(data.users.length).to.be.equal(3);
+                    test.resetSession();
+                    test.setKeepSession(false);
+                    done();
+                });
             });
         });
-        */
     });
 
 });

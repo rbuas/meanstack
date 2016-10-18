@@ -564,6 +564,21 @@ User.Logout = function(email, callback) {
     });
 }
 
+User.saveUserSession = function(req, user) {
+    if(!req || !user)
+        return;
+
+    req.session.user = {
+        label : user.label,
+        name : user.name,
+        status : user.status,
+        email : user.email,
+        lang : user.lang,
+        profile : user.profile,
+        logged : user.status == User.STATUS.ON
+    };
+}
+
 User.VerifyLogged = function(req) {
     var logged = req && req.session && req.session.user && req.session.user.logged;
     return logged ? req.session.user : null;
@@ -579,7 +594,7 @@ User.VerifyProfile = function(req, profile) {
         return profile == userProfile;
     }
 
-    return profile.indexOf(profile) >= 0;
+    return profile.indexOf(userProfile) >= 0;
 }
 
 // PRIVATE
