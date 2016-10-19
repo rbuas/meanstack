@@ -18,7 +18,10 @@ var UserRoute = require("./routes/user");
 var _chat = require("./routes/chat");
 
 brain.get("/", _connectionRoutes.startpage);
+brain.post("/s/connect", _connectionRoutes.connect);
+brain.get("/s/reset", _connectionRoutes.reset);
 
+//USER PUBLIC ROUTES
 brain.post("/s/user-register", UserRoute.register);
 brain.post("/s/user-unregister", UserRoute.unregister);
 brain.get("/s/user-confirm/:token", UserRoute.confirm);
@@ -26,17 +29,18 @@ brain.post("/s/user-login", UserRoute.login);
 brain.post("/s/user-logout", UserRoute.logout);
 brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
 brain.post("/s/user-resetpassword", UserRoute.resetPassword);
+
+//USER ADMIN ROUTES
+brain.post("/s/user-addpassport", UserRoute.addPassport);
+brain.post("/s/user-removepassport", UserRoute.remPassport);
 brain.get("/s/user-find", UserRoute.find);
 
-brain.post("/s/connect", _connectionRoutes.connect);
-brain.get("/s/reset", _connectionRoutes.reset);
-brain.get("/s/user-addpassport", UserRoute.addPassport);
-brain.get("/s/user-rempassport", UserRoute.remPassport);
+brain.usocket("connection", _chat.broadcast);
 
 brain.get("/s/quotes", _quoteRoutes.quotes);
 brain.get("/s/quotes/:quote", _quoteRoutes.quote);
 
-brain.usocket("connection", _chat.broadcast);
+
 
 // brain.get("/login", _marksRoutes.login);
 // brain.get("/register", _marksRoutes.register);

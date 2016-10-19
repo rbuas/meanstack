@@ -78,6 +78,16 @@ TestUserApi.prototype.find = function (criteria, callback) {
     self.request({path : "/s/user-find", method : "GET", data : criteria}, callback);
 }
 
+TestUserApi.prototype.addpassport = function (email, passport, callback) {
+    var self = this;
+    self.request({path : "/s/user-addpassport", method : "POST", data : {email:email, passport:passport}}, callback);
+}
+
+TestUserApi.prototype.removepassport = function (email, passport, callback) {
+    var self = this;
+    self.request({path : "/s/user-removepassport", method : "POST", data : {email:email, passport:passport}}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -485,7 +495,7 @@ describe("api.user", function() {
                 _expect(data).to.be.ok;
                 User.Remove({email: email2}, function() {
                     test.resetSession();
-                    test.setKeepSession(true);
+                    test.setKeepSession(false);
                     done();
                 });
             });
@@ -761,4 +771,155 @@ describe("api.user", function() {
         });
     });
 
+    describe("addpassport", function() {
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password,
+                    profile : User.PROFILE.ADMIN,
+                    forcestatus : User.STATUS.OFF
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    test.setKeepSession(true);
+                    test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                        done();
+                    });
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            test.resetSession();
+            test.setKeepSession(false);
+            User.Remove({email: email1}, done);
+        });
+
+        it("single", function(done) {
+            test.addpassport(email1, "test", function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.be.ok;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.passport).to.be.ok;
+                _expect(data.user.passport.length).to.be.equal(1);
+                done();
+            });
+        });
+
+        it("multiple", function(done) {
+            test.addpassport(email1, ["test1", "test2", "test3"], function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.be.ok;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.passport).to.be.ok;
+                _expect(data.user.passport.length).to.be.equal(3);
+                done();
+            });
+        });
+
+        it("merge", function(done) {
+            User.AddPassport(email1, "test0", function(err, user) {
+                _expect(err).to.be.null;
+                _expect(user).to.be.ok;
+                _expect(user.passport).to.be.ok;
+                _expect(user.passport.length).to.be.equal(1);
+                test.addpassport(email1, ["test1", "test2", "test3"], function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                    _expect(data.user).to.be.ok;
+                    _expect(data.user.passport).to.be.ok;
+                    _expect(data.user.passport.length).to.be.equal(4);
+                    _expect(data.user.passport[3]).to.be.equal("test3");
+                    done();
+                });
+            });
+        });
+
+        it("duplicate", function(done) {
+            test.addpassport(email1, ["test0", "test0", "test1", "test2", "test3"], function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.be.ok;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.passport).to.be.ok;
+                _expect(data.user.passport.length).to.be.equal(4);
+                _expect(data.user.passport[3]).to.be.equal("test3");
+                done();
+            });
+        });
+    });
+
+    describe("removepassport", function() {
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password,
+                    profile : User.PROFILE.ADMIN,
+                    forcestatus : User.STATUS.OFF
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    User.AddPassport(email1, ["test1", "test2", "test3"], function(err, user) {
+                        _expect(err).to.be.null;
+                        _expect(user).to.be.ok;
+                        _expect(user.passport).to.be.ok;
+                        _expect(user.passport.length).to.be.equal(3);
+                        test.setKeepSession(true);
+                        test.login(email1, password, function(errLogin, infoLogin, dataLogin) {
+                            done();
+                        });
+                    });
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            test.resetSession();
+            test.setKeepSession(false);
+            User.Remove({email: email1}, done);
+        });
+
+        it("unknow", function(done) {
+            test.removepassport(email1, "test", function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.be.ok;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.passport).to.be.ok;
+                _expect(data.user.passport.length).to.be.equal(3);
+                done();
+            });
+        });
+
+        it("multiple", function(done) {
+            test.removepassport(email1, ["test1", "test3"], function(err, info, data) {
+                _expect(err).to.be.null;
+                _expect(info).to.be.ok;
+                _expect(info.statusCode).to.be.equal(200);
+                _expect(data).to.be.ok;
+                _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                _expect(data.user).to.be.ok;
+                _expect(data.user.passport).to.be.ok;
+                _expect(data.user.passport.length).to.be.equal(1);
+                done();
+            });
+        });
+    });
 });

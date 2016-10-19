@@ -549,7 +549,7 @@ User.Login = function (email, password, callback) {
  * @param callback function Callback params (error, user)
  */
 User.Logout = function(email, callback) {
-     if(!email) {
+    if(!email) {
         if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
@@ -563,6 +563,43 @@ User.Logout = function(email, callback) {
         user.save(callback);
     });
 }
+
+
+User.AddPassport = function(email, passport, callback) {
+    if(!email || !passport)
+        return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
+
+    return User.Get(email, function(err, user) {
+        if(err || !user)
+            return System.callback(callback, err);
+
+        if(typeof(passport) == "string") passport = [passport];
+
+        user.passport = user.passport || [];
+        user.passport = user.passport.concat(passport);
+        user.passport = user.passport.unique();
+        user.save(callback);
+    });
+}
+
+User.RemovePassport = function(email, passport, callback) {
+    if(!email || !passport)
+        return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
+
+    return User.Get(email, function(err, user) {
+        if(err || !user)
+            return System.callback(callback, err);
+
+        if(typeof(passport) == "string") passport = [passport];
+
+        user.passport = user.passport || [];
+        user.passport = user.passport.removeArray(passport);
+        user.save(callback);
+    });
+}
+
+
+// AUXILIAR
 
 User.saveUserSession = function(req, user) {
     if(!req || !user)
@@ -596,6 +633,7 @@ User.VerifyProfile = function(req, profile) {
 
     return profile.indexOf(userProfile) >= 0;
 }
+
 
 // PRIVATE
 

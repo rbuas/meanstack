@@ -24,6 +24,29 @@ RegExp.escape = function(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 };
 
+Array.prototype.unique = function() {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+    return a;
+};
+
+Array.prototype.removeArray = function(killer) {
+    var a = this.concat();
+    for(var i=0; i<killer.length; ++i) {
+        var val = killer[i];
+        var index = a.indexOf(val);
+        if(index >= 0) {
+            a.splice(index, 1);
+        }
+    }
+    return a;
+};
+
 
 // Extension's functions
 

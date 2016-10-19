@@ -196,18 +196,59 @@ UserRoute.find = function(req, res) {
             response.error = err;
         } else {
             Log.message("user.find success", users);
+            response.success = User.MESSAGE.USER_SUCCESS;
             response.users = users;
         }
         res.json(response);
     });
 }
 
-
-
 UserRoute.addPassport = function(req, res) {
-    //TODO
+    var response = {};
+    if(!User.VerifyProfile(req, User.PROFILE.ADMIN)) {
+        Log.message("user.find not authorized user", req.session.user);
+        response.error = E(User.ERROR.USER_NOTAUTHORIZED, req.session.user);
+        res.json(response);
+        return;
+    }
+
+    var email = req.body.email;
+    var passport = req.body.passport;
+
+    User.AddPassport(email, passport, function(err, user) {
+        if(err || !user) {
+            Log.message("user.addpassport failure", err);
+            response.error = err;
+        } else {
+            Log.message("user.addpassport success", user);
+            response.success = User.MESSAGE.USER_SUCCESS;
+            response.user = user;
+        }
+        res.json(response);
+    });
 }
 
 UserRoute.remPassport = function(req, res) {
-    //TODO
+    var response = {};
+    if(!User.VerifyProfile(req, User.PROFILE.ADMIN)) {
+        Log.message("user.find not authorized user", req.session.user);
+        response.error = E(User.ERROR.USER_NOTAUTHORIZED, req.session.user);
+        res.json(response);
+        return;
+    }
+
+    var email = req.body.email;
+    var passport = req.body.passport;
+
+    User.RemovePassport(email, passport, function(err, user) {
+        if(err || !user) {
+            Log.message("user.removepassport failure", err);
+            response.error = err;
+        } else {
+            Log.message("user.removepassport success", user);
+            response.success = User.MESSAGE.USER_SUCCESS;
+            response.user = user;
+        }
+        res.json(response);
+    });
 }

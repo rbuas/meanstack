@@ -70,6 +70,7 @@ TestRouteApi.prototype.request = function (options, callback) {
 
     if(method == "POST") {
         info.request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        info.request.headers['connection'] = 'keep-alive';
         info.request.headers['Content-Length'] = Buffer.byteLength(querystring);
     }
     if(self.keepsession) {
