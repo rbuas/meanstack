@@ -212,11 +212,11 @@ User.CreateAnonymous = function(callback) {
 /**
  * Update
  * @param user object User with newmail possibility
- * @param callback function Callback params (error, oldUserProperties)
+ * @param callback function Callback params (error, savedUser)
  */
 User.Update = function (user, callback) {
     if(!user || !user.email) {
-        if(callback) callback(E(User.ERROR.USER_PARAMS), false);
+        if(callback) callback(E(User.ERROR.USER_PARAMS, user), false);
         return;
     } 
 

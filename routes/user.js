@@ -92,7 +92,7 @@ UserRoute.login = function (req, res) {
     });
 }
 
-UserRoute.logout = function(req, res) {
+UserRoute.logout = function (req, res) {
     var email = req.session.user && req.session.user.email;
     var logged = req.session.user && req.session.user.logged;
     var response = {};
@@ -117,7 +117,7 @@ UserRoute.logout = function(req, res) {
     });
 }
 
-UserRoute.resetPassword = function(req, res) {
+UserRoute.resetPassword = function (req, res) {
     var userid = req.body.userid;
     var token = req.body.token;
     var newpassword = req.body.newpassword;
@@ -136,7 +136,7 @@ UserRoute.resetPassword = function(req, res) {
     });
 }
 
-UserRoute.askResetPassword = function(req, res) {
+UserRoute.askResetPassword = function (req, res) {
     var email = req.body.email;
     var response = {};
     User.AskResetPassword(email, function(err) {
@@ -146,6 +146,23 @@ UserRoute.askResetPassword = function(req, res) {
         } else {
             Log.message("user.askresetpassword success to " + email);
             User.saveUserSession(req, {email:email});
+            response.success = User.MESSAGE.USER_SUCCESS;
+            response.user = req.session.user;
+        }
+        res.json(response);
+    });
+}
+
+UserRoute.update = function (req, res) {
+    var user = req.body.user;
+    var response = {};
+    User.Update(user, function(err, savedUser) {
+        if(err || !savedUser) {
+            Log.message("user.update failure", {user:user, err:err});
+            response.error = err;
+        } else {
+            Log.message("user.update success to ", user);
+            User.saveUserSession(req, user);
             response.success = User.MESSAGE.USER_SUCCESS;
             response.user = req.session.user;
         }

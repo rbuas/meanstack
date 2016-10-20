@@ -29,6 +29,7 @@ brain.post("/s/user-login", UserRoute.login);
 brain.post("/s/user-logout", UserRoute.logout);
 brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
 brain.post("/s/user-resetpassword", UserRoute.resetPassword);
+brain.post("/s/user-update", UserRoute.update);
 
 //USER ADMIN ROUTES
 brain.post("/s/user-addpassport", UserRoute.addPassport);

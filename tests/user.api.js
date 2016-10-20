@@ -88,6 +88,11 @@ TestUserApi.prototype.removepassport = function (email, passport, callback) {
     self.request({path : "/s/user-removepassport", method : "POST", data : {email:email, passport:passport}}, callback);
 }
 
+TestUserApi.prototype.update = function (user, callback) {
+    var self = this;
+    self.request({path : "/s/user-update", method : "POST", data : {user:user}}, callback);
+}
+
 describe("api.user", function() {
     var m, test;
     var email1 = "rodrigobuas+unittest@gmail.com";
@@ -920,6 +925,46 @@ describe("api.user", function() {
                 _expect(data.user.passport.length).to.be.equal(1);
                 done();
             });
+        });
+    });
+
+    describe("addpassport", function() {
+        beforeEach(function(done) {
+            User.Create({
+                    email : email1,
+                    password : password,
+                    profile : User.PROFILE.ADMIN,
+                    forcestatus : User.STATUS.OFF
+                },
+                function(err, savedUser) {
+                    _expect(err).to.be.null;
+                    _expect(savedUser).to.not.be.null;
+                    _expect(savedUser.email).to.equal(email1);
+                    done();
+                }
+            );
+        });
+
+        afterEach(function(done) {
+            User.Remove({email: email1}, done);
+        });
+
+        it.only("basic", function(done) {
+            test.update(
+                {
+                    email : email1,
+                    label : "labeltest",
+                    name : "nametest"
+                },
+                function(err, info, data) {
+                    _expect(err).to.be.null;
+                    _expect(info).to.be.ok;
+                    _expect(info.statusCode).to.be.equal(200);
+                    _expect(data).to.be.ok;
+                    _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                    done();
+                }
+            );
         });
     });
 });
