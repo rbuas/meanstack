@@ -118,7 +118,7 @@ describe("api.user", function() {
         });
 
         it("method-ko", function(done) {
-            test.register(null, function(err, info, data) {
+            test.register({}, function(err, info, data) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.be.equal(TestRouteApi.ERROR.TEST_SERVER);
                 _expect(info).to.not.be.null;
@@ -128,7 +128,7 @@ describe("api.user", function() {
         });
 
         it("method-ok", function(done) {
-            test.register(null, function(err, info, data) {
+            test.register({}, function(err, info, data) {
                 _expect(info).to.not.be.null;
                 _expect(info.statusCode).to.be.equal(200);
                 done();
@@ -928,7 +928,7 @@ describe("api.user", function() {
         });
     });
 
-    describe("addpassport", function() {
+    describe("update", function() {
         beforeEach(function(done) {
             User.Create({
                     email : email1,
@@ -940,6 +940,8 @@ describe("api.user", function() {
                     _expect(err).to.be.null;
                     _expect(savedUser).to.not.be.null;
                     _expect(savedUser.email).to.equal(email1);
+                    _expect(savedUser.profile).to.equal(User.PROFILE.ADMIN);
+                    _expect(savedUser.status).to.equal(User.STATUS.OFF)
                     done();
                 }
             );
@@ -949,7 +951,7 @@ describe("api.user", function() {
             User.Remove({email: email1}, done);
         });
 
-        it.only("basic", function(done) {
+        it("basic", function(done) {
             test.update(
                 {
                     email : email1,
@@ -962,6 +964,9 @@ describe("api.user", function() {
                     _expect(info.statusCode).to.be.equal(200);
                     _expect(data).to.be.ok;
                     _expect(data.success).to.be.equal(User.MESSAGE.USER_SUCCESS);
+                    _expect(data.user).to.be.ok;
+                    _expect(data.user.label).to.be.equal("labeltest");
+                    _expect(data.user.name).to.be.equal("nametest");
                     done();
                 }
             );

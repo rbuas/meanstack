@@ -52,11 +52,8 @@ TestRouteApi.prototype.request = function (options, callback) {
         return;
 
     var method = options.method || "GET";
-    var querystring = _querystring.stringify(options.data);
     var path = options.path;
-    if(method == "GET") {
-        path = JsExt.buildUrl(path, querystring);
-    }
+    var dataString = JSON.stringify(options.data);
     var info = {
         startTime : new Date(),
         request : {
@@ -67,12 +64,16 @@ TestRouteApi.prototype.request = function (options, callback) {
             headers : {}
         }
     };
-
-    if(method == "POST") {
-        info.request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        info.request.headers['connection'] = 'keep-alive';
-        info.request.headers['Content-Length'] = Buffer.byteLength(querystring);
+    if(method == "GET") {
+        var querystring = _querystring.stringify(options.data);
+        info.request.path = JsExt.buildUrl(path, querystring);
+    } else if(method == "POST") {
+        info.request.headers['Content-Type'] = 'application/json';
+        info.request.headers['Connection'] = 'keep-alive';
+        info.request.headers['Content-Length'] = dataString && dataString.length || 0;
+        info.request.json = true;
     }
+
     if(self.keepsession) {
         if(self.sessionCookie) info.request.headers['Cookie'] = self.sessionCookie;
         info.request.headers["Connection"] = "keep-alive";
@@ -120,8 +121,8 @@ TestRouteApi.prototype.request = function (options, callback) {
         if(callback) callback(error, info, null);
     });
 
-    if(method == "POST") {
-        request.write(querystring);
+    if(dataString && method == "POST") {
+        request.write(dataString);
     }
 
     request.end();
