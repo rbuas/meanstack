@@ -194,6 +194,31 @@ User.Create = function(user, callback) {
 }
 
 
+
+/**
+ * Get
+ * @param email User email
+ * @param callback function Callback params (error, user)
+ */
+User.Get = function(email, callback) {
+    if(!email) {
+        if(callback) callback(E(User.ERROR.USER_PARAMS));
+        return;
+    }
+
+    return User.DB.findOne(
+        {email:email}, 
+        {password:0, history:0, __v:0}, 
+        function(err, user) {
+            if(err || !user) {
+                err = E(User.ERROR.USER_NOTFOUND, {error:err, email:email, user:user});
+            }
+            if(callback) callback(err, user);
+        }
+    );
+}
+
+
 /**
  * CreateAnonymous
  * @param user object
@@ -315,30 +340,6 @@ User.Find = function(where, callback) {
                 err = E(User.ERROR.USER_NOTFOUND, err);
             }
             if(callback) callback(err, users);
-        }
-    );
-}
-
-
-/**
- * Get
- * @param email User email
- * @param callback function Callback params (error, user)
- */
-User.Get = function(email, callback) {
-    if(!email) {
-        if(callback) callback(E(User.ERROR.USER_PARAMS));
-        return;
-    }
-
-    return User.DB.findOne(
-        {email:email}, 
-        {password:0, history:0, __v:0}, 
-        function(err, user) {
-            if(err || !user) {
-                err = E(User.ERROR.USER_NOTFOUND, {error:err, email:email, user:user});
-            }
-            if(callback) callback(err, user);
         }
     );
 }
