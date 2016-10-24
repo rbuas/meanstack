@@ -2,7 +2,7 @@
   "name": "projectzero",
   "version": "1.0.0",
   "description": "whitepaper project to start new projects",
-  "main": "app.js",
+  "main": "backbone.js",
   "scripts": {
     "start-backbone": "nodemon backbone.js",
     "start-backbone-test": "nodemon backbone.js webmailer=fake",
