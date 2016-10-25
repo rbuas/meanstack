@@ -98,6 +98,7 @@ describe("unit.doc", function() {
                     _expect(err).to.be.null;
                     _expect(docs).to.not.be.null;
                     _expect(docs.length).to.equal(0);
+                    doc.splice(3,1);
                     done();
                 });
             });
@@ -136,10 +137,10 @@ describe("unit.doc", function() {
 
     describe("get", function() {
         it("found", function(done) {
-            Doc.Get("doc1", function(err, savedDoc) {
+            Doc.Get("doc5", function(err, savedDoc) {
                 _expect(err).to.be.null;
                 _expect(savedDoc).to.not.be.null;
-                _expect(savedDoc.content).to.equal(doc[1]);
+                _expect(savedDoc.id).to.equal("doc5");
                 done();
             });
         });
@@ -164,11 +165,11 @@ describe("unit.doc", function() {
 
     describe("find", function() {
         it("found", function(done) {
-            Doc.Find({id:"doc1"}, function(err, docs) {
+            Doc.Find({id:"doc6"}, function(err, docs) {
                 _expect(err).to.be.null;
                 _expect(docs).to.not.be.null;
                 _expect(docs.length).to.equal(1);
-                _expect(docs[0].content).to.equal(doc[1]);
+                _expect(docs[0].id).to.equal("doc6");
                 done();
             });
         });
