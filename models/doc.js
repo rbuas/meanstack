@@ -66,6 +66,27 @@ Doc.Get = function(id, callback) {
         return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, id), null]);
 
     return Doc.DB.findOne(
+        {id:id}, 
+        {__v:0}, 
+        function(err, doc) {
+            if(err || !doc)
+                err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, id:id, doc:doc});
+            System.callback(callback, [err, doc]);
+        }
+    );
+}
+
+
+/**
+ * GetByObjectId
+ * @param id String
+ * @param callback function Callback params (error, doc)
+ */
+Doc.GetByObjectId = function(id, callback) {
+    if(!id)
+        return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, id), null]);
+
+    return Doc.DB.findOne(
         {_id:id}, 
         {__v:0}, 
         function(err, doc) {
