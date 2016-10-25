@@ -241,7 +241,7 @@ User.CreateAnonymous = function(callback) {
  */
 User.Update = function (user, callback) {
     if(!user || !user.email)
-        return System.callback(callback, E(User.ERROR.USER_PARAMS, user), null)
+        return System.callback(callback, [E(User.ERROR.USER_PARAMS, user), null]);
 
     var oldmail = user.email;
     User.Get(oldmail, function(err, savedUser) {

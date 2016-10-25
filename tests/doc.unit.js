@@ -12,175 +12,82 @@ var Log = require(ROOT_DIR + "/brain/log");
 var Memory = require(ROOT_DIR + "/brain/memory");
 var WebMailer = require(ROOT_DIR + "/brain/webmailer");
 var ViewEngine = require(ROOT_DIR + "/brain/viewengine");
-var User = require(ROOT_DIR + "/models/user");
+var Doc = require(ROOT_DIR + "/models/doc");
 
-Dictionary.load(ROOT_DIR + "/common.json");
-WebMailer.FAKE = true;
-WebMailer.VERBOSE = false;
-User.VERBOSE = false;
-
-describe("unit.user", function() {
+describe("unit.doc", function() {
     var m;
-    var email1 = "rodrigobuas+unittest@gmail.com";
-    var email2 = "rodrigobuas+unittest2@gmail.com";
-    var email3 = "rodrigobuas+unittest3@gmail.com";
-    var email4 = "rodrigobuas+unittest4@gmail.com";
-    var password = "123456";
+    var doc = [
+        "doc0 content test",
+        "doc1 content test",
+        "doc2 content test",
+        "doc3 content test",
+        "doc4 content test",
+        "doc5 content test",
+        "doc6 content test",
+        "doc7 content test",
+        "doc8 content test",
+        "doc9 content test"
+    ];
 
     before(function(done) {
-        m = new Memory({onconnect:done});
+        m = new Memory({onconnect:function() {
+            var pending = doc.length;
+            doc.forEach(function(value, index, arr){
+                Doc.Create({content:value, id:"doc" + index}, function(err, savedDoc) {
+                    if(--pending <= 0) done();
+                });
+            });
+        }});
     });
 
     after(function(done){
-        m.disconnect(done);
+        Doc.Remove({}, function(){
+            m.disconnect(done);
+        });
     });
 
-    describe("create", function() {
+    describe.only("create", function() {
         afterEach(function(done) {
-            User.Remove({email: email1}, function() {
-                done();
-            });
+            Doc.Remove({id: "test"}, done);
         });
 
         it("null", function(done) {
-            var user = null;
-            User.Create(user, function(err, savedUser) {
+            Doc.Create(null, function(err, savedDoc) {
                 _expect(err).to.not.be.null;
-                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
-                _expect(savedUser).to.be.null;
+                _expect(err.code).to.equal(Doc.ERROR.DOC_PARAMS);
+                _expect(savedDoc).to.be.null;
                 done();
             });
         });
         it("empty", function(done) {
-            var user = {};
-            User.Create(user, function(err, savedUser) {
+            Doc.Create({}, function(err, savedDoc) {
                 _expect(err).to.not.be.null;
-                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
-                _expect(savedUser).to.be.null;
-                done();
-            });
-        });
-        it("nopassword", function(done) {
-            var user = {email: email1};
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.not.be.null;
-                _expect(err.code).to.equal(User.ERROR.USER_PARAMS);
-                _expect(savedUser).to.be.null;
+                _expect(err.code).to.equal(Doc.ERROR.DOC_PARAMS);
+                _expect(savedDoc).to.be.null;
                 done();
             });
         });
         it("success", function(done) {
-            var user = {email: email1, password: password};
-            User.Create(user, function(err, savedUser) {
+            Doc.Create({content:"test content", id:"test"}, function(err, savedDoc) {
                 _expect(err).to.be.null;
-                _expect(savedUser).to.not.be.null;
-                _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
+                _expect(savedDoc).to.not.be.null;
                 done();
             });
         });
-        it("full", function(done) {
-            var user = {
-                email : email1,
-                password : password,
-                label : "testlabel",
-                name : "testname",
-                gender : User.GENDER.M,
-                lang : "PT",
-                birthday : "01/01/1982",
-                origin : "testorigin",
-                profile : User.PROFILE.CLIENT
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.be.null;
-                _expect(savedUser).to.not.be.null;
-               User.Get(email1, function(err2, savedUser2) {
-                    _expect(err2).to.be.null;
-                    _expect(savedUser2.email).to.be.equal(user.email);
-                    _expect(savedUser2.label).to.be.equal(user.label);
-                    _expect(savedUser2.name).to.be.equal(user.name);
-                    _expect(savedUser2.status).to.be.equal(User.STATUS.CONFIRM);
-                    _expect(savedUser2.gender).to.be.equal(user.gender);
-                    _expect(savedUser2.lang).to.be.equal(user.lang);
-                    _expect(savedUser2.birthday).to.not.be.null;
-                    _expect(_moment(savedUser2.birthday).format("DD/MM/YYYY")).to.be.equal(user.birthday);
-                    _expect(savedUser2.origin).to.be.equal(user.origin);
-                    _expect(savedUser2.profile).to.be.equal(user.profile);
-                    done();
-                });
-            });
-        });
         it("duplicate", function(done) {
-            var user = {email: email1, password: password};
-            User.Create(user, function(err, savedUser) {
+            var doc = {content:"test content", id:"test"};
+            Doc.Create(doc, function(err, savedDoc) {
                 _expect(err).to.be.null;
-                _expect(savedUser).to.not.be.null;
-                _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
-                User.Create(user, function(err2, savedUser2) {
+                _expect(savedDoc).to.not.be.null;
+                Doc.Create(doc, function(err2, savedDoc2) {
                     _expect(err2).to.not.be.null;
                     _expect(err2.code).to.equal(11000);
                     done();
                 });
             });
         });
-        it("type-name", function(done) {
-            var user = {
-                email: email1, 
-                password: password ,
-                name : 555
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.be.null;
-                _expect(savedUser).to.not.be.null;
-                _expect(savedUser.status).to.equal(User.STATUS.CONFIRM);
-                done();
-            });
-        });
-        it("type-genre-ko", function(done) {
-            var user = {
-                email: email1, 
-                password: password,
-                gender : "HHH"
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.not.be.null;
-                done();
-            });
-        });
-        it("type-genre-ok", function(done) {
-            var user = {
-                email: email1, 
-                password: password,
-                gender : User.GENDER.F
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.be.null;
-                done();
-            });
-        });
-        it("type-profile-ko", function(done) {
-            var user = {
-                email: email1, 
-                password: password,
-                profile : "HHH"
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.not.be.null;
-                done();
-            });
-        });
-        it("type-profile-ok", function(done) {
-            var user = {
-                email: email1, 
-                password: password,
-                profile : User.PROFILE.ADMIN
-            };
-            User.Create(user, function(err, savedUser) {
-                _expect(err).to.be.null;
-                done();
-            });
-        });
     });
-
+/*
     describe("createanonymous", function() {
         after(function(done) {
             User.Purge(0, User.STATUS.ANONYMOUS, done);
@@ -1262,4 +1169,5 @@ describe("unit.user", function() {
             });
         });
     });
+    */
 });

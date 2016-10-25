@@ -42,13 +42,6 @@ Quote.Schema = new _mongoose.Schema({
 }, { strict: true });
 
 
-Quote.Schema.pre("save", function(next) {
-    var quote = this;
-
-    next();
-});
-
-
 Quote.DB = _mongoose.model("Quote", Quote.Schema);
 
 
@@ -64,8 +57,6 @@ Quote.Create = function(quote, callback) {
     var newquote = new Quote.DB();
     newquote.since = quote.since || Date.now();
     newquote.showcount = 0;
-    newquote.ratepos = [];
-    newquote.rateneg = [];
     newquote.date = quote.date;
     newquote.author = quote.author;
     newquote.text = quote.text;
@@ -76,15 +67,15 @@ Quote.Create = function(quote, callback) {
 
 /**
  * Get
- * @param quoteid String
+ * @param id String
  * @param callback function Callback params (error, quote)
  */
-Quote.Get = function(quoteid, callback) {
-    if(!quoteid)
+Quote.Get = function(id, callback) {
+    if(!id)
         return System.callback(callback, E(Quote.ERROR.QUOTE_PARAMS), null);
 
     return Quote.DB.findOne(
-        {_id:quoteid}, 
+        {_id:id}, 
         {__v:0}, 
         function(err, quote) {
             if(err || !quote)
@@ -148,71 +139,21 @@ Quote.Find = function(where, callback) {
 
 /**
  * Random get a random quote
- * @param category String
+ * @param where Criteria object
  * @param count Number
  * @param callback function Callback params (error, quotes)
  */
-Quote.Random = function(category, count, callback) {
-    Quote.DB.count({category:category}, function(err, catCount) {
+Quote.Random = function(where, count, callback) {
+    Quote.DB.count(where, function(err, catCount) {
         if(err)
             return System.callback(callback, E(Quote.ERROR.QUOTE_COUNT, err), null);
 
         if(count > catCount) count = catCount;
 
         var start = Math.floor(Math.random() * (catCount - count + 1));
-        var options = {
-            skip : start,
-            limit : count, 
-        };
-        var fields = {};
-        var query = Quote.DB.find({category:category}, fields, options);
-        query.exec(callback);
-    });
-}
-
-/**
- * RatePos Rate as a good quote
- * @param quoteid
- * @param callback function Callback params (error, savedQuote)
- */
-Quote.RatePos = function(quoteid, userid, callback) {
-    if(!quoteid || !userid)
-        return System.callback(callback, E(Quote.ERROR.QUOTE_PARAMS, {quoteid:quoteid, userid:userid}), null);
-
-    User.Find({_id:userid}, function(err, users) {
-        if(err || !users || users.length < 1)
-            return System.callback(callback, E(Quote.ERROR.QUOTE_USER, userid), null);
-
-        Quote.Get(quoteid, function(err, quote) {
-            if(err || !quote)
-                return err;
-
-            quote.ratepos.push(userid);
-            quote.save(callback);
-        });
-    });
-}
-
-/**
- * RateNeg Rate as a not good quote
- * @param quoteid
- * @param callback function Callback params (error, savedQuote)
- */
-Quote.RateNeg = function(category, userid, callback) {
-    if(!quoteid || !userid)
-        return System.callback(callback, E(Quote.ERROR.QUOTE_PARAMS, {quoteid:quoteid, userid:userid}), null);
-
-
-    User.Find({_id:userid}, function(err, users) {
-        if(err || !users || users.length < 1)
-            return System.callback(callback, E(Quote.ERROR.QUOTE_USER, userid), null);
-
-        Quote.Get(quoteid, function(err, quote) {
-            if(err || !quote)
-                return err;
-
-            quote.rateneg.push(userid);
-            quote.save(callback);
-        });
+        var query = Quote.DB.find(where)
+        .skip(start)
+        .limit(count)
+        .exec(callback);
     });
 }
