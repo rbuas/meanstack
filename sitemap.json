@@ -1,10 +1,23 @@
 {
-    "/" : {
+    "/groupe-ski/alpes-du-nord/alpe-dhuez.html" : {
         "freq":"d",
         "last":"2016-01-05",
-        "alias":[],
-        "title":"",
         "resume":"",
-        "priority":1
+        "priority":0.8,
+        "weight":"",
+        "rawurl":"",
+        "secure":"",
+        "encoding":"Unicode (UTF-8)",
+        "pagesize":197.54296875,
+        "last_pagesize":197.54296875,
+        "loadtime":"",
+        "last_loadtime":"",
+        "title":"",
+        "last_title":"",
+        "canonical":"",
+        "last_canonical":"",
+        "description":"",
+        "last_description":"",
+        "gtm":""
     }
 }

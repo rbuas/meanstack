@@ -4,8 +4,10 @@ var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
 
-var Log = require("../../brain/log");
-var WebDroneScraper = require("../../brain/webdronescraper");
+global.ROOT_DIR = __dirname + "/../..";
+
+var Log = require(ROOT_DIR + "/brain/log");
+var WebDroneScraper = require(ROOT_DIR + "/brain/webdronescraper");
 
 describe("basicload", function() {
     var wdc;
@@ -32,6 +34,7 @@ describe("basicload", function() {
             {host:"www.google.com"}, 
             function(data, stats) {
                 //Log.message("loadpage stats : ", stats);
+                console.log("GOOGLE ", data, stats);
                 done();
             }
         );

@@ -2,8 +2,12 @@ var _expect = require("chai").expect;
 var _assert = require("chai").assert;
 var _should = require("chai").should();
 
-var Log = require("../brain/log");
-var WebDroneScraper = require("../brain/webdronescraper");
+global.ROOT_DIR = __dirname + "/..";
+
+var Log = require(ROOT_DIR + "/brain/log");
+var WebDroneScraper = require(ROOT_DIR + "/brain/webdronescraper");
+
+
 
 describe("load", function() {
     var wdc;
@@ -13,24 +17,24 @@ describe("load", function() {
         wdc = new WebDroneScraper();
         done();
     });
-    after(function() {
+    after(function(done) {
         //Log.message("Stats: ", wdc.stats);
+        done();
     });
 
     it("sitemap-once", function(done) {
-        wdc.sitemap(
-            "../sitemap.json",
-            "localhost",
-            "8080",
-            function (data, stats) {
+        wdc.sitemap({
+            mapfile : "../sitemap.json",
+            hostname : "www.locatour.com",
+            port : 80,
+            eachCallback : function (data, stats) {
+                _expect(stats).to.be.ok;
+                _expect(stats.statusCode).to.be.equal(200);
                 _expect(data).to.be.not.null;
-                _expect(stats).to.not.be.null;
 
                 var url = wdc.getStatsUrl(stats) || "";
                 Log.message("SITEMAP::" + url);
 
-                _expect(stats.complete).to.be.equal(true);
-                _expect(stats.statusCode).to.be.equal(200);
 
                 if(stats.duration > 1000) {
                     Log.warning("Exceeding load time limits");
@@ -38,11 +42,11 @@ describe("load", function() {
                 if(stats.contentLength > 500000) {
                     Log.warning("Exceeding load size limits");
                 }
-            },
-            function (data, stats) {
+            },  
+            endCallback : function (data, stats) {
                 Log.message("Stats: ", stats);
                 done();
-            }
-        );
+            },
+        });
     });
 });

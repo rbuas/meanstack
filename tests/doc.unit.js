@@ -239,7 +239,7 @@ describe("unit.doc", function() {
             Doc.Random({}, 20, function(err, docs) {
                 _expect(err).to.be.null;
                 _expect(docs).to.not.be.null;
-                _expect(docs.length).to.equal(10);
+                _expect(docs.length).to.equal(9);
                 done();
             });
         });
