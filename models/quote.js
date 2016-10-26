@@ -33,11 +33,9 @@ Quote.MESSAGE = System.registerMessages({
 Quote.Schema = new _mongoose.Schema({
     author : {type:String, required:true},
     text : {type:String, unique:true, required:true},
-    category : {type:String},
+    category : [String],
     date : Date,
     since : {type:Date, default:Date.now},
-    ratepos : [],
-    rateneg : [],
     showcount : {type:Number, min:0}
 }, { strict: true });
 
@@ -51,10 +49,11 @@ Quote.DB = _mongoose.model("Quote", Quote.Schema);
  * @param callback function Callback params (error, savedQuote)
  */
 Quote.Create = function(quote, callback) {
+    var self = this;
     if(!quote || !quote.text || !quote.author)
-        return System.callback(callback, E(Quote.ERROR.QUOTE_PARAMS, quote), null);
+        return System.callback(callback, [E(Quote.ERROR.QUOTE_PARAMS, quote), null]);
 
-    var newquote = new Quote.DB();
+    var newquote = new self.DB();
     newquote.since = quote.since || Date.now();
     newquote.showcount = 0;
     newquote.date = quote.date;

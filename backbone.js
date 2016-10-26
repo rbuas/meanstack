@@ -1,6 +1,6 @@
-// globals variables must to be exported before all initialization
+global.ROOT_DIR = __dirname;
 
-var Brain = require(__dirname + "/brain/brain");
+var Brain = require(ROOT_DIR + "/brain/brain");
 var brain = global.brain = module.exports.brain = new Brain({
     port:8080,
     name: "NodeTemplateHB",
@@ -10,18 +10,18 @@ var brain = global.brain = module.exports.brain = new Brain({
     memory: {db: "mongodb://localhost/test"}
 });
 
-var _quoteRoutes = require("./routes/quote");
 //var _citiesRoutes = require("./routes/cities");
 //var _resRoutes = require("./routes/resource");
-var _connectionRoutes = require("./routes/connection");
-var UserRoute = require("./routes/user");
-var _chat = require("./routes/chat");
+var _connectionRoutes = require(ROOT_DIR + "/routes/connection");
+var _chat = require(ROOT_DIR + "/routes/chat");
 
 brain.get("/", _connectionRoutes.startpage);
 brain.post("/s/connect", _connectionRoutes.connect);
 brain.get("/s/reset", _connectionRoutes.reset);
 
-//USER PUBLIC ROUTES
+//USER
+var UserRoute = require(ROOT_DIR + "/routes/user");
+//PUBLIC ROUTES
 brain.post("/s/user-register", UserRoute.register);
 brain.post("/s/user-unregister", UserRoute.unregister);
 brain.get("/s/user-confirm/:token", UserRoute.confirm);
@@ -30,16 +30,17 @@ brain.post("/s/user-logout", UserRoute.logout);
 brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
 brain.post("/s/user-resetpassword", UserRoute.resetPassword);
 brain.post("/s/user-update", UserRoute.update);
-
-//USER ADMIN ROUTES
+//ADMIN ROUTES
 brain.post("/s/user-addpassport", UserRoute.addPassport);
 brain.post("/s/user-removepassport", UserRoute.remPassport);
 brain.get("/s/user-find", UserRoute.find);
 
 brain.usocket("connection", _chat.broadcast);
 
-brain.get("/s/quotes", _quoteRoutes.quotes);
-brain.get("/s/quotes/:quote", _quoteRoutes.quote);
+//QUOTES
+var QuoteRoute = require(ROOT_DIR + "/routes/quote");
+brain.get("/s/quotes/:category", QuoteRoute.quotes);
+brain.get("/s/quote/:quote", QuoteRoute.quote);
 
 
 

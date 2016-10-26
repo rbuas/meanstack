@@ -17,17 +17,24 @@ function WebDroneScraper (options) {
     self.stats = {};
 }
 
-WebDroneScraper.defaultoptions = {};
+WebDroneScraper.defaultoptions = {
+    //mapfile : String,
+    //hostname : String,
+    //port : Number,
+    //eachCallback : callback (data, stats),
+    //endCallback : callback (data, stats)
+    //scrapCallback : callback (data, stats)
+};
 
-WebDroneScraper.prototype.scrapLink = function (link, endCallback, loadcharge) {
+WebDroneScraper.prototype.scrapLink = function (link, config, callback) {
     var self = this;
-    if(!link)
+    if(!link || !config)
         return;
 
-    loadcharge = loadcharge || 1;
-    var statsid = generatStatsId(link);
+    var loadcharge = config.loadcharge || 1;
+    var statsid = link.path;
     self.stats[statsid] = self.stats[statsid] || startStats();
-    var linkstats = self.stats[statsid];
+    var stats = self.stats[statsid];
     var pendding = loadcharge;
 
     for(var i = 0 ; i < loadcharge; i++) {
@@ -35,27 +42,29 @@ WebDroneScraper.prototype.scrapLink = function (link, endCallback, loadcharge) {
 
         self.request({
                 path:link.path,
-                port:link.port,
-                hostname:link.hostname
+                port:link.port || config.port,
+                hostname:link.hostname || config.hostname
             }, 
             function(err, reqinfo, data) {
                 var newstats;
                 if(!err && data) {
-                    var scrapinfo = getScrapInfos(data);
-                    newstats = stockStats(linkstats, link, reqinfo, scrapinfo);
+                    newstats = stockStats(stats, link, config, reqinfo, getScrapInfos(self, config, data));
                     if(newstats) sendUpdateStats(self, newstats);
                 }
 
-                pendding--;
-                if(pendding == 0 && endCallback) endCallback(data, newstats);
-            });
+                if(--pendding == 0 && callback) callback(data, newstats);
+            }
+        );
     }
 }
 
-WebDroneScraper.prototype.scrap = function (list, eachCallback, endCallback) {
+WebDroneScraper.prototype.scrap = function (list, config) {
     var self = this;
+    if(!config)
+        return;
+
     if(!list) {
-        if(endCallback) endCallback();
+        if(config.endCallback) config.endCallback();
         return;
     }
 
@@ -67,32 +76,28 @@ WebDroneScraper.prototype.scrap = function (list, eachCallback, endCallback) {
         if(!list.hasOwnProperty(l))
             continue;
 
-        var target = list[l];
-        self.scrapLink(target, function(data, newstats) {
-            if(target.callback) target.callback(data, newstats);
-            if(eachCallback) eachCallback(data, newstats);
-            if(--pendding == 0 && endCallback) endCallback(data, newstats);
+        var link = list[l];
+        self.scrapLink(link, config, function(data, newstats) {
+            if(config.eachCallback) config.eachCallback(data, newstats);
+            if(--pendding == 0 && config.endCallback) config.endCallback(data, newstats);
         });
     }
 }
 
 WebDroneScraper.prototype.sitemap = function (config) {
     var self = this;
-    var mapfile = config.mapfile;//"../sitemap.json" 
-    var hostname = config.hostname;
-    var port = config.port; 
-    var eachCallback = config.eachCallback; 
-    var endCallback = config.endCallback;
-    if(!mapfile) {
-        if(endCallback) endCallback();
+    if(!config)
+        return;
+    if(!config.mapfile) {
+        if(config.endCallback) config.endCallback();
         return;
     }
 
-    self.mapfile = mapfile;
+    self.mapfile = config.mapfile;
     self.sitemap = require(self.mapfile);
     if(!self.sitemap) {
-        Log.error("Can not load sitemap from : " + mapfile);
-        if(endCallback) endCallback();
+        Log.error("Can not load sitemap from : " + self.mapfile);
+        if(config.endCallback) config.endCallback();
         return;
     }
 
@@ -101,27 +106,28 @@ WebDroneScraper.prototype.sitemap = function (config) {
         if(!self.sitemap.hasOwnProperty(path))
             continue;
 
-        sitemaplinks.push({hostname:hostname, port:port, path:path});
+        var oldsstats = self.sitemap[path];
+        sitemaplinks.push({path:path, oldsstats : oldsstats});
     }
 
     if(sitemaplinks.length == 0) {
         Log.message("No links into sitemap");
-        if(endCallback) endCallback();
+        if(config.endCallback) config.endCallback();
         return;
     }
 
-    return self.scrap(sitemaplinks, eachCallback, endCallback);
+    return self.scrap(sitemaplinks, config);
 }
 
 WebDroneScraper.prototype.getStatsUrl = function (stats) {
-    if(!stats || !stats.link)
+    if(!stats)
         return;
 
-    var url = stats.link.hostname || stats.link.host || "";
-    if(stats.link.port) {
-        url += ":" + stats.link.port;
+    var url = stats.hostname || stats.host || "";
+    if(stats.port) {
+        url += ":" + stats.port;
     }
-    url += stats.link.path;
+    url += stats.path;
     return url;
 }
 
@@ -208,23 +214,24 @@ function startStats () {
     };
 }
 
-function generatStatsId (link) {
+function generatStatsId (link, config) {
     if(!link)
         return "?";
 
-    var host = link.host || "";
-    var port = link.port || "";
+    var hostname = link.hostname || config.hostname || "";
+    var port = link.port || config.port || "";
     var path = link.path || "";
-    var protocol = link.protocol || "";
+    var protocol = link.protocol || config.protocol || "";
     return (protocol ? protocol + "//" : "") + host + (port ? ":" + port : "") + path;
 }
 
-function stockStats (stats, link, info, scrapinfo) {
+function stockStats (stats, link, config, info, scrapinfo) {
     if(!stats) {
         Log.error("Missing stats object to stock info into it");
         return false;
     }
 
+    config = config || {};
     var newstats;
     if(!info || typeof(info) == "string") {
         newstats = {
@@ -232,14 +239,15 @@ function stockStats (stats, link, info, scrapinfo) {
         };
     } else {
         newstats = {
-            link : link,
+            hostname : link.hostname || config.hostname,
+            port : link.port || config.port,
+            path : link.path,
             statusCode : info.statusCode,
             statusMessage : info.statusMessage,
-            complete : info.complete,
             duration : info.duration,
-            cacheControl : info.headers && info.headers["cache-control"],
+            //cacheControl : info.headers && info.headers["cache-control"],
             contentType : info.headers && info.headers["content-type"],
-            connection : info.headers && info.headers["connection"],
+            //connection : info.headers && info.headers["connection"],
             contentLength : parseInt(info.headers && info.headers["content-length"]),
             scrapinfo : scrapinfo
         };
@@ -257,28 +265,33 @@ function sendUpdateStats (self, newstats) {
     if(self.updatestats) self.updatestats(newstats, self.stats);
 }
 
-function getScrapInfos (data) {
-    if(!data)
+function getScrapInfos (self, config, data) {
+    if(!self || !config || !data)
         return;
 
     var $ = _cheerio.load(data);
     if(!$)
         return;
-    
-    return {
-        droneinfo : getDroneInfos($),
-        title : getTitleInfo($)
-    };
+
+    var scrapinfo;
+    if(config.scrapCallback) {
+        scrapinfo = config.scrapCallback($) || {};
+    } else {
+        var titleinfo = $("h1");
+        var canonical = $("link[rel='canonical']");
+        scrapinfo = {
+            title : titleinfo.text(),
+            titleCount : titleinfo ? titleinfo.length : 0,
+            canonical : canonical.attr("href")
+        };
+    }
+    scrapinfo.droneinfo = getDroneInfos($);
+
+    return scrapinfo;
 }
 
 function getDroneInfos ($) {
     if(!$) return;
     var droneinfo = $("#webdrone");
     return droneinfo.text();
-}
-
-function getTitleInfo ($) {
-    if(!$) return;
-    var titleinfo = $("h1");
-    return titleinfo.text();    
 }

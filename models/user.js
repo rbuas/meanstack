@@ -166,12 +166,13 @@ User.DB = _mongoose.model("User", User.Schema);
  * @param callback function Callback params (error, savedUser)
  */
 User.Create = function(user, callback) {
+    var self = this;
     if(!user || !user.email || !user.password) {
         if(callback) callback(E(User.ERROR.USER_PARAMS, user), null);
         return;
     }
 
-    var newuser = new User.DB();
+    var newuser = new self.DB();
     newuser.email = user.email;
     newuser.label = user.label;
     newuser.password = user.password;
@@ -201,12 +202,13 @@ User.Create = function(user, callback) {
  * @param callback function Callback params (error, user)
  */
 User.Get = function(email, callback) {
+    var self = this;
     if(!email) {
         if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
-    return User.DB.findOne(
+    return self.DB.findOne(
         {email:email}, 
         {password:0, history:0, __v:0}, 
         function(err, user) {
@@ -225,7 +227,8 @@ User.Get = function(email, callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.CreateAnonymous = function(callback) {
-    var newuser = new User.DB();
+    var self = this;
+    var newuser = new self.DB();
     newuser.email = newuser.id + "@anonymous.com";
     newuser.password = "a";
     newuser.isAnonymous = true;
@@ -240,11 +243,12 @@ User.CreateAnonymous = function(callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.Update = function (user, callback) {
+    var self = this;
     if(!user || !user.email)
         return System.callback(callback, [E(User.ERROR.USER_PARAMS, user), null]);
 
     var oldmail = user.email;
-    User.Get(oldmail, function(err, savedUser) {
+    self.Get(oldmail, function(err, savedUser) {
         if(err || !savedUser) {
             if(callback) callback(E(User.ERROR.USER_NOTFOUND, err));
             return;
@@ -263,7 +267,8 @@ User.Update = function (user, callback) {
  * @param callback function Callback params (error)
  */
 User.Remove = function (where, callback) {
-    User.DB.remove(where, callback);
+    var self = this;
+    self.DB.remove(where, callback);
 }
 
 
@@ -273,12 +278,13 @@ User.Remove = function (where, callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.SoftRemove = function(email, password, callback) {
+    var self = this;
     if(!email || !password) {
         if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
-    User.DB.findOne({email:email}, function(err, user) {
+    self.DB.findOne({email:email}, function(err, user) {
         if(!user) {
             if(callback) callback(E(User.ERROR.USER_UNKNOW), null);
             return;
@@ -303,12 +309,13 @@ User.SoftRemove = function(email, password, callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.Restore = function(email, callback) {
+    var self = this;
     if(!email) {
         if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
-    User.DB.findOne({email:email}, function(err, user) {
+    self.DB.findOne({email:email}, function(err, user) {
         if(!user) {
             if(callback) callback(E(User.ERROR.USER_UNKNOW), null);
             return;
@@ -326,13 +333,14 @@ User.Restore = function(email, callback) {
  * @param callback function Callback params (error, users)
  */
 User.Find = function(where, callback) {
+    var self = this;
     if(where.name) where.name = new RegExp(RegExp.escape(where.name), 'i');
     if(where.email) where.email = new RegExp(RegExp.escape(where.email), 'i');
     if(where.label) where.label = new RegExp(RegExp.escape(where.label), 'i');
     if(where.since) where.since = {$gt : where.since};
     if(where.lastlogin) where.lastlogin = {$gt : where.lastlogin};
 
-    return User.DB.find(
+    return self.DB.find(
         where, 
         {password:0, token:0, history:0, __v:0}, 
         function(err, users) {
@@ -353,6 +361,7 @@ User.Find = function(where, callback) {
  * @param callback function Callback params (error)
  */
 User.Purge = function(days, status, callback) {
+    var self = this;
     if(days == null || !status) {
         if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
@@ -360,7 +369,7 @@ User.Purge = function(days, status, callback) {
     var where = {status:status};
     if(days) where.since = {$lt : _moment().subtract(days, "days")};
 
-    User.DB.remove(where, callback);
+    self.DB.remove(where, callback);
 }
 
 
@@ -371,12 +380,13 @@ User.Purge = function(days, status, callback) {
  * @param callback function Callback params (error, savedUser)
  */
 User.Confirm = function(token, callback) {
+    var self = this;
     if(!token) {
         if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
-    User.Find({_id:token}, function(err, users) {
+    self.Find({_id:token}, function(err, users) {
         var user = users && users.length ? users[0] : null;
         if(!user) {
             if(callback) callback(E(User.ERROR.USER_TOKEN), null);
@@ -396,12 +406,13 @@ User.Confirm = function(token, callback) {
  * @param callback function Callback params (error, token)
  */
 User.GetResetToken = function(email, callback) {
+    var self = this;
     if(!email) {
         if(callback) callback(E(User.ERROR.USER_PARAMS), null);
         return;
     }
 
-    return User.DB.findOne(
+    return self.DB.findOne(
         {email:email}, 
         function(err, user) {
             var token = null;
@@ -425,10 +436,11 @@ User.GetResetToken = function(email, callback) {
  * @param callback function Callback params (error, user)
  */
 User.ResetPassword = function(userid, token, newpassword, callback) {
+    var self = this;
     if(!userid || !token || !newpassword)
         return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-    User.DB.findOne({_id:userid}, function(err, user) {
+    self.DB.findOne({_id:userid}, function(err, user) {
         if(!user)
             return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
@@ -449,10 +461,11 @@ User.ResetPassword = function(userid, token, newpassword, callback) {
  * @param callback function Callback params (error)
  */
 User.AskResetPassword = function(email, callback) {
+    var self = this;
     if(!email)
         return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-    User.DB.findOne(
+    self.DB.findOne(
         {email:email},
         function(err, user) {
             if(err || !user)
@@ -463,7 +476,7 @@ User.AskResetPassword = function(email, callback) {
             if(!userid || !token)
                 return System.callback(callback, [E(User.ERROR.USER_DATA, {userid:userid,token:token})]);
 
-            User.Mailer.send(
+            self.Mailer.send(
                 {
                     to : email,
                     subject : I("USER_RESETPASS_SUBJECT", user.lang),
@@ -499,12 +512,13 @@ User.AskResetPassword = function(email, callback) {
  * @param callback function Callback params (error, user)
  */
 User.Login = function (email, password, callback) {
+    var self = this;
     if(!email || !password) {
         if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
-    return User.DB.findOne({email:email}, function(err, user) {
+    return self.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(E(User.ERROR.USER_NOTFOUND, err), user);
             return;
@@ -548,12 +562,13 @@ User.Login = function (email, password, callback) {
  * @param callback function Callback params (error, user)
  */
 User.Logout = function(email, callback) {
+    var self = this;
     if(!email) {
         if(callback) callback(E(User.ERROR.USER_PARAMS));
         return;
     }
 
-    return User.DB.findOne({email:email}, function(err, user) {
+    return self.DB.findOne({email:email}, function(err, user) {
         if(err || !user) {
             if(callback) callback(E(User.ERROR.USER_NOTFOUND, err), user);
             return;
@@ -565,10 +580,11 @@ User.Logout = function(email, callback) {
 
 
 User.AddPassport = function(email, passport, callback) {
+    var self = this;
     if(!email || !passport)
         return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-    return User.Get(email, function(err, user) {
+    return self.Get(email, function(err, user) {
         if(err || !user)
             return System.callback(callback, err);
 
@@ -582,10 +598,11 @@ User.AddPassport = function(email, passport, callback) {
 }
 
 User.RemovePassport = function(email, passport, callback) {
+    var self = this;
     if(!email || !passport)
         return System.callback(callback, [E(User.ERROR.USER_PARAMS)]);
 
-    return User.Get(email, function(err, user) {
+    return self.Get(email, function(err, user) {
         if(err || !user)
             return System.callback(callback, err);
 

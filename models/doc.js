@@ -43,10 +43,11 @@ Doc.DB = _mongoose.model("Doc", Doc.Schema);
  * @param callback function Callback params (error, savedDoc)
  */
 Doc.Create = function(doc, callback) {
+    var self = this;
     if(!doc || !doc.content || !doc.id)
         return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, doc), null]);
 
-    var newdoc = new Doc.DB();
+    var newdoc = new self.DB();
     newdoc.since = doc.since || Date.now();
     newdoc.showcount = 0;
     newdoc.id = doc.id;
@@ -62,10 +63,11 @@ Doc.Create = function(doc, callback) {
  * @param callback function Callback params (error, doc)
  */
 Doc.Get = function(id, callback) {
+    var self = this;
     if(!id)
         return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, id), null]);
 
-    return Doc.DB.findOne(
+    return self.DB.findOne(
         {id:id}, 
         {__v:0}, 
         function(err, doc) {
@@ -83,10 +85,11 @@ Doc.Get = function(id, callback) {
  * @param callback function Callback params (error, doc)
  */
 Doc.GetByObjectId = function(id, callback) {
+    var self = this;
     if(!id)
         return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, id), null]);
 
-    return Doc.DB.findOne(
+    return self.DB.findOne(
         {_id:id}, 
         {__v:0}, 
         function(err, doc) {
@@ -104,10 +107,11 @@ Doc.GetByObjectId = function(id, callback) {
  * @param callback function Callback params (error, savedDoc)
  */
 Doc.Update = function (doc, callback) {
+    var self = this;
     if(!doc || !doc.id)
         return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, doc), null])
 
-    Doc.Get(doc.id, function(err, savedDoc) {
+    self.Get(doc.id, function(err, savedDoc) {
         if(err || !savedDoc)
             return System.callback(callback, [E(Doc.ERROR.DOC_NOTFOUND, err), null]);
 
@@ -123,7 +127,8 @@ Doc.Update = function (doc, callback) {
  * @param callback function Callback params (error)
  */
 Doc.Remove = function (where, callback) {
-    Doc.DB.remove(where, callback);
+    var self = this;
+    self.DB.remove(where, callback);
 }
 
 
@@ -133,11 +138,12 @@ Doc.Remove = function (where, callback) {
  * @param callback function Callback params (error, docs)
  */
 Doc.Find = function(where, callback) {
+    var self = this;
     if(where.text) where.text = new RegExp(RegExp.escape(where.text), 'i');
     if(where.author) where.author = new RegExp(RegExp.escape(where.author), 'i');
     if(where.since) where.since = {$gt : where.since};
 
-    return Doc.DB.find(
+    return self.DB.find(
         where, 
         {__v:0}, 
         function(err, docs) {
@@ -156,14 +162,15 @@ Doc.Find = function(where, callback) {
  * @param callback function Callback params (error, docs)
  */
 Doc.Random = function(where, count, callback) {
-    Doc.DB.count(where, function(err, catCount) {
+    var self = this;
+    self.DB.count(where, function(err, catCount) {
         if(err)
             return System.callback(callback, [E(Doc.ERROR.DOC_COUNT, err), null]);
 
         if(count > catCount) count = catCount;
 
         var start = Math.floor(Math.random() * (catCount - count + 1));
-        var query = Doc.DB.find(where)
+        var query = self.DB.find(where)
         .skip(start)
         .limit(count)
         .exec(callback);

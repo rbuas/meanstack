@@ -7,46 +7,44 @@ global.ROOT_DIR = __dirname + "/..";
 var Log = require(ROOT_DIR + "/brain/log");
 var WebDroneScraper = require(ROOT_DIR + "/brain/webdronescraper");
 
-
-
-describe("load", function() {
+describe("load.sitemap", function() {
     var wdc;
 
     before(function(done) {
-        // runs before all tests in this block
         wdc = new WebDroneScraper();
         done();
     });
     after(function(done) {
-        //Log.message("Stats: ", wdc.stats);
         done();
     });
 
-    it("sitemap-once", function(done) {
+    it("sitemap", function(done) {
         wdc.sitemap({
             mapfile : "../sitemap.json",
             hostname : "www.locatour.com",
             port : 80,
+            scrapCallback : function ($) {
+                if(!$) return;
+
+                var titleinfo = $("h1");
+                var canonical = $("link[rel='canonical']");
+                return {
+                    title : titleinfo.text(),
+                    titleCount : titleinfo ? titleinfo.length : 0,
+                    canonical : canonical.attr("href")
+                };
+            },
             eachCallback : function (data, stats) {
+                _expect(data).to.be.not.null;
                 _expect(stats).to.be.ok;
                 _expect(stats.statusCode).to.be.equal(200);
-                _expect(data).to.be.not.null;
-
-                var url = wdc.getStatsUrl(stats) || "";
-                Log.message("SITEMAP::" + url);
-
-
-                if(stats.duration > 1000) {
-                    Log.warning("Exceeding load time limits");
-                }
-                if(stats.contentLength > 500000) {
-                    Log.warning("Exceeding load size limits");
-                }
-            },  
+                _expect(stats.duration).to.be.below(2000);
+                _expect(stats.contentLength).to.be.below(500000);
+            },
             endCallback : function (data, stats) {
                 Log.message("Stats: ", stats);
                 done();
-            },
+            }
         });
     });
 });

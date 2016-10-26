@@ -16,24 +16,28 @@ var Quote = require(ROOT_DIR + "/models/quote");
 
 describe("unit.quote", function() {
     var m;
-    var doc = [
-        "doc0 content test",
-        "doc1 content test",
-        "doc2 content test",
-        "doc3 content test",
-        "doc4 content test",
-        "doc5 content test",
-        "doc6 content test",
-        "doc7 content test",
-        "doc8 content test",
-        "doc9 content test"
+    var quotes = [
+        {"author": "Ansel Adams","text": "You don't make a photograph just with a camera. You bring to the act of photography all the pictures you have seen, the books you have read, the music you have heard, the people you have loved."},
+        {"author": "Ernst Haas","text": "I am not interested in shooting new things – I am interested to see things new."},
+        {"author": "Ted Grant","text": "When you photograph people in color, you photograph their clothes. But when you photograph people in Black and white, you photograph their souls."},
+        {"author": "Ansel Adams","text": "You don’t take a photograph, you make it."},
+        {"author": "Ansel Adams","text": "To the complaint, 'There are no people in these photographs,' I respond, There are always two people: the photographer and the viewer."},
+        {"author": "Henri Cartier-Bresson","text": "Your first 10,000 photographs are your worst."},
+        {"author": "Henri Cartier-Bresson","text": "To photograph: it is to put on the same line of sight the head, the eye and the heart."},
+        {"author": "Henri Cartier-Bresson","text": "Photographier c’est mettre sur la même ligne de mire la tête, l’oeil et le coeur."},
+        {"author": "John Stuart Mill","text": "La photographie est une brève complicité entre la prévoyance et le hasard."},
+        {"author": "Henri Cartier-Bresson","text": "To me, photography is the simultaneous recognition in a fraction of a second of the significance of an event."},
+        {"author": "Robert Frank","text": "The eye should learn to listen before it looks."},
+        {"author": "Tim Walker","text": "Only photograph what you love."},
+        {"author": "Ralph Gibson","text": "Une photographie forte, ce n’est plus l’image de quelque chose, c’est quelque chose en soi."}
     ];
 
     before(function(done) {
         m = new Memory({onconnect:function() {
-            var pending = doc.length;
-            doc.forEach(function(value, index, arr){
-                Doc.Create({content:value, id:"doc" + index}, function(err, savedDoc) {
+            var pending = quotes.length;
+            quotes.forEach(function(value, index, arr){
+                Quote.Create(value, function(err, savedQuote) {
+                    value.id = savedQuote.id;
                     if(--pending <= 0) done();
                 });
             });
@@ -41,51 +45,90 @@ describe("unit.quote", function() {
     });
 
     after(function(done){
-        Doc.Remove({}, function(){
+        Quote.Remove({}, function(){
             m.disconnect(done);
         });
     });
 
     describe("create", function() {
-        afterEach(function(done) {
-            Doc.Remove({id: "test"}, done);
-        });
-
         it("null", function(done) {
-            Doc.Create(null, function(err, savedDoc) {
+            Quote.Create(null, function(err, savedQuote) {
                 _expect(err).to.not.be.null;
-                _expect(err.code).to.equal(Doc.ERROR.DOC_PARAMS);
-                _expect(savedDoc).to.be.null;
+                _expect(err.code).to.equal(Quote.ERROR.QUOTE_PARAMS);
+                _expect(savedQuote).to.be.null;
                 done();
             });
         });
         it("empty", function(done) {
-            Doc.Create({}, function(err, savedDoc) {
+            Quote.Create({}, function(err, savedQuote) {
                 _expect(err).to.not.be.null;
-                _expect(err.code).to.equal(Doc.ERROR.DOC_PARAMS);
-                _expect(savedDoc).to.be.null;
+                _expect(err.code).to.equal(Quote.ERROR.QUOTE_PARAMS);
+                _expect(savedQuote).to.be.null;
                 done();
             });
         });
         it("success", function(done) {
-            Doc.Create({content:"test content", id:"test"}, function(err, savedDoc) {
+            Quote.Create({author:"rbuas", text:"blablabla"}, function(err, savedQuote) {
                 _expect(err).to.be.null;
-                _expect(savedDoc).to.not.be.null;
-                _expect(savedDoc.content).to.be.equal("test content");
-                _expect(savedDoc.id).to.be.equal("test");
-                done();
+                _expect(savedQuote).to.not.be.null;
+                _expect(savedQuote.text).to.be.equal("blablabla");
+                _expect(savedQuote.author).to.be.equal("rbuas");
+                Quote.Remove({author: "rbuas"}, done);
             });
         });
         it("duplicate", function(done) {
-            var doc = {content:"test content", id:"test"};
-            Doc.Create(doc, function(err, savedDoc) {
+            var quote = {author:"rbuas", text:"blablabla"};
+            Quote.Create(quote, function(err, savedQuote) {
                 _expect(err).to.be.null;
-                _expect(savedDoc).to.not.be.null;
-                Doc.Create(doc, function(err2, savedDoc2) {
-                    _expect(err2).to.not.be.null;
-                    _expect(err2.code).to.equal(11000);
-                    done();
+                _expect(savedQuote).to.not.be.null;
+                Quote.Create(quote, function(err, savedQuote) {
+                    _expect(err).to.not.be.null;
+                    _expect(err.code).to.equal(11000);
+                    Quote.Remove({author: "rbuas"}, done);
                 });
+            });
+        });
+    });
+
+    describe("random", function() {
+        it("basic", function(done) {
+            Quote.Random({}, 1, function(err, quotes) {
+                _expect(err).to.be.null;
+                _expect(quotes).to.not.be.null;
+                _expect(quotes.length).to.equal(1);
+                _expect(quotes[0]).to.be.ok;
+                _expect(quotes[0].author).to.be.ok;
+                _expect(quotes[0].text).to.be.ok;
+                console.log("random : ", quotes[0].author, quotes[0].text);
+                done();
+            });
+        });
+
+        it("multiples", function(done) {
+            Quote.Random({}, 3, function(err, quotes) {
+                _expect(err).to.be.null;
+                _expect(quotes).to.not.be.null;
+                _expect(quotes.length).to.equal(3);
+                _expect(quotes[0]).to.be.ok;
+                _expect(quotes[0].text).to.be.ok;
+                _expect(quotes[0].author).to.be.ok;
+                _expect(quotes[1]).to.be.ok;
+                _expect(quotes[1].text).to.be.ok;
+                _expect(quotes[1].author).to.be.ok;
+                _expect(quotes[2]).to.be.ok;
+                _expect(quotes[2].text).to.be.ok;
+                _expect(quotes[2].author).to.be.ok;
+                console.log("random : ", quotes[0].author, quotes[1].author, quotes[2].author);
+                done();
+            });
+        });
+
+        it("bounds", function(done) {
+            Quote.Random({}, 20, function(err, quotes) {
+                _expect(err).to.be.null;
+                _expect(quotes).to.not.be.null;
+                _expect(quotes.length).to.equal(13);
+                done();
             });
         });
     });
