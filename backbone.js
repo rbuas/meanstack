@@ -10,7 +10,7 @@ var brain = global.brain = module.exports.brain = new Brain({
     memory: {db: "mongodb://localhost/test"}
 });
 
-var _quoteRoutes = require("./routes/quotes");
+var _quoteRoutes = require("./routes/quote");
 //var _citiesRoutes = require("./routes/cities");
 //var _resRoutes = require("./routes/resource");
 var _connectionRoutes = require("./routes/connection");

@@ -6,7 +6,15 @@ var _resemble = require("node-resemble-js");
 var _log = require("./log");
 var PNG = require("pngjs").PNG;
 
-var _defaultoptions = {
+function TestProofCase (suite, options) {
+    var self = this;
+    self.suite = suite;
+    self.options = Object.assign(TestProofCase.defaultoptions, options) || {};
+    self.proofindex = 0;
+    self.proofdiff = [];
+    _resemble.outputSettings(self.options.resemble);
+}
+TestProofCase.defaultoptions = {
     path : __dirname + "/proof/",
     imageproof : ".proof", 
     imagediff : ".diff", 
@@ -24,15 +32,6 @@ var _defaultoptions = {
         errorType: 'movement',
         transparency: 0.1
     }
-};
-
-function TestProofCase (suite, options) {
-    var self = this;
-    self.suite = suite;
-    self.options = Object.assign(_defaultoptions, options) || {};
-    self.proofindex = 0;
-    self.proofdiff = [];
-    _resemble.outputSettings(self.options.resemble);
 }
 
 TestProofCase.prototype.proof = function(proofname) {

@@ -201,4 +201,47 @@ describe("unit.doc", function() {
             });
         });
     });
+
+    describe("random", function() {
+        it("basic", function(done) {
+            Doc.Random({}, 1, function(err, docs) {
+                _expect(err).to.be.null;
+                _expect(docs).to.not.be.null;
+                _expect(docs.length).to.equal(1);
+                _expect(docs[0]).to.be.ok;
+                _expect(docs[0].content).to.be.ok;
+                _expect(docs[0].id).to.be.ok;
+                console.log("random : ", docs[0].id);
+                done();
+            });
+        });
+
+        it("multiples", function(done) {
+            Doc.Random({}, 3, function(err, docs) {
+                _expect(err).to.be.null;
+                _expect(docs).to.not.be.null;
+                _expect(docs.length).to.equal(3);
+                _expect(docs[0]).to.be.ok;
+                _expect(docs[0].content).to.be.ok;
+                _expect(docs[0].id).to.be.ok;
+                _expect(docs[1]).to.be.ok;
+                _expect(docs[1].content).to.be.ok;
+                _expect(docs[1].id).to.be.ok;
+                _expect(docs[2]).to.be.ok;
+                _expect(docs[2].content).to.be.ok;
+                _expect(docs[2].id).to.be.ok;
+                console.log("random : ", docs[0].id, docs[1].id, docs[2].id);
+                done();
+            });
+        });
+
+        it("bounds", function(done) {
+            Doc.Random({}, 20, function(err, docs) {
+                _expect(err).to.be.null;
+                _expect(docs).to.not.be.null;
+                _expect(docs.length).to.equal(10);
+                done();
+            });
+        });
+    });
 });
