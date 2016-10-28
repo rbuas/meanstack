@@ -101,20 +101,18 @@ Wap.Create = function (wap, callback) {
 /**
  * Create
  * @param wap object
- * @param callback function Callback params (error, savedWap)
+ * @param callback function Callback params (error, waps)
  */
-Wap.getMap = function () {
-var self = this;
-    if(!id)
-        return System.callback(callback, [E(Doc.ERROR.DOC_PARAMS, id), null]);
+Wap.getMap = function (callback) {
+    var self = this;
 
     return self.DB.find(
         {}, 
-        {__v:0}, 
-        function(err, doc) {
-            if(err || !doc)
-                err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, id:id, doc:doc});
-            System.callback(callback, [err, doc]);
+        {__v:0, canonical:1, metatitle:1, title:1}, 
+        function(err, waps) {
+            if(err || !waps)
+                err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, waps:waps});
+            System.callback(callback, [err, waps]);
         }
     );
 }

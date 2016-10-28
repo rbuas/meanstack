@@ -212,29 +212,30 @@ WebDroneScraper.prototype.wap = function (config) {
     if(!config)
         return;
 
-    self.sitemap = Wap.getMap();
-    if(!self.sitemap) {
-        Log.error("Can not load sitemap from : " + self.mapfile);
-        if(config.endCallback) config.endCallback();
-        return;
-    }
+    self.sitemap = Wap.getMap(function(err, waps) {
+        if(!self.sitemap) {
+            Log.error("Can not load sitemap from : " + self.mapfile);
+            if(config.endCallback) config.endCallback();
+            return;
+        }
 
-    var sitemaplinks = [];
-    for(var path in self.sitemap) {
-        if(!self.sitemap.hasOwnProperty(path))
-            continue;
+        var sitemaplinks = [];
+        for(var path in self.sitemap) {
+            if(!self.sitemap.hasOwnProperty(path))
+                continue;
 
-        var oldsstats = self.sitemap[path];
-        sitemaplinks.push({path:path, oldsstats : oldsstats});
-    }
+            var oldsstats = self.sitemap[path];
+            sitemaplinks.push({path:path, oldsstats : oldsstats});
+        }
 
-    if(sitemaplinks.length == 0) {
-        Log.message("No links into sitemap");
-        if(config.endCallback) config.endCallback();
-        return;
-    }
+        if(sitemaplinks.length == 0) {
+            Log.message("No links into sitemap");
+            if(config.endCallback) config.endCallback();
+            return;
+        }
 
-    return self.scrap(sitemaplinks, config);
+        self.scrap(sitemaplinks, config);
+    });
 }
 
 
