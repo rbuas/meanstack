@@ -7,11 +7,7 @@ var _crypto = require("crypto");
 var JsExt = require(ROOT_DIR + "/brain/jsext");
 var Log = require(ROOT_DIR + "/brain/log");
 var System = require(ROOT_DIR + "/brain/system");
-var Config = require(ROOT_DIR + "/brain/config");
 var E = System.error;
-var WebMailer = require(ROOT_DIR + "/brain/webmailer");
-var Dictionary = require(ROOT_DIR + "/brain/dictionary");
-var I = Dictionary.get;
 var Doc = require(ROOT_DIR + "/models/doc");
 
 module.exports = Quote = Object.assign({}, Doc);

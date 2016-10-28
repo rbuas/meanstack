@@ -5,6 +5,7 @@ var _querystring = require("querystring");
 var Log = require(ROOT_DIR + "/brain/log");
 var JsExt = require(ROOT_DIR + "/brain/jsext");
 var System = require(ROOT_DIR + "/brain/system");
+var Wap = require(ROOT_DIR + "/models/wap");
 var E = System.error;
 
 module.exports = WebDroneScraper;
@@ -25,6 +26,92 @@ WebDroneScraper.defaultoptions = {
     //endCallback : callback (data, stats)
     //scrapCallback : callback (data, stats)
 };
+
+WebDroneScraper.prototype.getStatsUrl = function (stats) {
+    if(!stats)
+        return;
+
+    var url = stats.hostname || stats.host || "";
+    if(stats.port) {
+        url += ":" + stats.port;
+    }
+    url += stats.path;
+    return url;
+}
+
+WebDroneScraper.prototype.request = function (options, callback) {
+    var self = this;
+    if(!options)
+        return;
+
+    var method = options.method || "GET";
+    var path = options.path;
+    var dataString = JSON.stringify(options.data);
+    var info = {
+        request : {
+            method : method,
+            //port : options.port || self.options.port,
+            path : path || "/",
+            hostname : options.hostname || self.options.urlbase,
+            headers : {}
+        }
+    };
+    if(method == "GET") {
+        var querystring = _querystring.stringify(options.data);
+        info.request.path = JsExt.buildUrl(path, querystring);
+    } else if(method == "POST") {
+        info.request.headers['Content-Type'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8';
+        info.request.headers['Connection'] = 'keep-alive';
+        info.request.headers['Content-Length'] = dataString && dataString.length || 0;
+        info.request.json = true;
+    }
+
+    if(options.keepsession) {
+        if(options.sessionCookie) info.request.headers['Cookie'] = options.sessionCookie;
+        info.request.headers["Connection"] = "keep-alive";
+        info.request.agent = new _http.Agent({
+            maxSockets: 1,
+            timeout: 60000,
+            keepAliveTimeout: 30000
+        });
+    }
+
+    info.startTime = new Date();
+    var request = _http.request(info.request, function(res) {
+        var data = "";
+        res.setEncoding('utf8');
+        info.headers = res.headers;
+        if(options.keepsession) {
+            var cookie = res.headers["set-cookie"];
+            options.sessionCookie = cookie && cookie.length > 0 && cookie[0];
+        }
+        res.on("data", function(d) {
+            data += d;
+        });
+        res.on("end", function() {
+            info.endTime = new Date();
+            info.duration = info.endTime - info.startTime;
+            info.statusCode = this.statusCode;
+            info.statusMessage = this.statusMessage;
+            if(info.statusCode != 200) {
+                var error = "status code error";
+                if(callback) callback(error, info, null);
+                return;
+            }
+            if(callback) callback(null, info, data);
+        });
+    }).on("error", function(error) {
+        info.endTime = new Date();
+
+        if(callback) callback(error, info, null);
+    });
+
+    if(dataString && method == "POST") {
+        request.write(dataString);
+    }
+
+    request.end();
+}
 
 WebDroneScraper.prototype.scrapLink = function (link, config, callback) {
     var self = this;
@@ -119,90 +206,35 @@ WebDroneScraper.prototype.sitemap = function (config) {
     return self.scrap(sitemaplinks, config);
 }
 
-WebDroneScraper.prototype.getStatsUrl = function (stats) {
-    if(!stats)
-        return;
 
-    var url = stats.hostname || stats.host || "";
-    if(stats.port) {
-        url += ":" + stats.port;
-    }
-    url += stats.path;
-    return url;
-}
-
-WebDroneScraper.prototype.request = function (options, callback) {
+WebDroneScraper.prototype.wap = function (config) {
     var self = this;
-    if(!options)
+    if(!config)
         return;
 
-    var method = options.method || "GET";
-    var path = options.path;
-    var dataString = JSON.stringify(options.data);
-    var info = {
-        request : {
-            method : method,
-            //port : options.port || self.options.port,
-            path : path || "/",
-            hostname : options.hostname || self.options.urlbase,
-            headers : {}
-        }
-    };
-    if(method == "GET") {
-        var querystring = _querystring.stringify(options.data);
-        info.request.path = JsExt.buildUrl(path, querystring);
-    } else if(method == "POST") {
-        info.request.headers['Content-Type'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8';
-        info.request.headers['Connection'] = 'keep-alive';
-        info.request.headers['Content-Length'] = dataString && dataString.length || 0;
-        info.request.json = true;
+    self.sitemap = Wap.getMap();
+    if(!self.sitemap) {
+        Log.error("Can not load sitemap from : " + self.mapfile);
+        if(config.endCallback) config.endCallback();
+        return;
     }
 
-    if(options.keepsession) {
-        if(options.sessionCookie) info.request.headers['Cookie'] = options.sessionCookie;
-        info.request.headers["Connection"] = "keep-alive";
-        info.request.agent = new _http.Agent({
-            maxSockets: 1,
-            timeout: 60000,
-            keepAliveTimeout: 30000
-        });
+    var sitemaplinks = [];
+    for(var path in self.sitemap) {
+        if(!self.sitemap.hasOwnProperty(path))
+            continue;
+
+        var oldsstats = self.sitemap[path];
+        sitemaplinks.push({path:path, oldsstats : oldsstats});
     }
 
-    info.startTime = new Date();
-    var request = _http.request(info.request, function(res) {
-        var data = "";
-        res.setEncoding('utf8');
-        info.headers = res.headers;
-        if(options.keepsession) {
-            var cookie = res.headers["set-cookie"];
-            options.sessionCookie = cookie && cookie.length > 0 && cookie[0];
-        }
-        res.on("data", function(d) {
-            data += d;
-        });
-        res.on("end", function() {
-            info.endTime = new Date();
-            info.duration = info.endTime - info.startTime;
-            info.statusCode = this.statusCode;
-            info.statusMessage = this.statusMessage;
-            if(info.statusCode != 200) {
-                var error = "status code error";
-                if(callback) callback(error, info, null);
-                return;
-            }
-            if(callback) callback(null, info, data);
-        });
-    }).on("error", function(error) {
-        info.endTime = new Date();
-
-        if(callback) callback(error, info, null);
-    });
-
-    if(dataString && method == "POST") {
-        request.write(dataString);
+    if(sitemaplinks.length == 0) {
+        Log.message("No links into sitemap");
+        if(config.endCallback) config.endCallback();
+        return;
     }
 
-    request.end();
+    return self.scrap(sitemaplinks, config);
 }
 
 
