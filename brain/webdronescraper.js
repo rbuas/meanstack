@@ -23,7 +23,8 @@ WebDroneScraper.defaultoptions = {
     //hostname : String,
     //port : Number,
     //eachCallback : callback (data, stats),
-    //endCallback : callback (data, stats)
+    //endCallback : callback (data, stats),
+    //updateStats : callback (newstats, stats),
     //scrapCallback : callback (data, stats)
 };
 
@@ -113,13 +114,13 @@ WebDroneScraper.prototype.request = function (options, callback) {
     request.end();
 }
 
-WebDroneScraper.prototype.scrapLink = function (link, config, callback) {
+WebDroneScraper.prototype.scrapWap = function (wap, config, callback) {
     var self = this;
-    if(!link || !config)
+    if(!wap || !config)
         return;
 
     var loadcharge = config.loadcharge || 1;
-    var statsid = link.path;
+    var statsid = wap.path;
     self.stats[statsid] = self.stats[statsid] || startStats();
     var stats = self.stats[statsid];
     var pendding = loadcharge;
@@ -128,14 +129,15 @@ WebDroneScraper.prototype.scrapLink = function (link, config, callback) {
         var startTime = new Date();
 
         self.request({
-                path:link.path,
-                port:link.port || config.port,
-                hostname:link.hostname || config.hostname
+                path:wap.path,
+                port:wap.port || config.port,
+                hostname:wap.hostname || config.hostname
             }, 
             function(err, reqinfo, data) {
                 var newstats;
                 if(!err && data) {
-                    newstats = stockStats(stats, link, config, reqinfo, getScrapInfos(self, config, data));
+                    newstats = stockStats(stats, wap, config, reqinfo, getScrapInfos(self, config, data));
+                    archiveWapStats(self, newstats);
                     if(newstats) sendUpdateStats(self, newstats);
                 }
 
@@ -150,10 +152,8 @@ WebDroneScraper.prototype.scrap = function (list, config) {
     if(!config)
         return;
 
-    if(!list) {
-        if(config.endCallback) config.endCallback();
-        return;
-    }
+    if(!list)
+        return System.callback(config.endCallback);
 
     list = (list instanceof Array) ? list : [list];
 
@@ -163,8 +163,8 @@ WebDroneScraper.prototype.scrap = function (list, config) {
         if(!list.hasOwnProperty(l))
             continue;
 
-        var link = list[l];
-        self.scrapLink(link, config, function(data, newstats) {
+        var wap = list[l];
+        self.scrapWap(wap, config, function(data, newstats) {
             if(config.eachCallback) config.eachCallback(data, newstats);
             if(--pendding == 0 && config.endCallback) config.endCallback(data, newstats);
         });
@@ -175,66 +175,51 @@ WebDroneScraper.prototype.sitemap = function (config) {
     var self = this;
     if(!config)
         return;
-    if(!config.mapfile) {
-        if(config.endCallback) config.endCallback();
-        return;
-    }
+
+    if(!config.mapfile)
+        return System.callback(config.endCallback);
 
     self.mapfile = config.mapfile;
     self.sitemap = require(self.mapfile);
     if(!self.sitemap) {
         Log.error("Can not load sitemap from : " + self.mapfile);
-        if(config.endCallback) config.endCallback();
-        return;
+        return System.callback(config.endCallback);
     }
 
-    var sitemaplinks = [];
+    var wapmap = [];
     for(var path in self.sitemap) {
         if(!self.sitemap.hasOwnProperty(path))
             continue;
 
-        var oldsstats = self.sitemap[path];
-        sitemaplinks.push({path:path, oldsstats : oldsstats});
+        var wap = self.sitemap[path];
+        wap.path = path;
+        wapmap.push(wap);
     }
 
-    if(sitemaplinks.length == 0) {
-        Log.message("No links into sitemap");
-        if(config.endCallback) config.endCallback();
-        return;
+    if(wapmap.length == 0) {
+        Log.message("No waps into wapmap");
+        return System.callback(config.endCallback);
     }
 
-    return self.scrap(sitemaplinks, config);
+    return self.scrap(wapmap, config);
 }
 
-
-WebDroneScraper.prototype.wap = function (config) {
+WebDroneScraper.prototype.wapmap = function (config) {
     var self = this;
     if(!config)
         return;
 
-    self.sitemap = Wap.getMap(function(err, waps) {
-        if(!self.sitemap) {
-            Log.error("Can not load sitemap from : " + self.mapfile);
-            if(config.endCallback) config.endCallback();
-            return;
+    Wap.getMap(function(err, wapmap) {
+        if(!wapmap) {
+            Log.error("Can not retrieve wapmap : " + wapmap);
+            return System.callback(config.endCallback);
+        }
+        if(wapmap.length == 0) {
+            Log.message("No links into wapmap");
+            return System.callback(config.endCallback);
         }
 
-        var sitemaplinks = [];
-        for(var path in self.sitemap) {
-            if(!self.sitemap.hasOwnProperty(path))
-                continue;
-
-            var oldsstats = self.sitemap[path];
-            sitemaplinks.push({path:path, oldsstats : oldsstats});
-        }
-
-        if(sitemaplinks.length == 0) {
-            Log.message("No links into sitemap");
-            if(config.endCallback) config.endCallback();
-            return;
-        }
-
-        self.scrap(sitemaplinks, config);
+        self.scrap(wapmap, config);
     });
 }
 
@@ -258,7 +243,7 @@ function generatStatsId (link, config) {
     return (protocol ? protocol + "//" : "") + host + (port ? ":" + port : "") + path;
 }
 
-function stockStats (stats, link, config, info, scrapinfo) {
+function stockStats (stats, wap, config, info, scrapinfo) {
     if(!stats) {
         Log.error("Missing stats object to stock info into it");
         return false;
@@ -272,9 +257,9 @@ function stockStats (stats, link, config, info, scrapinfo) {
         };
     } else {
         newstats = {
-            hostname : link.hostname || config.hostname,
-            port : link.port || config.port,
-            path : link.path,
+            hostname : wap.hostname || config.hostname,
+            port : wap.port || config.port,
+            path : wap.path,
             statusCode : info.statusCode,
             statusMessage : info.statusMessage,
             duration : info.duration,
@@ -295,7 +280,7 @@ function sendUpdateStats (self, newstats) {
         Log.error("Missing main object");
         return;
     }
-    if(self.updatestats) self.updatestats(newstats, self.stats);
+    if(self.updateStats) self.updateStats(newstats, self.stats);
 }
 
 function getScrapInfos (self, config, data) {
@@ -327,4 +312,9 @@ function getDroneInfos ($) {
     if(!$) return;
     var droneinfo = $("#webdrone");
     return droneinfo.text();
+}
+
+function archiveWapStats (self, newstats) {
+    if(!self) return;
+    //TODO
 }

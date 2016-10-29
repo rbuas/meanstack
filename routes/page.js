@@ -25,3 +25,11 @@ module.exports.reset = function(req, res) {
     };
     res.json(response);
 }
+
+module.exports.basic = function(req, res) {
+    var viewdata = {
+        metatitle: "angular test one",
+        layout: "angular"
+    };
+    res.render("angular", viewdata);
+}

@@ -27,9 +27,19 @@ Wap.MESSAGE = System.registerMessages({
  * Wap Schema
  */
 Wap.Schema = new _mongoose.Schema({
-    canonical : {type:String, unique:true, required:true},
-
+    path : {type:String, unique:true, required:true},
     author : String,
+    priority : Number,
+    since : {type:Date, default:Date.now},
+    lastupdate : Date,
+
+    category : [String],
+    crosslink : [String],
+    alias : [String],
+
+    showcount : {type:Number, min:0},
+
+    canonical : String,
     title : String,
     metatitle : String,
     metalocale : String,
@@ -38,15 +48,7 @@ Wap.Schema = new _mongoose.Schema({
     metaimage : String,
     metafollow : Boolean,
     metaindex : Boolean,
-    priority : Number,
-    lastupdate : Date,
-    since : {type:Date, default:Date.now},
 
-    category : [String],
-    crosslink : [String],
-    alias : [String],
-    showcount : {type:Number, min:0},
-    
     statusCode : Number,
     statusMessage : String,
     loadDuration : Number,
@@ -73,10 +75,11 @@ Wap.DB = _mongoose.model("Wap", Wap.Schema);
  */
 Wap.Create = function (wap, callback) {
     var self = this;
-    if(!wap || !wap.canonical)
+    if(!wap || !wap.path)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, wap), null]);
 
     var newwap = new self.DB();
+    newwap.path = wap.path;
     newwap.canonical = wap.canonical;
     newwap.author = wap.author;
     newwap.title = wap.title;
@@ -101,18 +104,18 @@ Wap.Create = function (wap, callback) {
 /**
  * Create
  * @param wap object
- * @param callback function Callback params (error, waps)
+ * @param callback function Callback params (error, wapmap)
  */
 Wap.getMap = function (callback) {
     var self = this;
 
     return self.DB.find(
         {}, 
-        {__v:0, canonical:1, metatitle:1, title:1}, 
-        function(err, waps) {
-            if(err || !waps)
-                err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, waps:waps});
-            System.callback(callback, [err, waps]);
+        {__v:0},// path:1, canonical:1, metatitle:1, title:1 
+        function(err, wapmap) {
+            if(err || !wapmap)
+                err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, wapmap:wapmap});
+            System.callback(callback, [err, wapmap]);
         }
     );
 }

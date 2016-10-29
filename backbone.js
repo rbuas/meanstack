@@ -12,12 +12,12 @@ var brain = global.brain = module.exports.brain = new Brain({
 
 //var _citiesRoutes = require("./routes/cities");
 //var _resRoutes = require("./routes/resource");
-var _connectionRoutes = require(ROOT_DIR + "/routes/connection");
-var _chat = require(ROOT_DIR + "/routes/chat");
+var PageRoute = require(ROOT_DIR + "/routes/page");
+var ChatRoute = require(ROOT_DIR + "/routes/chat");
 
-brain.get("/", _connectionRoutes.startpage);
-brain.post("/s/connect", _connectionRoutes.connect);
-brain.get("/s/reset", _connectionRoutes.reset);
+brain.get("/", PageRoute.startpage);
+brain.post("/s/connect", PageRoute.connect);
+brain.get("/s/reset", PageRoute.reset);
 
 //USER
 var UserRoute = require(ROOT_DIR + "/routes/user");
@@ -35,7 +35,7 @@ brain.post("/s/user-addpassport", UserRoute.addPassport);
 brain.post("/s/user-removepassport", UserRoute.remPassport);
 brain.get("/s/user-find", UserRoute.find);
 
-brain.usocket("connection", _chat.broadcast);
+brain.usocket("connection", ChatRoute.broadcast);
 
 //QUOTES
 var QuoteRoute = require(ROOT_DIR + "/routes/quote");
