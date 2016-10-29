@@ -55,6 +55,7 @@ Quote.Create = function(quote, callback) {
     newquote.date = quote.date;
     newquote.author = quote.author;
     newquote.text = quote.text;
+    newquote.category = typeof(quote.category) == "string" ? [quote.category] : [];
 
     newquote.save(callback);
 }

@@ -7,6 +7,7 @@
     "start-backbone": "nodemon backbone.js",
     "start-backbone-test": "nodemon backbone.js webmailer=fake",
     "start-db": "./mongodb/bin/mongod -dbpath ./data",
+    "start-dbtest": "./mongodb/bin/mongod -dbpath ./tests/data",
     "start-dbterminal": "./mongodb/bin/mongo",
     "start-selenium": "/usr/local/bin/webdriver-manager start",
     "tests": "./node_modules/mocha/bin/_mocha ./tests/*.unit.js ./tests/*.api.js ./tests/*.load.js --colors",

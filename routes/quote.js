@@ -26,8 +26,8 @@ QuoteRoute.quote = function(req, res) {
 }
 
 QuoteRoute.quotes = function(req, res) {
-    var category = res.params.category;
-    Quote.Ramdom({category:category}, function(err, quotes) {
+    var category = req.params.category;
+    Quote.Random({category:category}, 1, function(err, quotes) {
         var response = {};
         if(err || !quotes) {
             Log.message("quote.random failure", err);

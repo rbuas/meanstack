@@ -31,6 +31,7 @@ Doc.Schema = new _mongoose.Schema({
     content : String,
     id : {type:String, unique:true},
     since : {type:Date, default:Date.now()},
+    showcount : Number
 }, { strict: true });
 
 
@@ -71,9 +72,15 @@ Doc.Get = function(id, callback) {
         {id:id}, 
         {__v:0}, 
         function(err, doc) {
-            if(err || !doc)
+            if(err || !doc) {
                 err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, id:id, doc:doc});
-            System.callback(callback, [err, doc]);
+                return System.callback(callback, [err, doc]);
+            }
+
+            doc.showcount++;
+            doc.save(function(errSave, savedDoc) {
+                System.callback(callback, [err, doc]);
+            });
         }
     );
 }
@@ -95,7 +102,11 @@ Doc.GetByObjectId = function(id, callback) {
         function(err, doc) {
             if(err || !doc)
                 err = E(Doc.ERROR.DOC_NOTFOUND, {error:err, id:id, doc:doc});
-            System.callback(callback, [err, doc]);
+
+            doc.showcount++;
+            doc.save(function(errSave, savedDoc) {
+                System.callback(callback, [err, doc]);
+            });
         }
     );
 }
@@ -147,8 +158,15 @@ Doc.Find = function(where, callback) {
         where, 
         {__v:0}, 
         function(err, docs) {
-            if(err || !docs)
+            if(err || !docs) {
                 err = E(Doc.QUOTE.DOC_NOTFOUND, err);
+                return System.callback(callback, [err, doc]);
+            }
+
+            docs.forEach(function(value, index) {
+                value.showcount++;
+                value.save();
+            })
             if(callback) callback(err, docs);
         }
     );
@@ -168,11 +186,19 @@ Doc.Random = function(where, count, callback) {
             return System.callback(callback, [E(Doc.ERROR.DOC_COUNT, err), null]);
 
         if(count > catCount) count = catCount;
-
         var start = Math.floor(Math.random() * (catCount - count + 1));
         var query = self.DB.find(where)
         .skip(start)
         .limit(count)
-        .exec(callback);
+        .exec(function(errFind, docs) {
+            if(!docs)
+                return;
+
+            docs.forEach(function(value, index) {
+                value.showcount++;
+                value.save();
+            });
+            System.callback(callback, [errFind, docs]);
+        });
     });
 }
