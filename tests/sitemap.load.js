@@ -14,16 +14,15 @@ function testPage (data, stats) {
     _expect(data).to.be.not.null;
     _expect(stats).to.be.ok;
     _expect(stats.statusCode).to.be.equal(200);
-    _expect(stats.duration).to.be.below(2000);
+    _expect(stats.loadDuration).to.be.below(2000);
     _expect(stats.contentLength).to.be.below(500000);
-    _expect(stats.scrapinfo).to.be.ok;
-    _expect(stats.scrapinfo.description).to.be.ok;
-    _expect(stats.scrapinfo.description).to.not.be.equal("");
-    _expect(stats.scrapinfo.canonical).to.be.ok;
-    _expect(stats.scrapinfo.canonical).to.not.be.equal("");
-    _expect(stats.scrapinfo.gtm).to.be.ok;
-    _expect(stats.scrapinfo.gtm).to.not.be.equal("");
-    var canonicalParsed = _url.parse(stats.scrapinfo.canonical);
+    _expect(stats.metadescription).to.be.ok;
+    _expect(stats.metadescription).to.not.be.equal("");
+    _expect(stats.canonical).to.be.ok;
+    _expect(stats.canonical).to.not.be.equal("");
+    _expect(stats.gtm).to.be.ok;
+    _expect(stats.gtm).to.not.be.equal("");
+    var canonicalParsed = _url.parse(stats.canonical);
     _expect(canonicalParsed).to.be.ok;
     _expect(canonicalParsed.path).to.be.equal(stats.path);
 }
@@ -33,13 +32,13 @@ function scrapPage ($) {
 
     var titleinfo = $("h1");
     var canonical = $("link[rel='canonical']");
-    var description = $("meta[name='description']");
+    var metadescription = $("meta[name='description']");
     var gtm = $("#gtm");
     return {
         title : titleinfo.text(),
         titleCount : titleinfo ? titleinfo.length : 0,
         canonical : canonical.attr("href"),
-        description : description && description.length > 0 && description[0].attribs ? description[0].attribs.content : null,
+        metadescription : metadescription && metadescription.length > 0 && metadescription[0].attribs ? metadescription[0].attribs.content : null,
         gtm : gtm.text()
     };
 }
@@ -53,13 +52,21 @@ describe("load.sitemap", function() {
 
     before(function(done) {
         wdc = new WebDroneScraper();
-        m = new Memory({onconnect:done});
+        m = new Memory({onconnect:function(){
+            Wap.Remove({}, function() {
+                Wap.Create({path:"/groupe-ski/alpes-du-nord/alpe-dhuez.html", id:"test"}, function(err, savedWap) {
+                    done();
+                });
+            });
+        }});
     });
     after(function(done) {
-        m.disconnect(done);
+        Wap.Remove({}, function() {
+            m.disconnect(done);
+        });
     });
 
-    it("sitemap-json", function(done) {
+    it("filemap", function(done) {
         wdc.sitemap({
             mapfile : "../sitemap.json",
             hostname : "www.locatour.com",

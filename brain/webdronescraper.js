@@ -1,6 +1,7 @@
 var _http = require("http");
 var _cheerio = require("cheerio");
 var _querystring = require("querystring");
+var _url = require("url");
 
 var Log = require(ROOT_DIR + "/brain/log");
 var JsExt = require(ROOT_DIR + "/brain/jsext");
@@ -91,7 +92,7 @@ WebDroneScraper.prototype.request = function (options, callback) {
         });
         res.on("end", function() {
             info.endTime = new Date();
-            info.duration = info.endTime - info.startTime;
+            info.loadDuration = info.endTime - info.startTime;
             info.statusCode = this.statusCode;
             info.statusMessage = this.statusMessage;
             if(info.statusCode != 200) {
@@ -136,8 +137,7 @@ WebDroneScraper.prototype.scrapWap = function (wap, config, callback) {
             function(err, reqinfo, data) {
                 var newstats;
                 if(!err && data) {
-                    newstats = stockStats(stats, wap, config, reqinfo, getScrapInfos(self, config, data));
-                    archiveWapStats(self, newstats);
+                    newstats = stockStats(self, stats, wap, config, reqinfo, getScrapInfos(self, config, data));
                     if(newstats) sendUpdateStats(self, newstats);
                 }
 
@@ -209,7 +209,7 @@ WebDroneScraper.prototype.wapmap = function (config) {
     if(!config)
         return;
 
-    Wap.getMap(function(err, wapmap) {
+    Wap.GetMap({}, function(err, wapmap) {
         if(!wapmap) {
             Log.error("Can not retrieve wapmap : " + wapmap);
             return System.callback(config.endCallback);
@@ -243,35 +243,37 @@ function generatStatsId (link, config) {
     return (protocol ? protocol + "//" : "") + host + (port ? ":" + port : "") + path;
 }
 
-function stockStats (stats, wap, config, info, scrapinfo) {
+function stockStats (self, stats, wap, config, info, scrapinfo) {
     if(!stats) {
         Log.error("Missing stats object to stock info into it");
         return false;
     }
 
     config = config || {};
-    var newstats;
+    var newstats = scrapinfo || {};
     if(!info || typeof(info) == "string") {
         newstats = {
             error : info || "unknwon error" 
         };
     } else {
-        newstats = {
+        newstats = Object.assign(newstats, {
             hostname : wap.hostname || config.hostname,
             port : wap.port || config.port,
             path : wap.path,
             statusCode : info.statusCode,
             statusMessage : info.statusMessage,
-            duration : info.duration,
+            loadDuration : info.loadDuration,
             //cacheControl : info.headers && info.headers["cache-control"],
             contentType : info.headers && info.headers["content-type"],
             //connection : info.headers && info.headers["connection"],
-            contentLength : parseInt(info.headers && info.headers["content-length"]),
-            scrapinfo : scrapinfo
-        };
+            contentLength : parseInt(info.headers && info.headers["content-length"])
+        });
     }
 
     stats.load.push(newstats);
+    Wap.StockStats(newstats, function(err, savedStats) {
+        console.log("stockStats : ", savedStats);
+    });
     return newstats;
 }
 
@@ -312,9 +314,4 @@ function getDroneInfos ($) {
     if(!$) return;
     var droneinfo = $("#webdrone");
     return droneinfo.text();
-}
-
-function archiveWapStats (self, newstats) {
-    if(!self) return;
-    //TODO
 }
