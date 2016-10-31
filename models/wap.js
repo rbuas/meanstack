@@ -18,10 +18,14 @@ Wap.ERROR = System.registerErrors({
     WAP_PARAMS : "Missing required params",
     WAP_NOTFOUND : "Can not find the wap",
     WAP_DUPLICATE : "Duplicate entry",
+    WAP_STATE : "State machine operation invalid"
 });
 Wap.MESSAGE = System.registerMessages({
     WAP_SUCCESS : "Operation success"
-})
+});
+Wap.TYPE = {
+    PAGE : "PAGE"
+};
 Wap.STATUS = {
     BLOCKED : "BLOCKED",
     ACTIVE : "ACTIVE"
@@ -31,6 +35,7 @@ Wap.STATE = {
     EDITION : "EDITION",
     REVISION : "REVISION",
     TEST : "TEST",
+    SCHEDULED : "SCHEDULED",
     PUBLIC : "PUBLIC"
 };
 
@@ -44,8 +49,10 @@ Wap.Schema = new _mongoose.Schema({
     chiefeditor : String,
     priority : Number,
     since : {type:Date, default:Date.now},
+    publicdate : {type:Date, default:Date.now},
     lastupdate : Date,
 
+    type : String,
     resume : String,
     content : [String],
     category : [String],
@@ -87,8 +94,10 @@ Wap.PUBLIC_PROPERTIES = {
     author : 1,
     chiefeditor : 1,
     since : 1,
+    publicdate : 1,
     lastupdate : 1,
     status : 1,
+    type : 1,
     resume : 1,
     content : 1,
     category : 1,
@@ -108,6 +117,7 @@ Wap.MAP_PROPERTIES = {
     path : 1,
     id : 1,
     status : 1,
+    type : 1,
     resume : 1,
     category : 1,
     canonical : 1,
@@ -143,14 +153,18 @@ Wap.Create = function (wap, callback) {
     newwap.priority = wap.priority;
     newwap.lastupdate = wap.lastupdate || Date.now();;
     newwap.since = wap.since || Date.now();
+    newwap.publicdate = wap.publicdate || Date.now();
     newwap.state = wap.state;
     newwap.status = wap.status || Wap.STATUS.BLOCKED;
     newwap.content = wap.content;
+    newwap.type = wap.type || Wap.TYPE.PAGE;
     newwap.resume = wap.resume;
     newwap.category = wap.category;
     newwap.crosslink = wap.crosslink;
     newwap.alias = wap.alias;
     newwap.showcount = 0;
+
+    newwap = assertStateMachine(newwap);
 
     newwap.save(callback);
 }
@@ -161,7 +175,8 @@ Wap.Create = function (wap, callback) {
  * @param callback function Callback params (error, statsArr)
  */
 Wap.Find = function (where, callback) {
-    Wap.DB.find(where, Wap.PUBLIC_PROPERTIES, callback);
+    var self = this;
+    self.DB.find(where, Wap.PUBLIC_PROPERTIES, callback);
 }
 
 /**
@@ -218,4 +233,64 @@ Wap.StockStats = function (stats, callback) {
  */
 Wap.GetStats = function (stats, callback) {
     Wap.STATS.find(stats, {}, callback);
+}
+
+/**
+ * PublishScheduled Search for SCHEDULED waps in the past to publish it 
+ * @param callback function Callback params (error, waps)
+ */
+Wap.PublishScheduled = function (callback) {
+    var self = this;
+    var where = {
+        state : Wap.STATE.SCHEDULED, 
+        publicdate : {$gte : _moment()}    
+    };
+    self.DB.find(where, {}, function(err, waps) {
+        if(err || !waps)
+            return System.callback(callback, [err, waps]);
+        
+        if(waps.length <= 0)
+            return System.callback(callback, [err, waps]);
+
+        var pending = waps.length;
+        waps.forEach(function(wap, index) {
+            if(!wap) return;
+
+            wap.STATE = Wap.STATE.PUBLIC;
+            wap.save(function(err, savedWap) {
+                if(--pending <= 0) System.callback(callback, [err, waps]);
+            });
+        })
+    });
+
+}
+
+Wap.Publish = function (id, publicdate, callback) {
+    var self = this;
+    self.Get(id, function(err, wap) {
+        if(err || !wap)
+            return System.callback(callback, [err, wap]);
+        
+        if(wap.state != Wap.STATE.TEST)
+            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), wap]);
+
+        wap.state = dateInFuture(wap.publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.PUBLIC;
+        wap.save(callback);
+    });
+}
+
+function assertStateMachine (newwap) {
+    if(newwap.state == Wap.STATE.PUBLIC) {
+        var isPublicDateInFuture = dateInFuture(newwap.publicdate);
+        if(isPublicDateInFuture)
+            newwap.STATE = Wap.STATE.SCHEDULED;
+    }
+    return newwap;
+}
+
+function dateInFuture (date) {
+    if(!date) return false;
+
+    var target = _moment(date, "DD/MM/YYYY");
+    return _moment().diff(target) < 0;
 }

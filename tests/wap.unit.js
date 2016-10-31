@@ -14,39 +14,43 @@ var WebMailer = require(ROOT_DIR + "/brain/webmailer");
 var ViewEngine = require(ROOT_DIR + "/brain/viewengine");
 var Wap = require(ROOT_DIR + "/models/wap");
 
-describe("unit.wap", function() {
+describe.only("unit.wap", function() {
     var m;
     var testwaps = [
-        {path:"home", content:["hello world"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"history", content:["bla bla bla"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"aboutus", content:["nothing"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"news", content:["running tests"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"contact", content:["please don't"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"page_a", content:["ohhhh"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.DEV},
-        {path:"page_b", content:["ohhhh"], status:Wap.STATUS.BLOCKED, state:Wap.STATE.TEST},
-        {path:"page_c", content:["ohhhh"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.EDITION},
-        {path:"post_1", content:["hello world 1"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"post_2", content:["hello world 2"], status:Wap.STATUS.BLOCKED, state:Wap.STATE.EDITION},
-        {path:"post_3", content:["hello world 3"], status:Wap.STATUS.ACTIVE, state:Wap.STATE.TEST}
+        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.DEV},
+        {path:"page_b", content:["ohhhh"], type:"A", status:Wap.STATUS.BLOCKED, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")},
+        {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.EDITION, publicdate : _moment().add(1, "days")},
+        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"post_2", content:["hello world 2"], type:"B", status:Wap.STATUS.BLOCKED, state:Wap.STATE.EDITION},
+        {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
     ];
 
     before(function(done) {
-        m = new Memory({onconnect:function() {
-            var pending = testwaps.length;
-            testwaps.forEach(function(wap, index, arr){
-                wap.id = "wap" + index;
-                Wap.Create(wap, function(err, savedWap) {
-                    _expect(err).to.be.null;
-                    if(--pending <= 0) done();
-                });
-            });
-        }});
+        m = new Memory({onconnect:done});
     });
 
-    after(function(done){
-        Wap.Remove({}, function(){
-            m.disconnect(done);
+    after(function(done) {
+        m.disconnect(done);
+    });
+
+    beforeEach(function(done) {
+        var pending = testwaps.length;
+        testwaps.forEach(function(wap, index, arr){
+            wap.id = "wap" + index;
+            Wap.Create(wap, function(err, savedWap) {
+                _expect(err).to.be.null;
+                if(--pending <= 0) done();
+            });
         });
+    });
+
+    afterEach(function(done) {
+        Wap.Remove({}, done);
     });
 
     describe("create", function() {
@@ -100,7 +104,6 @@ describe("unit.wap", function() {
                     _expect(err).to.be.null;
                     _expect(waps).to.not.be.null;
                     _expect(waps.length).to.equal(0);
-                    testwaps.splice(10,1)
                     done();
                 });
             });
@@ -195,6 +198,25 @@ describe("unit.wap", function() {
                 done();
             });
         });
+
+        it("type", function(done) {
+            Wap.Find({type:"C"}, function(err, waps) {
+                _expect(err).to.be.null;
+                _expect(waps).to.not.be.null;
+                _expect(waps.length).to.equal(2);
+                Wap.Find({type:"A"}, function(err, waps) {
+                    _expect(err).to.be.null;
+                    _expect(waps).to.not.be.null;
+                    _expect(waps.length).to.equal(5);
+                    Wap.Find({type:"B"}, function(err, waps) {
+                        _expect(err).to.be.null;
+                        _expect(waps).to.not.be.null;
+                        _expect(waps.length).to.equal(4);
+                        done();
+                    });
+                });
+            });
+        });
     });
 
     describe("random", function() {
@@ -209,6 +231,13 @@ describe("unit.wap", function() {
                 console.log("random : ", waps[0].id);
                 done();
             });
+        });
+    });
+
+    describe("publishscheduled", function() {
+        it("basic", function(done) {
+            //TODO
+            done();
         });
     });
 });

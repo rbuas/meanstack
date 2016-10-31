@@ -30,20 +30,24 @@ describe("unit.doc", function() {
     ];
 
     before(function(done) {
-        m = new Memory({onconnect:function() {
-            var pending = doc.length;
-            doc.forEach(function(value, index, arr){
-                Doc.Create({content:value, id:"doc" + index}, function(err, savedDoc) {
-                    if(--pending <= 0) done();
-                });
-            });
-        }});
+        m = new Memory({onconnect:done});
     });
 
     after(function(done){
-        Doc.Remove({}, function(){
-            m.disconnect(done);
+        m.disconnect(done);
+    });
+
+    beforeEach(function(done) {
+        var pending = doc.length;
+        doc.forEach(function(value, index, arr){
+            Doc.Create({content:value, id:"doc" + index}, function(err, savedDoc) {
+                if(--pending <= 0) done();
+            });
         });
+    });
+
+    afterEach(function(done){
+        Doc.Remove({}, done);
     });
 
     describe("create", function() {
@@ -98,7 +102,6 @@ describe("unit.doc", function() {
                     _expect(err).to.be.null;
                     _expect(docs).to.not.be.null;
                     _expect(docs.length).to.equal(0);
-                    doc.splice(3,1);
                     done();
                 });
             });
@@ -239,7 +242,7 @@ describe("unit.doc", function() {
             Doc.Random({}, 20, function(err, docs) {
                 _expect(err).to.be.null;
                 _expect(docs).to.not.be.null;
-                _expect(docs.length).to.equal(9);
+                _expect(docs.length).to.equal(10);
                 done();
             });
         });
