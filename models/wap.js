@@ -163,11 +163,27 @@ Wap.Create = function (wap, callback) {
 /**
  * Find return an array of waps that match with 'where'' filter properties
  * @param where Filter object that contains wap informations
- * @param callback function Callback params (error, statsArr)
+ * @param callback function Callback params (error, waps)
  */
 Wap.Find = function (where, callback) {
     var self = this;
-    self.DB.find(where, self.PUBLIC_PROPERTIES, callback);
+    if(where.since) where.since = {$gt : where.since};
+    if(where.publicdate) where.publicdate = {$gt : where.publicdate};
+    if(where.lastupdate) where.lastupdate = {$gt : where.lastupdate};
+    self.DB.find(where, self.PUBLIC_PROPERTIES, function(err, waps) {
+        if(err)
+            return System.callback(callback, [err, waps]);
+
+        self.DRAFT.find(where, self.PUBLIC_PROPERTIES, function(err, drafts) {
+            if(err)
+                return System.callback(callback, [err, drafts]);
+
+            waps = waps || [];
+            drafts = drafts || [];
+            var response = waps.concat(drafts);
+            return System.callback(callback, [null, response]);
+        });
+    });
 }
 
 /**

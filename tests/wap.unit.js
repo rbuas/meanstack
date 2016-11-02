@@ -214,7 +214,7 @@ describe("unit.wap", function() {
             Wap.Find({type:"C"}, function(err, waps) {
                 _expect(err).to.be.null;
                 _expect(waps).to.not.be.null;
-                _expect(waps.length).to.equal(1);
+                _expect(waps.length).to.equal(2);
                 Wap.Find({type:"A"}, function(err, waps) {
                     _expect(err).to.be.null;
                     _expect(waps).to.not.be.null;
@@ -222,7 +222,7 @@ describe("unit.wap", function() {
                     Wap.Find({type:"B"}, function(err, waps) {
                         _expect(err).to.be.null;
                         _expect(waps).to.not.be.null;
-                        _expect(waps.length).to.equal(1);
+                        _expect(waps.length).to.equal(4);
                         done();
                     });
                 });

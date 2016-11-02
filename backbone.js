@@ -42,6 +42,10 @@ var QuoteRoute = require(ROOT_DIR + "/routes/quote");
 brain.get("/s/quotes/:category", QuoteRoute.quotes);
 brain.get("/s/quote/:quote", QuoteRoute.quote);
 
+//WAP
+var WapRoute = require(ROOT_DIR + "/routes/wap");
+brain.post("/s/waps/:state/:category/:type", WapRoute.list);
+brain.post("/s/waps/:state/:category?", WapRoute.list);
 
 
 // brain.get("/login", _marksRoutes.login);
