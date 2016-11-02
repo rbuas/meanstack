@@ -18,7 +18,11 @@ Wap.ERROR = System.registerErrors({
     WAP_PARAMS : "Missing required params",
     WAP_NOTFOUND : "Can not find the wap",
     WAP_DUPLICATE : "Duplicate entry",
-    WAP_STATE : "State machine operation invalid"
+    WAP_STATE : "State machine operation invalid",
+    WAP_EDITING : "Wap already in edition",
+    WAP_CONFIG : "Problems with wap configurations",
+    WAP_PERMISSION : "Author doesn't have a permition to change the wap state",
+    WAP_DRAFTNOTFOUND : "Can not find the draft, it must be create before edit it"
 });
 Wap.MESSAGE = System.registerMessages({
     WAP_SUCCESS : "Operation success"
@@ -31,13 +35,21 @@ Wap.STATUS = {
     ACTIVE : "ACTIVE"
 };
 Wap.STATE = {
-    DEV : "DEV",
-    EDITION : "EDITION",
-    REVISION : "REVISION",
-    TEST : "TEST",
-    SCHEDULED : "SCHEDULED",
-    PUBLIC : "PUBLIC"
+    DRAFT : "DRAFT",            //DRAFT
+    EDITING : "EDITING",        //DRAFT
+    REVIEW : "REVIEW",          //DRAFT
+    REPPROVED : "REPPROVED",    //DRAFT
+    APPROVED : "APPROVED",      //DRAFT
+    SCHEDULED : "SCHEDULED",    //DB
+    PUBLIC : "PUBLIC"           //DB
 };
+Wap.DRAFTSTATES = [
+    Wap.STATE.DRAFT,
+    Wap.STATE.EDITING,
+    Wap.STATE.REVIEW,
+    Wap.STATE.REPPROVED,
+    Wap.STATE.APPROVED
+];
 
 /**
  * Wap Schema
@@ -97,6 +109,7 @@ Wap.PUBLIC_PROPERTIES = {
     publicdate : 1,
     lastupdate : 1,
     status : 1,
+    state : 1,
     type : 1,
     resume : 1,
     content : 1,
@@ -117,6 +130,7 @@ Wap.MAP_PROPERTIES = {
     path : 1,
     id : 1,
     status : 1,
+    state : 1,
     type : 1,
     resume : 1,
     category : 1,
@@ -125,6 +139,7 @@ Wap.MAP_PROPERTIES = {
 };
 
 Wap.DB = _mongoose.model("Wap", Wap.Schema);
+Wap.DRAFT = _mongoose.model("WapDrafts", Wap.Schema);
 Wap.STATS = _mongoose.model("WapStats", Wap.Schema);
 
 /**
@@ -137,34 +152,10 @@ Wap.Create = function (wap, callback) {
     if(!wap || (!wap.path && !wap.id))
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, wap), null]);
 
-    var newwap = new self.DB();
-    newwap.id = wap.id || wap.path;
-    newwap.path = wap.path || wap.id;
-    newwap.canonical = wap.canonical;
-    newwap.author = wap.author;
-    newwap.title = wap.title;
-    newwap.metatitle = wap.metatitle;
-    newwap.metalocale = wap.metalocale;
-    newwap.metadescription = wap.metadescription;
-    newwap.metaentity = wap.metaentity;
-    newwap.metaimage = wap.metaimage;
-    newwap.metafollow = wap.metafollow;
-    newwap.metaindex = wap.metaindex;
-    newwap.priority = wap.priority;
-    newwap.lastupdate = wap.lastupdate || Date.now();;
-    newwap.since = wap.since || Date.now();
-    newwap.publicdate = wap.publicdate || Date.now();
-    newwap.state = wap.state;
-    newwap.status = wap.status || Wap.STATUS.BLOCKED;
-    newwap.content = wap.content;
-    newwap.type = wap.type || Wap.TYPE.PAGE;
-    newwap.resume = wap.resume;
-    newwap.category = wap.category;
-    newwap.crosslink = wap.crosslink;
-    newwap.alias = wap.alias;
-    newwap.showcount = 0;
+    if(wap.state && Wap.DRAFTSTATES.indexOf(wap.state) >= 0)
+        return self.DraftCreate(wap, callback);
 
-    newwap = assertStateMachine(newwap);
+    var newwap = assertWap(new self.DB(), wap);
 
     newwap.save(callback);
 }
@@ -176,7 +167,7 @@ Wap.Create = function (wap, callback) {
  */
 Wap.Find = function (where, callback) {
     var self = this;
-    self.DB.find(where, Wap.PUBLIC_PROPERTIES, callback);
+    self.DB.find(where, self.PUBLIC_PROPERTIES, callback);
 }
 
 /**
@@ -236,14 +227,226 @@ Wap.GetStats = function (stats, callback) {
 }
 
 /**
+ * DraftCreate
+ * @param wap object
+ * @param callback function Callback params (error, savedDraft)
+ */
+Wap.DraftCreate = function (draft, callback) {
+    var self = this;
+    if(!draft || (!draft.path && !draft.id))
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, draft), null]);
+
+    var newwap = assertWap(new self.DRAFT(), draft, {lastupdate: Date.now(), state : Wap.STATE.DRAFT});
+
+    newwap.save(callback);
+}
+
+/**
+ * DraftGet
+ * @param id String
+ * @param callback function Callback params (error, savedDraf)
+ */
+Wap.DraftGet = function (id, callback) {
+    var self = this;
+    return self.DRAFT.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, draft) {
+        if(err || !draft) {
+            err = E(Wap.ERROR.WAP_DRAFTNOTFOUND, {error:err, id:id, draft:draft});
+            return System.callback(callback, [err, draft]);
+        }
+        return System.callback(callback, [err, draft]);
+    });
+}
+
+/**
+ * DraftStart Start a draft wap (new or copy of a public version)
+ * @param draft Wap object/config with id property
+ * @param userid String Draft author
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftStart = function (draft, userid, callback) {
+    var self = this;
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {draft:draft, userid:userid}), null]);
+
+    //search for a public version (SCHEDULED | PUBLIC) to copy instance
+    self.Get(draft.id, function(err, wap) {
+        if(err && err.code != Doc.ERROR.DOC_NOTFOUND)
+            return System.callback(callback, [err, wap]);
+
+        if(wap) {
+            var wapConfig = assertWap({}, wap, {});
+            draft = Object.assign(wapConfig, draft);
+            draft.state = Wap.STATE.DRAFT;
+        }
+
+        draft.author = userid;
+        self.DraftCreate(draft, callback);
+    });
+}
+
+/**
+ * DraftStartEdition Start to edit a draft already started
+ * @param id String draft id
+ * @param userid String Draft author
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftStartEdition = function (id, userid, callback) {
+    var self = this;
+    if(!id || !userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        if(draft.state == Wap.STATE.EDITING)
+            return System.callback(callback, [E(Wap.ERROR.WAP_EDITING), draft]);
+
+        draft.state = Wap.STATE.EDITING;
+        draft.author = userid;
+        draft.save(callback);
+    });
+}
+
+/**
+ * DraftEndEdition End to edit a draft already in edition
+ * @param id String draft id
+ * @param userid String Draft author
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftEndEdition = function (id, userid, callback) {
+    var self = this;
+    if(!id || !userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        if(draft.state != Wap.STATE.EDITING)
+            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
+
+        if(draft.author != userid)
+            return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
+
+        draft.state = Wap.STATE.DRAFT;
+        draft.save(callback);
+    });
+}
+
+/**
+ * DraftReview Send a draft to revision
+ * @param id String draft id
+ * @param userid String Draft author
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftReview = function (id, userid, callback) {
+    var self = this;
+    if(!id || !userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        if(draft.state == Wap.STATE.EDITING && draft.author != userid)
+            return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), draft]);
+
+        draft.state = Wap.STATE.REVIEW;
+        draft.save(callback);
+    });
+}
+
+/**
+ * DraftReviewRepprove Reprove the revision draft
+ * @param id String draft id
+ * @param userid String Draft chiefeditor
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftReviewRepprove = function (id, userid, callback) {
+    var self = this;
+    if(!id || !userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        draft.state = Wap.STATE.REPPROVED;
+        draft.chiefeditor = userid;
+        draft.save(callback);
+    });
+}
+
+/**
+ * DraftReviewApprove Aprove the revision draft
+ * @param id String draft id
+ * @param userid String Draft chiefeditor
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftReviewApprove = function (id, userid, callback) {
+    var self = this;
+    if(!id || !userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        draft.state = Wap.STATE.APPROVED;
+        draft.chiefeditor = userid;
+        draft.save(callback);
+    });
+}
+
+/**
+ * DraftPublish Publish approved draft
+ * @param id String draft id
+ * @param userid String Draft chiefeditor
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftPublish = function (id, publicdate, callback) {
+    var self = this;
+    if(!id)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    self.DraftGet(id, function(err, draft) {
+        if(err || !draft)
+            return System.callback(callback, [err, draft]);
+
+        if(draft.state != Wap.STATE.APPROVED)
+            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
+
+        draft.state = dateInFuture(publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.PUBLIC;
+        self.Create(draft, function (err, wap) {
+            if(err && err.code == 11000 && wap) {
+                wap = assertWap(wap, draft);
+                return wap.save(function(err, savedWap) {
+                    if(err || !savedWap)
+                        return System.callback(callback, [err, savedWap]);
+
+                    draft.remove();
+                    return System.callback(callback, [null, wap]);
+                });
+            } else if(err || !wap) {
+                return System.callback(callback, [err, draft]);
+            }
+
+            draft.remove();
+            return System.callback(callback, [null, wap]);
+        });
+    });
+}
+
+/**
  * PublishScheduled Search for SCHEDULED waps in the past to publish it 
  * @param callback function Callback params (error, waps)
  */
 Wap.PublishScheduled = function (callback) {
     var self = this;
     var where = {
-        state : Wap.STATE.SCHEDULED, 
-        publicdate : {$gte : _moment()}    
+        state : Wap.STATE.SCHEDULED,
+        publicdate : {$gte : _moment()}
     };
     self.DB.find(where, {}, function(err, waps) {
         if(err || !waps)
@@ -265,27 +468,58 @@ Wap.PublishScheduled = function (callback) {
 
 }
 
-Wap.Publish = function (id, publicdate, callback) {
-    var self = this;
-    self.Get(id, function(err, wap) {
-        if(err || !wap)
-            return System.callback(callback, [err, wap]);
-        
-        if(wap.state != Wap.STATE.TEST)
-            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), wap]);
 
-        wap.state = dateInFuture(wap.publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.PUBLIC;
-        wap.save(callback);
-    });
+//PRIVATE
+function assertWap (wap, config, defaultConfig) {
+    if(!wap || !config)
+        return wap;
+
+    var datenow = Date.now();
+    defaultConfig = defaultConfig || {
+        lastupdate : datenow,
+        since : datenow,
+        publicdate : datenow,
+        status : Wap.STATUS.BLOCKED,
+        type : Wap.TYPE.PAGE
+    };
+ 
+    wap.id = config.id || config.path;
+    wap.path = config.path || config.id;
+    wap.canonical = config.canonical;
+    wap.author = config.author;
+    wap.title = config.title;
+    wap.metatitle = config.metatitle;
+    wap.metalocale = config.metalocale;
+    wap.metadescription = config.metadescription;
+    wap.metaentity = config.metaentity;
+    wap.metaimage = config.metaimage;
+    wap.metafollow = config.metafollow;
+    wap.metaindex = config.metaindex;
+    wap.priority = config.priority;
+    wap.lastupdate = config.lastupdate || defaultConfig.lastupdate;
+    wap.since = config.since || defaultConfig.since;
+    wap.publicdate = config.publicdate || defaultConfig.publicdate;
+    wap.state = config.state || defaultConfig.state;
+    wap.status = config.status || defaultConfig.status;
+    wap.content = config.content;
+    wap.type = config.type || defaultConfig.type;
+    wap.resume = config.resume;
+    wap.category = config.category;
+    wap.crosslink = config.crosslink;
+    wap.alias = config.alias;
+    wap.showcount = 0;
+
+    wap = assertStateMachine(wap);
+    return wap;
 }
 
-function assertStateMachine (newwap) {
-    if(newwap.state == Wap.STATE.PUBLIC) {
-        var isPublicDateInFuture = dateInFuture(newwap.publicdate);
+function assertStateMachine (wap) {
+    if(wap.state == Wap.STATE.PUBLIC) {
+        var isPublicDateInFuture = dateInFuture(wap.publicdate);
         if(isPublicDateInFuture)
-            newwap.STATE = Wap.STATE.SCHEDULED;
+            wap.STATE = Wap.STATE.SCHEDULED;
     }
-    return newwap;
+    return wap;
 }
 
 function dateInFuture (date) {
