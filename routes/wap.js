@@ -88,5 +88,4 @@ WapRoute.DraftPublish = function(req, res) {
 }
 
 WapRoute.PublishScheduled = function(req, res) {
-
 }

@@ -16,6 +16,7 @@ Wap.VERBOSE = true;
 
 Wap.ERROR = System.registerErrors({
     WAP_PARAMS : "Missing required params",
+    WAP_DB : "Error on DB",
     WAP_NOTFOUND : "Can not find the wap",
     WAP_DUPLICATE : "Duplicate entry",
     WAP_STATE : "State machine operation invalid",
@@ -171,19 +172,20 @@ Wap.Get = function (id, callback) {
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, id), null]);
 
     return self.DB.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, wap) {
-        if(err) {
-            err = E(Wap.ERROR.WAP_NOTFOUND, {error:err, id:id, wap:wap});
-            return System.callback(callback, [err, wap]);
-        }
-        if(wap) {
-            return System.callback(callback, [err, wap]);
-        }
+        if(err)
+            return System.callback(callback, [E(Wap.ERROR.WAP_DB, {error:err, id:id, wap:wap}), wap]);
+
+        if(wap)
+            return System.callback(callback, [null, wap]);
+
         return self.DRAFT.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, draft) {
-            if(err || !draft) {
-                err = E(Wap.ERROR.WAP_DRAFTNOTFOUND, {error:err, id:id, draft:draft});
-                return System.callback(callback, [err, draft]);
-            }
-            return System.callback(callback, [err, draft]);
+            if(err)
+                return System.callback(callback, [E(Wap.ERROR.WAP_DB, {error:err, id:id, draft:draft}), draft]);
+
+            if(!draft)
+                return System.callback(callback, [E(Wap.ERROR.WAP_NOTFOUND, id), draft]);
+
+            return System.callback(callback, [null, draft]);
         });
     });
 }
@@ -317,7 +319,7 @@ Wap.DraftStart = function (draft, userid, callback) {
 
     //search for a public version (SCHEDULED | PUBLIC) to copy instance
     self.Get(draft.id, function(err, wap) {
-        if(err && err.code != Doc.ERROR.DOC_NOTFOUND)
+        if(err && err.code != Wap.ERROR.WAP_NOTFOUND)
             return System.callback(callback, [err, wap]);
 
         if(wap) {
