@@ -511,9 +511,9 @@ describe("unit.wap", function() {
                     _expect(err.code).to.be.equal(Wap.ERROR.WAP_STATE);
                     _expect(savedWap).to.be.null;
                     Wap.Get("history", function(err, savedWap) {
-                        _expect(err).to.be.ok;
-                        _expect(err.code).to.be.equal(Doc.ERROR.DOC_NOTFOUND);
-                        _expect(savedWap).to.be.null;
+                        _expect(err).to.be.null;
+                        _expect(savedWap).to.be.ok;
+                        _expect(savedWap.state).to.be.equal(Wap.STATE.REPPROVED);
                        done();
                     })
                 });

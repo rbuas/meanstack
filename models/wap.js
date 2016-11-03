@@ -161,6 +161,34 @@ Wap.Create = function (wap, callback) {
 }
 
 /**
+ * Get wap in all STATEs
+ * @param wap object
+ * @param callback function Callback params (error, savedWap)
+ */
+Wap.Get = function (id, callback) {
+    var self = this;
+    if(!id)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, id), null]);
+
+    return self.DB.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, wap) {
+        if(err) {
+            err = E(Wap.ERROR.WAP_NOTFOUND, {error:err, id:id, wap:wap});
+            return System.callback(callback, [err, wap]);
+        }
+        if(wap) {
+            return System.callback(callback, [err, wap]);
+        }
+        return self.DRAFT.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, draft) {
+            if(err || !draft) {
+                err = E(Wap.ERROR.WAP_DRAFTNOTFOUND, {error:err, id:id, draft:draft});
+                return System.callback(callback, [err, draft]);
+            }
+            return System.callback(callback, [err, draft]);
+        });
+    });
+}
+
+/**
  * Find return an array of waps that match with 'where'' filter properties
  * @param where Filter object that contains wap informations
  * @param callback function Callback params (error, waps)
@@ -264,6 +292,9 @@ Wap.DraftCreate = function (draft, callback) {
  */
 Wap.DraftGet = function (id, callback) {
     var self = this;
+    if(!id)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, id), null]);
+
     return self.DRAFT.findOne({id:id}, self.PUBLIC_PROPERTIES, function(err, draft) {
         if(err || !draft) {
             err = E(Wap.ERROR.WAP_DRAFTNOTFOUND, {error:err, id:id, draft:draft});
