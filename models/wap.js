@@ -153,12 +153,16 @@ Wap.Create = function (wap, callback) {
     if(!wap || (!wap.path && !wap.id))
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, wap), null]);
 
-    if(wap.state && Wap.DRAFTSTATES.indexOf(wap.state) >= 0)
+    if(self.IsDraft(wap.state))
         return self.DraftCreate(wap, callback);
 
     var newwap = assertWap(new self.DB(), wap);
 
     newwap.save(callback);
+}
+
+Wap.IsDraft = function (state) {
+    return state && Wap.DRAFTSTATES.indexOf(state) >= 0;
 }
 
 /**
@@ -197,6 +201,7 @@ Wap.Get = function (id, callback) {
  */
 Wap.Find = function (where, callback) {
     var self = this;
+    where = where || {};
     if(where.since) where.since = {$gt : where.since};
     if(where.publicdate) where.publicdate = {$gt : where.publicdate};
     if(where.lastupdate) where.lastupdate = {$gt : where.lastupdate};

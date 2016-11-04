@@ -45,9 +45,20 @@ brain.get("/s/quote/:quote", QuoteRoute.quote);
 //WAP
 var WapRoute = require(ROOT_DIR + "/routes/wap");
 brain.get("/s/waps/:state/:category/:type", WapRoute.list);
-brain.get("/s/waps/:state/:category?", WapRoute.list);
+brain.get("/s/waps/:state/:category", WapRoute.list);
+brain.get("/s/waps/:state", WapRoute.list);
+brain.get("/s/waps", WapRoute.list);
 brain.get("/s/wapmap/:category/:type?", WapRoute.map);
-brain.post("/s/wapcreate", WapRoute.create);
+brain.get("/s/wap/:wapid/:state?", WapRoute.get);
+brain.post("/s/wap-create", WapRoute.create);
+brain.post("/s/wap-update", WapRoute.update);
+brain.post("/s/wap-draftstart", WapRoute.draftstart);
+brain.post("/s/wap-draftedit", WapRoute.draftedit);
+brain.post("/s/wap-draftclose", WapRoute.draftclose);
+brain.post("/s/wap-draftreview", WapRoute.draftreview);
+brain.post("/s/wap-draftrepprove", WapRoute.draftrepprove);
+brain.post("/s/wap-draftapprove", WapRoute.draftapprove);
+brain.post("/s/wap-draftpublish", WapRoute.draftpublish);
 
 
 // brain.get("/login", _marksRoutes.login);

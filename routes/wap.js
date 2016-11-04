@@ -12,6 +12,7 @@ WapRoute.list = function(req, res) {
     if(type && type != "*") where.type = type.split("|");
     if(category && category != "*") where.category = category.split("|");
     if(state && state != "*") where.state = state.split("|");
+
     Wap.Find(where, function(err, waps) {
         var response = {};
         if(err || !waps) {
@@ -63,29 +64,172 @@ WapRoute.create = function(req, res) {
     });
 }
 
-WapRoute.DraftGet = function(req, res) {
+WapRoute.get = function(req, res) {
+    var wapid = req.params.wapid;
+    var state = req.params.state;
+    state = state && state.toUpperCase();
+
+    if(Wap.IsDraft(state)) {
+        Wap.DraftGet(wap, function(err, savedWap) {
+            var response = {};
+            if(err || !savedWap) {
+                Log.message("wap.get failure", err);
+                response.error = err;
+            } else {
+                Log.message("wap.get success");
+                response.success = Wap.MESSAGE.WAP_SUCCESS;
+                response.wap = savedWap;
+            }
+            res.json(response);
+        });
+    } else {
+        Wap.Get(wap, function(err, savedWap) {
+            var response = {};
+            if(err || !savedWap) {
+                Log.message("wap.get failure", err);
+                response.error = err;
+            } else {
+                Log.message("wap.get success");
+                response.success = Wap.MESSAGE.WAP_SUCCESS;
+                response.wap = savedWap;
+            }
+            res.json(response);
+        });
+    }
 }
 
-WapRoute.DraftStart = function(req, res) {
+WapRoute.update = function(req, res) {
+    var wap = req.body.wap;
+    if(wap) delete(wap.state);
+    Wap.Update(wap, function(err, savedWap) {
+        var response = {};
+        if(err || !savedWap) {
+            Log.message("wap.update failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.update success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedWap;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftStartEdition = function(req, res) {
+WapRoute.draftstart = function(req, res) {
+    var userid = req.body.userid;
+    var wap = req.body.wap;
+    Wap.DraftStart(wap, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.get failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.get success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftEndEdition = function(req, res) {
+WapRoute.draftedit = function(req, res) {
+    var userid = req.body.userid;
+    var wapid = req.body.wapid;
+    Wap.DraftStartEdition(wapid, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftedit failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftedit success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftReview = function(req, res) {
+WapRoute.draftclose = function(req, res) {
+    var userid = req.body.userid;
+    var wapid = req.body.wapid;
+    Wap.DraftEndEdition(wapid, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftclose failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftclose success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftReviewRepprove = function(req, res) {
+WapRoute.draftreview = function(req, res) {
+    var userid = req.body.userid;
+    var wapid = req.body.wapid;
+    Wap.DraftReview(wapid, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftreview failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftreview success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftReviewApprove = function(req, res) {
+WapRoute.draftrepprove = function(req, res) {
+    var userid = req.body.userid;
+    var wapid = req.body.wapid;
+    Wap.DraftReviewRepprove(wapid, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftrepprove failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftrepprove success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.DraftPublish = function(req, res) {
+WapRoute.draftapprove = function(req, res) {
+    var userid = req.body.userid;
+    var wapid = req.body.wapid;
+    Wap.DraftReviewApprove(wapid, userid, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftapprove failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftapprove success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
 
-WapRoute.PublishScheduled = function(req, res) {
+WapRoute.draftpublish = function(req, res) {
+    var publicdate = req.body.publicdate;
+    var wapid = req.body.wapid;
+    Wap.DraftPublish(wapid, publicdate, function (err, savedDraft) {
+        var response = {};
+        if(err || !savedDraft) {
+            Log.message("wap.draftpublish failure", err);
+            response.error = err;
+        } else {
+            Log.message("wap.draftpublish success");
+            response.success = Wap.MESSAGE.WAP_SUCCESS;
+            response.wap = savedDraft;
+        }
+        res.json(response);
+    });
 }
