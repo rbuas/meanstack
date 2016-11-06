@@ -8,6 +8,7 @@ var E = System.error;
 
 module.exports = TestRouteApi;
 
+
 function TestRouteApi (options) {
     var self = this;
     self.options = Object.assign(TestRouteApi.defaultoptions, options) || {};
@@ -15,11 +16,14 @@ function TestRouteApi (options) {
     self.sessionCookie = null;
 }
 
+
 TestRouteApi.defaultoptions = { urlbase : "localhost", port : 8080};
+
 
 TestRouteApi.ERROR = System.registerErrors({
     TEST_JSONPARSE : "Can not parse json data",
-    TEST_SERVER : "Internal server error"
+    TEST_SERVER : "Internal server error",
+    TEST_STEP_VERIFICATION : "Error in step verification"
 });
 
 
@@ -28,6 +32,7 @@ TestRouteApi.prototype.setKeepSession = function (active)
     var self = this;
     self.keepsession = active;
 }
+
 
 TestRouteApi.prototype.resetSession = function() 
 {
@@ -126,4 +131,38 @@ TestRouteApi.prototype.request = function (options, callback) {
     }
 
     request.end();
+}
+
+
+/**
+ * parcours
+ * 
+ * @param steps [Step] Step = {
+ *      action function Step action
+ *      params [arg] Step params to action without callback
+ *      verify callback Returns true/false to validate from action : callback(err, info, data)
+ * }
+ * callback function Callback params ()
+ */
+TestRouteApi.prototype.parcours = function (steps, callback, stepindex) {
+    var self = this;
+    stepindex = stepindex || 0;
+
+    var step = steps[stepindex];
+    if(!step || !step.action)
+        return Log.error("Parcous step error");
+
+    var params = step.params || [];
+    params.push(function(err, info, data) {
+        try {
+            var verifyed = step.verify ? step.verify(err, info, data) : true;
+        } catch (e) {
+            return System.callback(callback, [E(TestRouteApi.ERROR.TEST_STEP_VERIFICATION, step)]);
+        }
+        if(!verifyed)
+            return System.callback(callback, [E(TestRouteApi.ERROR.TEST_STEP_VERIFICATION, step)]);
+
+        self.parcours(steps, callback, ++stepindex);
+    });
+    step.action.apply(null, params);
 }

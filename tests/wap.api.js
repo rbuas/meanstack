@@ -151,9 +151,9 @@ describe("api.wap", function() {
 
         it("basic", function(done) {
             test.list(null, null, null, function(err, info, data) {
-                _expect(info).to.not.be.null;
+                _expect(info).to.be.ok;
                 _expect(info.statusCode).to.be.equal(200);
-                _expect(data).to.not.be.null;
+                _expect(data).to.be.ok;
                 _expect(data.success).to.be.equal(Wap.MESSAGE.WAP_SUCCESS);
                 _expect(data.waps).to.be.ok;
                 _expect(data.waps.length).to.be.equal(11);
@@ -161,6 +161,27 @@ describe("api.wap", function() {
                 _expect(data.waps[0].state).to.be.equal(Wap.STATE.PUBLIC);
                 done();
             });
+        });
+
+        it("parcours-success", function(done) {
+            test.parcours(
+                [
+                    {
+                        action:test.create, 
+                        params:[{path:"newpage", content:["new page content 1"]}],
+                        verify:function (err, info, data) {
+                            _expect(err).to.be.null;
+                            _expect(info).to.be.ok;
+                            _expect(info.statusCode).to.be.equal(200);
+                            _expect(data).to.be.ok;
+                            _expect(data.success).to.be.equal(Wap.MESSAGE.WAP_SUCCESS);
+                            return true;
+                        }
+                    }
+                ], function(err, info, data) {
+                    done();
+                }
+            );
         });
 
     });
