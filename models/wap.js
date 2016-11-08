@@ -33,7 +33,8 @@ Wap.TYPE = {
 };
 Wap.STATUS = {
     BLOCKED : "BLOCKED",
-    ACTIVE : "ACTIVE"
+    PRIVATE : "PRIVATE",
+    PUBLIC : "PUBLIC"
 };
 Wap.STATE = {
     DRAFT : "DRAFT",            //DRAFT
@@ -162,7 +163,7 @@ Wap.Create = function (wap, callback) {
 }
 
 Wap.IsDraft = function (state) {
-    return state && Wap.DRAFTSTATES.indexOf(state) >= 0;
+    return !state || Wap.DRAFTSTATES.indexOf(state) >= 0;
 }
 
 /**
@@ -529,13 +530,13 @@ function assertWap (wap, config, defaultConfig) {
         return wap;
 
     var datenow = Date.now();
-    defaultConfig = defaultConfig || {
+    defaultConfig = Object.assign(defaultConfig || {}, {
         lastupdate : datenow,
         since : datenow,
         publicdate : datenow,
         status : Wap.STATUS.BLOCKED,
         type : Wap.TYPE.PAGE
-    };
+    });
  
     wap.id = config.id || config.path;
     wap.path = config.path || config.id;

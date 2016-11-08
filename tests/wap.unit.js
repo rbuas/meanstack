@@ -18,17 +18,17 @@ var Wap = require(ROOT_DIR + "/models/wap");
 describe("unit.wap", function() {
     var m;
     var testwaps = [
-        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.DRAFT},
-        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.DRAFT},
+        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
+        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
         {path:"page_b", content:["ohhhh"], type:"A", status:Wap.STATUS.BLOCKED, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")},
-        {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.EDITING, author: "editortest", publicdate : _moment().add(1, "days")},
-        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.EDITING, author: "editortest", publicdate : _moment().add(1, "days")},
+        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
         {path:"post_2", content:["hello world 2"], type:"B", status:Wap.STATUS.BLOCKED, state:Wap.STATE.EDITING, author: "editortest"},
-        {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
+        {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
     ];
 
     before(function(done) {

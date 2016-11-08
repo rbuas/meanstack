@@ -105,17 +105,17 @@ TestWapApi.prototype.draftpublish = function (wap, userid, callback) {
 describe("api.wap", function() {
     var m, test;
     var testwaps = [
-        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.DRAFT},
-        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
-        {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.ACTIVE, state:Wap.STATE.DRAFT},
+        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
+        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
         {path:"page_b", content:["ohhhh"], type:"A", status:Wap.STATUS.BLOCKED, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")},
-        {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.EDITING, author: "editortest", publicdate : _moment().add(1, "days")},
-        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.ACTIVE, state:Wap.STATE.PUBLIC},
+        {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.EDITING, author: "editortest", publicdate : _moment().add(1, "days")},
+        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
         {path:"post_2", content:["hello world 2"], type:"B", status:Wap.STATUS.BLOCKED, state:Wap.STATE.EDITING, author: "editortest"},
-        {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.ACTIVE, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
+        {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
     ];
 
     before(function(done) {
@@ -147,7 +147,7 @@ describe("api.wap", function() {
         });
     });
 
-    describe("list", function() {
+    describe.only("list", function() {
 
         it("basic", function(done) {
             test.list(null, null, null, function(err, info, data) {
@@ -175,6 +175,9 @@ describe("api.wap", function() {
                             _expect(info.statusCode).to.be.equal(200);
                             _expect(data).to.be.ok;
                             _expect(data.success).to.be.equal(Wap.MESSAGE.WAP_SUCCESS);
+                            _expect(data.wap).to.be.ok;
+                            _expect(data.wap.status).to.be.equal(Wap.STATUS.BLOCKED);
+                            _expect(data.wap.state).to.be.equal(Wap.STATE.DRAFT);
                             return true;
                         }
                     }

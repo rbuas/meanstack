@@ -148,6 +148,9 @@ TestRouteApi.prototype.parcours = function (steps, callback, stepindex) {
     var self = this;
     stepindex = stepindex || 0;
 
+    if(stepindex >= steps.length)
+        return System.callback(callback, [null]);
+
     var step = steps[stepindex];
     if(!step || !step.action)
         return Log.error("Parcous step error");
@@ -164,5 +167,5 @@ TestRouteApi.prototype.parcours = function (steps, callback, stepindex) {
 
         self.parcours(steps, callback, ++stepindex);
     });
-    step.action.apply(null, params);
+    step.action.apply(self, params);
 }
