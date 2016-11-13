@@ -51,14 +51,13 @@ brain.get("/s/waps", WapRoute.list);
 brain.get("/s/wapmap/:category/:type?", WapRoute.map);
 brain.get("/s/wap/:wapid/:state?", WapRoute.get);
 brain.post("/s/wap-create", WapRoute.create);
+brain.post("/s/wap-startedition", WapRoute.startedition);
 brain.post("/s/wap-update", WapRoute.update);
-brain.post("/s/wap-draftstart", WapRoute.draftstart);
-brain.post("/s/wap-draftedit", WapRoute.draftedit);
-brain.post("/s/wap-draftclose", WapRoute.draftclose);
-brain.post("/s/wap-draftreview", WapRoute.draftreview);
-brain.post("/s/wap-draftrepprove", WapRoute.draftrepprove);
-brain.post("/s/wap-draftapprove", WapRoute.draftapprove);
-brain.post("/s/wap-draftpublish", WapRoute.draftpublish);
+brain.post("/s/wap-endedition", WapRoute.endedition);
+brain.post("/s/wap-review", WapRoute.draftreview);
+brain.post("/s/wap-repprove", WapRoute.draftrepprove);
+brain.post("/s/wap-approve", WapRoute.draftapprove);
+brain.post("/s/wap-publish", WapRoute.draftpublish);
 
 
 // brain.get("/login", _marksRoutes.login);

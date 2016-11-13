@@ -23,7 +23,8 @@ Wap.ERROR = System.registerErrors({
     WAP_EDITING : "Wap already in edition",
     WAP_CONFIG : "Problems with wap configurations",
     WAP_PERMISSION : "Author doesn't have a permition to change the wap state",
-    WAP_DRAFTNOTFOUND : "Can not find the draft, it must be create before edit it"
+    WAP_DRAFTNOTFOUND : "Can not find the draft, it must be create before edit it",
+    WAP_NOUSER : "Can not identify a logged user"
 });
 Wap.MESSAGE = System.registerMessages({
     WAP_SUCCESS : "Operation success"
@@ -149,13 +150,16 @@ Wap.STATS = _mongoose.model("WapStats", Wap.Schema);
  * @param wap object
  * @param callback function Callback params (error, savedWap)
  */
-Wap.Create = function (wap, callback) {
+Wap.Create = function (wap, userid, callback) {
     var self = this;
     if(!wap || (!wap.path && !wap.id))
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, wap), null]);
 
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
     if(self.IsDraft(wap.state))
-        return self.DraftCreate(wap, callback);
+        return self.DraftCreate(wap, userid, callback);
 
     var newwap = assertWap(new self.DB(), wap);
 
@@ -283,14 +287,45 @@ Wap.GetStats = function (stats, callback) {
  * @param wap object
  * @param callback function Callback params (error, savedDraft)
  */
-Wap.DraftCreate = function (draft, callback) {
+Wap.DraftCreate = function (draft, userid, callback) {
     var self = this;
     if(!draft || (!draft.path && !draft.id))
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, draft), null]);
 
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
     var newwap = assertWap(new self.DRAFT(), draft, {lastupdate: Date.now(), state : Wap.STATE.DRAFT});
 
     newwap.save(callback);
+}
+
+/**
+ * DraftStart Start a draft wap (new or copy of a public version)
+ * @param draft Wap object/config with id property
+ * @param userid String Draft author
+ * @param callback Callback(err, savedWapDraft)
+ */
+Wap.DraftStart = function (draft, userid, callback) {
+    var self = this;
+    if(!draft || (!draft.path && !draft.id))
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {draft:draft, userid:userid}), null]);
+
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
+    //search for a public version (SCHEDULED | PUBLIC) to copy instance
+    self.Get(draft.id, function(err, wap) {
+        if(err || !wap)
+            return System.callback(callback, [err, wap]);
+
+        var wapConfig = assertWap({}, wap, {});
+        draft = Object.assign(wapConfig, draft);
+        draft.state = Wap.STATE.DRAFT;
+
+        draft.author = userid;
+        self.DraftCreate(draft, userid, callback);
+    });
 }
 
 /**
@@ -313,29 +348,29 @@ Wap.DraftGet = function (id, callback) {
 }
 
 /**
- * DraftStart Start a draft wap (new or copy of a public version)
- * @param draft Wap object/config with id property
- * @param userid String Draft author
- * @param callback Callback(err, savedWapDraft)
+ * DraftUpdate
+ * @param draft {wap} Draft wap version to update (need id)
+ * @param callback function Callback params (error, savedDraf)
  */
-Wap.DraftStart = function (draft, userid, callback) {
+Wap.DraftUpdate = function (draft, userid, callback) {
     var self = this;
+    if(!draft || !draft.id)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, id), null]);
+
     if(!userid)
-        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {draft:draft, userid:userid}), null]);
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
-    //search for a public version (SCHEDULED | PUBLIC) to copy instance
-    self.Get(draft.id, function(err, wap) {
-        if(err && err.code != Wap.ERROR.WAP_NOTFOUND)
-            return System.callback(callback, [err, wap]);
+    self.DraftGet(draft.id, function(err, savedDraf) {
+        if(err || !savedDraf)
+            return System.callback(callback, [E(Wap.ERROR.WAP_DRAFTNOTFOUND, err), null]);
 
-        if(wap) {
-            var wapConfig = assertWap({}, wap, {});
-            draft = Object.assign(wapConfig, draft);
-            draft.state = Wap.STATE.DRAFT;
-        }
+        if(draft.state != Wap.STATE.EDITING)
+            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
+        if(draft.author != userid)
+            return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
 
-        draft.author = userid;
-        self.DraftCreate(draft, callback);
+        savedDraf = Object.assign(savedDraf, draft);
+        savedDraf.save(callback);
     });
 }
 
@@ -347,12 +382,18 @@ Wap.DraftStart = function (draft, userid, callback) {
  */
 Wap.DraftStartEdition = function (id, userid, callback) {
     var self = this;
-    if(!id || !userid)
+    if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
 
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
     self.DraftGet(id, function(err, draft) {
-        if(err || !draft)
+        if(err && err.code != Wap.ERROR.WAP_DRAFTNOTFOUND)
             return System.callback(callback, [err, draft]);
+
+        if(!draft)
+            return self.DraftStart({id:id}, userid, callback);
 
         if(draft.state == Wap.STATE.EDITING)
             return System.callback(callback, [E(Wap.ERROR.WAP_EDITING), draft]);
@@ -371,8 +412,11 @@ Wap.DraftStartEdition = function (id, userid, callback) {
  */
 Wap.DraftEndEdition = function (id, userid, callback) {
     var self = this;
-    if(!id || !userid)
+    if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
@@ -397,8 +441,11 @@ Wap.DraftEndEdition = function (id, userid, callback) {
  */
 Wap.DraftReview = function (id, userid, callback) {
     var self = this;
-    if(!id || !userid)
+    if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
@@ -420,8 +467,11 @@ Wap.DraftReview = function (id, userid, callback) {
  */
 Wap.DraftReviewRepprove = function (id, userid, callback) {
     var self = this;
-    if(!id || !userid)
+    if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
@@ -441,8 +491,11 @@ Wap.DraftReviewRepprove = function (id, userid, callback) {
  */
 Wap.DraftReviewApprove = function (id, userid, callback) {
     var self = this;
-    if(!id || !userid)
+    if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+
+    if(!userid)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
@@ -463,7 +516,7 @@ Wap.DraftReviewApprove = function (id, userid, callback) {
 Wap.DraftPublish = function (id, publicdate, callback) {
     var self = this;
     if(!id)
-        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
+        return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id}), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
@@ -473,7 +526,7 @@ Wap.DraftPublish = function (id, publicdate, callback) {
             return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
 
         draft.state = dateInFuture(publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.PUBLIC;
-        self.Create(draft, function (err, wap) {
+        self.Create(draft, draft.chiefeditor, function (err, wap) {
             if(err && err.code == 11000 && wap) {
                 wap = assertWap(wap, draft);
                 return wap.save(function(err, savedWap) {

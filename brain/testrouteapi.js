@@ -1,6 +1,9 @@
 var _http = require("http");
 var _cheerio = require("cheerio");
 var _querystring = require("querystring");
+var _expect = require("chai").expect;
+var _assert = require("chai").assert;
+var _should = require("chai").should();
 
 var JsExt = require(ROOT_DIR + "/brain/jsext");
 var System = require(ROOT_DIR + "/brain/system");
@@ -12,7 +15,7 @@ module.exports = TestRouteApi;
 function TestRouteApi (options) {
     var self = this;
     self.options = Object.assign(TestRouteApi.defaultoptions, options) || {};
-    self.keepsession = false;
+    self.keepsession = false || self.options.keepsession;
     self.sessionCookie = null;
 }
 
@@ -157,13 +160,7 @@ TestRouteApi.prototype.parcours = function (steps, callback, stepindex) {
 
     var params = step.params || [];
     params.push(function(err, info, data) {
-        try {
-            var verifyed = step.verify ? step.verify(err, info, data) : true;
-        } catch (e) {
-            return System.callback(callback, [E(TestRouteApi.ERROR.TEST_STEP_VERIFICATION, step)]);
-        }
-        if(!verifyed)
-            return System.callback(callback, [E(TestRouteApi.ERROR.TEST_STEP_VERIFICATION, step)]);
+        if(step.verify) _expect(step.verify(err, info, data)).to.be.equal(true, "parcours step : " + stepindex);
 
         self.parcours(steps, callback, ++stepindex);
     });

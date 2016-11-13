@@ -54,12 +54,13 @@ describe("load.sitemap", function() {
         wdc = new WebDroneScraper();
         m = new Memory({onconnect:function(){
             Wap.Remove({}, function() {
-                Wap.Create({path:"/groupe-ski/alpes-du-nord/alpe-dhuez.html", id:"test"}, function(err, savedWap) {
+                Wap.Create({path:"/groupe-ski/alpes-du-nord/alpe-dhuez.html", id:"test"}, "usertest", function(err, savedWap) {
                     done();
                 });
             });
         }});
     });
+
     after(function(done) {
         Wap.Remove({}, function() {
             m.disconnect(done);

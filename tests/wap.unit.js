@@ -42,7 +42,7 @@ describe("unit.wap", function() {
     beforeEach(function(done) {
         var pending = testwaps.length;
         testwaps.forEach(function(wap, index, arr){
-            Wap.Create(wap, function(err, savedWap) {
+            Wap.Create(wap, "usertest", function(err, savedWap) {
                 _expect(err).to.be.null;
                 if(--pending <= 0) done();
             });
@@ -61,7 +61,7 @@ describe("unit.wap", function() {
         });
 
         it("null", function(done) {
-            Wap.Create(null, function(err, savedWap) {
+            Wap.Create(null, "usertest", function(err, savedWap) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal(Wap.ERROR.WAP_PARAMS);
                 _expect(savedWap).to.be.null;
@@ -69,7 +69,7 @@ describe("unit.wap", function() {
             });
         });
         it("empty", function(done) {
-            Wap.Create({}, function(err, savedWap) {
+            Wap.Create({}, "usertest", function(err, savedWap) {
                 _expect(err).to.not.be.null;
                 _expect(err.code).to.equal(Wap.ERROR.WAP_PARAMS);
                 _expect(savedWap).to.be.null;
@@ -77,7 +77,7 @@ describe("unit.wap", function() {
             });
         });
         it("success", function(done) {
-            Wap.Create({content:["test content"], id:"test"}, function(err, savedWap) {
+            Wap.Create({content:["test content"], id:"test"}, "usertest", function(err, savedWap) {
                 _expect(err).to.be.null;
                 _expect(savedWap).to.not.be.null;
                 _expect(savedWap.id).to.be.equal("test");
@@ -86,10 +86,10 @@ describe("unit.wap", function() {
         });
         it("duplicate", function(done) {
             var doc = {content:"test content", id:"test"};
-            Wap.Create(doc, function(err, savedWap) {
+            Wap.Create(doc, "usertest", function(err, savedWap) {
                 _expect(err).to.be.null;
                 _expect(savedWap).to.not.be.null;
-                Wap.Create(doc, function(err2, savedWap2) {
+                Wap.Create(doc, "usertest", function(err2, savedWap2) {
                     _expect(err2).to.not.be.null;
                     _expect(err2.code).to.equal(11000);
                     done();
@@ -297,10 +297,9 @@ describe("unit.wap", function() {
 
         it("newone", function(done) {
             Wap.DraftStart({id:"wapnotexistent"}, "usertest", function (err, draft) {
-                _expect(err).to.be.null;
-                _expect(draft).to.be.ok;
-                _expect(draft.path).to.be.equal("wapnotexistent");
-                _expect(draft.state).to.be.equal(Wap.STATE.DRAFT);
+                _expect(err).to.be.ok;
+                _expect(err.code).to.be.equal(Wap.ERROR.WAP_NOTFOUND);
+                _expect(draft).to.be.null;
                 done();
             });
         });
@@ -328,7 +327,7 @@ describe("unit.wap", function() {
         it("param-userid", function(done) {
             Wap.DraftStartEdition("history", "", function(err, savedWap) {
                 _expect(err).to.be.ok;
-                _expect(err.code).to.be.equal(Wap.ERROR.WAP_PARAMS);
+                _expect(err.code).to.be.equal(Wap.ERROR.WAP_NOUSER);
                 _expect(savedWap).to.be.null;
                 done();
             });
@@ -337,7 +336,7 @@ describe("unit.wap", function() {
         it("notfound", function(done) {
             Wap.DraftStartEdition("wapnotfound", "usertest", function(err, savedWap) {
                 _expect(err).to.be.ok;
-                _expect(err.code).to.be.equal(Wap.ERROR.WAP_DRAFTNOTFOUND);
+                _expect(err.code).to.be.equal(Wap.ERROR.WAP_NOTFOUND);
                 _expect(savedWap).to.be.null;
                 done();
             });
@@ -366,8 +365,52 @@ describe("unit.wap", function() {
 
         it("inpublic", function(done) {
             Wap.DraftStartEdition("post_1", "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.path).to.be.equal("post_1");
+                done();
+            });
+        });
+    });
+
+    describe("draftupdate", function() {
+        it("sameauthor", function(done) { 
+             Wap.DraftStartEdition("history", "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.path).to.be.equal("history");
+                _expect(savedWap.state).to.be.equal(Wap.STATE.EDITING);
+                savedWap.content = ["test 1", "test 2"];
+                Wap.DraftUpdate(savedWap, "usertest", function(err, savedWap) {
+                    _expect(err).to.be.null;
+                    _expect(savedWap).to.be.ok;
+                    _expect(savedWap.path).to.be.equal("history");
+                    _expect(savedWap.content).to.contains("test 1");
+                    done();
+                });
+            });
+        });
+
+        it("diffauthor", function(done) { 
+             Wap.DraftStartEdition("history", "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.path).to.be.equal("history");
+                _expect(savedWap.state).to.be.equal(Wap.STATE.EDITING);
+                savedWap.content = ["test 1", "test 2"];
+                Wap.DraftUpdate(savedWap, "usertest2222", function(err, savedWap) {
+                    _expect(err).to.be.ok;
+                    _expect(err.code).to.be.equal(Wap.ERROR.WAP_PERMISSION);
+                    _expect(savedWap).to.be.null;
+                    done();
+                });
+            });
+        });
+
+        it("nonediting", function(done) { 
+            Wap.DraftUpdate({id:"history","content" : ["test 1", "test 2"]}, "usertest", function(err, savedWap) {
                 _expect(err).to.be.ok;
-                _expect(err.code).to.be.equal(Wap.ERROR.WAP_DRAFTNOTFOUND);
+                _expect(err.code).to.be.equal(Wap.ERROR.WAP_STATE);
                 _expect(savedWap).to.be.null;
                 done();
             });

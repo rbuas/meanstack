@@ -195,7 +195,6 @@ User.Create = function(user, callback) {
 }
 
 
-
 /**
  * Get
  * @param email User email
@@ -622,6 +621,7 @@ User.saveUserSession = function(req, user) {
         return;
 
     req.session.user = {
+        id : user.id || user._id,
         label : user.label,
         name : user.name,
         status : user.status,
@@ -632,9 +632,12 @@ User.saveUserSession = function(req, user) {
     };
 }
 
-User.VerifyLogged = function(req) {
+User.VerifyLogged = function(req, prop) {
     var logged = req && req.session && req.session.user && req.session.user.logged;
-    return logged ? req.session.user : null;
+    if(!logged)
+        return null;
+
+    return prop ? req.session.user[prop] : req.session.user;
 }
 
 User.VerifyProfile = function(req, profile) {

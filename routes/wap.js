@@ -1,4 +1,5 @@
 var Log = require(ROOT_DIR + "/brain/log");
+var User = require(ROOT_DIR + "/models/user");
 var Wap = require(ROOT_DIR + "/models/wap");
 
 module.exports = WapRoute = {};
@@ -50,7 +51,9 @@ WapRoute.map = function(req, res) {
 
 WapRoute.create = function(req, res) {
     var wap = req.body.wap;
-    Wap.Create(wap, function(err, savedWap) {
+    var userid = User.VerifyLogged(req, "id");
+    console.log("USER : ", userid);
+    Wap.Create(wap, userid, function(err, savedWap) {
         var response = {};
         if(err || !savedWap) {
             Log.message("wap.list failure", err);
@@ -100,8 +103,9 @@ WapRoute.get = function(req, res) {
 
 WapRoute.update = function(req, res) {
     var wap = req.body.wap;
+    var userid = User.VerifyLogged(req, "id");
     if(wap) delete(wap.state);
-    Wap.Update(wap, function(err, savedWap) {
+    Wap.DraftUpdate(wap, userid, function(err, savedWap) {
         var response = {};
         if(err || !savedWap) {
             Log.message("wap.update failure", err);
@@ -115,26 +119,9 @@ WapRoute.update = function(req, res) {
     });
 }
 
-WapRoute.draftstart = function(req, res) {
-    var userid = req.body.userid;
-    var wap = req.body.wap;
-    Wap.DraftStart(wap, userid, function (err, savedDraft) {
-        var response = {};
-        if(err || !savedDraft) {
-            Log.message("wap.get failure", err);
-            response.error = err;
-        } else {
-            Log.message("wap.get success");
-            response.success = Wap.MESSAGE.WAP_SUCCESS;
-            response.wap = savedDraft;
-        }
-        res.json(response);
-    });
-}
-
-WapRoute.draftedit = function(req, res) {
-    var userid = req.body.userid;
+WapRoute.startedition = function(req, res) {
     var wapid = req.body.wapid;
+    var userid = User.VerifyLogged(req, "id");
     Wap.DraftStartEdition(wapid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
@@ -149,9 +136,9 @@ WapRoute.draftedit = function(req, res) {
     });
 }
 
-WapRoute.draftclose = function(req, res) {
-    var userid = req.body.userid;
+WapRoute.endedition = function(req, res) {
     var wapid = req.body.wapid;
+    var userid = User.VerifyLogged(req, "id");
     Wap.DraftEndEdition(wapid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
@@ -167,8 +154,8 @@ WapRoute.draftclose = function(req, res) {
 }
 
 WapRoute.draftreview = function(req, res) {
-    var userid = req.body.userid;
     var wapid = req.body.wapid;
+    var userid = User.VerifyLogged(req, "id");
     Wap.DraftReview(wapid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
@@ -184,8 +171,8 @@ WapRoute.draftreview = function(req, res) {
 }
 
 WapRoute.draftrepprove = function(req, res) {
-    var userid = req.body.userid;
     var wapid = req.body.wapid;
+    var userid = User.VerifyLogged(req, "id");
     Wap.DraftReviewRepprove(wapid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
@@ -201,8 +188,8 @@ WapRoute.draftrepprove = function(req, res) {
 }
 
 WapRoute.draftapprove = function(req, res) {
-    var userid = req.body.userid;
     var wapid = req.body.wapid;
+    var userid = User.VerifyLogged(req, "id");
     Wap.DraftReviewApprove(wapid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
