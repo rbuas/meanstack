@@ -16,7 +16,7 @@ WapRoute.list = function(req, res) {
 
     Wap.Find(where, function(err, waps) {
         var response = {};
-        if(err || !waps) {
+        if(err) {
             Log.message("wap.list failure", err);
             response.error = err;
         } else {
@@ -56,10 +56,10 @@ WapRoute.create = function(req, res) {
     Wap.Create(wap, userid, function(err, savedWap) {
         var response = {};
         if(err || !savedWap) {
-            Log.message("wap.list failure", err);
+            Log.message("wap.create failure", err);
             response.error = err;
         } else {
-            Log.message("wap.list success");
+            Log.message("wap.create success");
             response.success = Wap.MESSAGE.WAP_SUCCESS;
             response.wap = savedWap;
         }

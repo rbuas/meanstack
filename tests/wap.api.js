@@ -111,7 +111,7 @@ var verifyWap = function (wap, expected) {
     if(expected.state) _expect(wap.state).to.be.equal(expected.state);
 }
 
-describe("api.wap", function() {
+describe.only("api.wap", function() {
     var m, test;
     var usertest = {email : "usertest@test.com", password : "123456", forcestatus : User.STATUS.OFF};
     var testwaps = [
@@ -196,7 +196,7 @@ describe("api.wap", function() {
         });
     });
 
-    describe.only("parcours", function() {
+    describe("parcours", function() {
         it("newpage", function(done) {
             test.parcours(
                 [

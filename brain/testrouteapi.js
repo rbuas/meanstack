@@ -98,7 +98,7 @@ TestRouteApi.prototype.request = function (options, callback) {
         info.headers = res.headers;
         if(self.keepsession) {
             var cookie = res.headers["set-cookie"];
-            self.sessionCookie = cookie && cookie.length > 0 && cookie[0];
+            self.sessionCookie = cookie && cookie.length > 0 && cookie[0] || self.sessionCookie;
         }
         res.on("data", function(d) {
             data += d;

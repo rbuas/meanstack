@@ -83,7 +83,7 @@ UserRoute.login = function (req, res) {
             response.error = err;
             User.saveUserSession(req, {email:email});
         } else {
-            Log.message("user.login success to ", user);
+            Log.message("user.login success to ", email);
             User.saveUserSession(req, user);
             response.success = User.MESSAGE.USER_SUCCESS;
         }
