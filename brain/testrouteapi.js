@@ -64,6 +64,7 @@ TestRouteApi.prototype.request = function (options, callback) {
     var dataString = JSON.stringify(options.data);
     var info = {
         startTime : new Date(),
+        requestData : options.data,
         request : {
             method : method,
             port : options.port || self.options.port,

@@ -44,7 +44,7 @@ Wap.STATE = {
     REPPROVED : "REPPROVED",    //DRAFT
     APPROVED : "APPROVED",      //DRAFT
     SCHEDULED : "SCHEDULED",    //DB
-    PUBLIC : "PUBLIC"           //DB
+    FINISHED : "FINISHED"       //DB
 };
 Wap.DRAFTSTATES = [
     Wap.STATE.DRAFT,
@@ -364,9 +364,9 @@ Wap.DraftUpdate = function (draft, userid, callback) {
         if(err || !savedDraf)
             return System.callback(callback, [E(Wap.ERROR.WAP_DRAFTNOTFOUND, err), null]);
 
-        if(draft.state != Wap.STATE.EDITING)
-            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
-        if(draft.author != userid)
+        if(savedDraf.state != Wap.STATE.EDITING)
+            return System.callback(callback, [E(Wap.ERROR.WAP_STATE, draft), null]);
+        if(savedDraf.author != userid)
             return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
 
         savedDraf = Object.assign(savedDraf, draft);
@@ -525,7 +525,7 @@ Wap.DraftPublish = function (id, publicdate, callback) {
         if(draft.state != Wap.STATE.APPROVED)
             return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
 
-        draft.state = dateInFuture(publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.PUBLIC;
+        draft.state = dateInFuture(publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.FINISHED;
         self.Create(draft, draft.chiefeditor, function (err, wap) {
             if(err && err.code == 11000 && wap) {
                 wap = assertWap(wap, draft);

@@ -60,40 +60,40 @@ TestWapApi.prototype.update = function (wap, callback) {
     self.request({path : path , method : "POST", data : {wap:wap}}, callback);
 }
 
-TestWapApi.prototype.startedition = function (wap, callback) {
+TestWapApi.prototype.startedition = function (wid, callback) {
     var self = this;
     var path = "/s/wap-startedition";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
-TestWapApi.prototype.endedition = function (wap, callback) {
+TestWapApi.prototype.endedition = function (wid, callback) {
     var self = this;
     var path = "/s/wap-endedition";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
-TestWapApi.prototype.review = function (wap, callback) {
+TestWapApi.prototype.review = function (wid, callback) {
     var self = this;
     var path = "/s/wap-review";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
-TestWapApi.prototype.repprove = function (wap, callback) {
+TestWapApi.prototype.repprove = function (wid, callback) {
     var self = this;
     var path = "/s/wap-repprove";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
-TestWapApi.prototype.approve = function (wap, callback) {
+TestWapApi.prototype.approve = function (wid, callback) {
     var self = this;
     var path = "/s/wap-approve";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
-TestWapApi.prototype.publish = function (wap, callback) {
+TestWapApi.prototype.publish = function (wid, callback) {
     var self = this;
     var path = "/s/wap-publish";
-    self.request({path : path , method : "POST", data : {wap:wap}}, callback);
+    self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 var verifySuccess = function (err, info, data) {
@@ -111,19 +111,19 @@ var verifyWap = function (wap, expected) {
     if(expected.state) _expect(wap.state).to.be.equal(expected.state);
 }
 
-describe.only("api.wap", function() {
+describe("api.wap", function() {
     var m, test;
     var usertest = {email : "usertest@test.com", password : "123456", forcestatus : User.STATUS.OFF};
     var testwaps = [
-        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
         {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
-        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
-        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
-        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"aboutus", content:["nothing"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
+        {path:"news", content:["running tests"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
+        {path:"contact", content:["please don't"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
         {path:"page_a", content:["ohhhh"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
         {path:"page_b", content:["ohhhh"], type:"A", status:Wap.STATUS.BLOCKED, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")},
         {path:"page_c", content:["ohhhh"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.EDITING, author: "editortest", publicdate : _moment().add(1, "days")},
-        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.PUBLIC},
+        {path:"post_1", content:["hello world 1"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
         {path:"post_2", content:["hello world 2"], type:"B", status:Wap.STATUS.BLOCKED, state:Wap.STATE.EDITING, author: "editortest"},
         {path:"post_3", content:["hello world 3"], type:"C", status:Wap.STATUS.PUBLIC, state:Wap.STATE.SCHEDULED, publicdate : _moment().add(1, "days")}
     ];
@@ -190,13 +190,13 @@ describe.only("api.wap", function() {
                 _expect(data.waps).to.be.ok;
                 _expect(data.waps.length).to.be.equal(11);
                 _expect(data.waps[0].path).to.be.equal("home");
-                _expect(data.waps[0].state).to.be.equal(Wap.STATE.PUBLIC);
+                _expect(data.waps[0].state).to.be.equal(Wap.STATE.FINISHED);
                 done();
             });
         });
     });
 
-    describe("parcours", function() {
+    describe.only("parcours", function() {
         it("newpage", function(done) {
             test.parcours(
                 [
@@ -226,22 +226,52 @@ describe.only("api.wap", function() {
                         params:[{path:"newpage", content:["new page content 1"]}],
                         verify:function(err, info, data) {
                             verifySuccess(err, info, data);
-                            verifyWap(data.wap, {
-                                status : Wap.STATUS.BLOCKED,
-                                state : Wap.STATE.DRAFT
-                            });
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.DRAFT});
                             return true;
                         }
                     },
                     {
                         action:test.startedition, 
-                        params:[{id:"newpage"}],
+                        params:["newpage"],
                         verify:function(err, info, data) {
                             verifySuccess(err, info, data);
-                            verifyWap(data.wap, {
-                                status : Wap.STATUS.BLOCKED,
-                                state : Wap.STATE.DRAFT
-                            });
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.EDITING});
+                            return true;
+                        }
+                    },
+                    {
+                        action:test.update, 
+                        params:[{id:"newpage", content:["new page content 1", "new page content 2"]}],
+                        verify:function(err, info, data) {
+                            verifySuccess(err, info, data);
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.EDITING,content : ["new page content 1", "new page content 2"]});
+                            return true;
+                        }
+                    },
+                    {
+                        action:test.endedition, 
+                        params:["newpage"],
+                        verify:function(err, info, data) {
+                            verifySuccess(err, info, data);
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.DRAFT});
+                            return true;
+                        }
+                    },
+                    {
+                        action:test.review, 
+                        params:["newpage"],
+                        verify:function(err, info, data) {
+                            verifySuccess(err, info, data);
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.REVIEW});
+                            return true;
+                        }
+                    },
+                    {
+                        action:test.approve, 
+                        params:["newpage"],
+                        verify:function(err, info, data) {
+                            verifySuccess(err, info, data);
+                            verifyWap(data.wap, {status : Wap.STATUS.BLOCKED,state : Wap.STATE.APPROVED});
                             return true;
                         }
                     }

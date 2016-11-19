@@ -32,7 +32,7 @@ WapRoute.map = function(req, res) {
     var category = req.params.category;
     var type = req.params.type;
 
-    var where = {state : Wap.STATE.PUBLIC};
+    var where = {state : Wap.STATE.FINISHED};
     if(type && type != "*") where.type = type.split("|");
     if(category && category != "*") where.category = category.split("|");
     Wap.GetMap(where, function(err, waps) {
@@ -120,9 +120,9 @@ WapRoute.update = function(req, res) {
 }
 
 WapRoute.startedition = function(req, res) {
-    var wapid = req.body.wapid;
+    var wid = req.body.wid;
     var userid = User.VerifyLogged(req, "id");
-    Wap.DraftStartEdition(wapid, userid, function (err, savedDraft) {
+    Wap.DraftStartEdition(wid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftedit failure", err);
@@ -137,9 +137,9 @@ WapRoute.startedition = function(req, res) {
 }
 
 WapRoute.endedition = function(req, res) {
-    var wapid = req.body.wapid;
+    var wid = req.body.wid;
     var userid = User.VerifyLogged(req, "id");
-    Wap.DraftEndEdition(wapid, userid, function (err, savedDraft) {
+    Wap.DraftEndEdition(wid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftclose failure", err);
@@ -154,9 +154,9 @@ WapRoute.endedition = function(req, res) {
 }
 
 WapRoute.draftreview = function(req, res) {
-    var wapid = req.body.wapid;
+    var wid = req.body.wid;
     var userid = User.VerifyLogged(req, "id");
-    Wap.DraftReview(wapid, userid, function (err, savedDraft) {
+    Wap.DraftReview(wid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftreview failure", err);
@@ -171,9 +171,9 @@ WapRoute.draftreview = function(req, res) {
 }
 
 WapRoute.draftrepprove = function(req, res) {
-    var wapid = req.body.wapid;
+    var wid = req.body.wid;
     var userid = User.VerifyLogged(req, "id");
-    Wap.DraftReviewRepprove(wapid, userid, function (err, savedDraft) {
+    Wap.DraftReviewRepprove(wid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftrepprove failure", err);
@@ -188,9 +188,9 @@ WapRoute.draftrepprove = function(req, res) {
 }
 
 WapRoute.draftapprove = function(req, res) {
-    var wapid = req.body.wapid;
+    var wid = req.body.wid;
     var userid = User.VerifyLogged(req, "id");
-    Wap.DraftReviewApprove(wapid, userid, function (err, savedDraft) {
+    Wap.DraftReviewApprove(wid, userid, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftapprove failure", err);
@@ -205,9 +205,9 @@ WapRoute.draftapprove = function(req, res) {
 }
 
 WapRoute.draftpublish = function(req, res) {
+    var wid = req.body.wid;
     var publicdate = req.body.publicdate;
-    var wapid = req.body.wapid;
-    Wap.DraftPublish(wapid, publicdate, function (err, savedDraft) {
+    Wap.DraftPublish(wid, publicdate, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftpublish failure", err);
