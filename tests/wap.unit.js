@@ -12,11 +12,14 @@ var Log = require(ROOT_DIR + "/brain/log");
 var Memory = require(ROOT_DIR + "/brain/memory");
 var WebMailer = require(ROOT_DIR + "/brain/webmailer");
 var ViewEngine = require(ROOT_DIR + "/brain/viewengine");
+var User = require(ROOT_DIR + "/models/user");
 var Doc = require(ROOT_DIR + "/models/doc");
 var Wap = require(ROOT_DIR + "/models/wap");
 
 describe("unit.wap", function() {
     var m;
+    var usertest = {email : "usertest@test.com", id : "usertest", password : "123456", forcestatus : User.STATUS.OFF, profile : User.PROFILE.WRITER};
+    var usertesteditor = {email : "usertestediter@test.com", id : "usertesteditor", password : "123456", forcestatus : User.STATUS.OFF, profile : User.PROFILE.EDITOR};
     var testwaps = [
         {path:"home", content:["hello world"], type:"A", status:Wap.STATUS.PUBLIC, state:Wap.STATE.FINISHED},
         {path:"history", content:["bla bla bla"], type:"B", status:Wap.STATUS.PUBLIC, state:Wap.STATE.DRAFT},
@@ -353,7 +356,7 @@ describe("unit.wap", function() {
         });
 
         it("editing", function(done) {
-            Wap.DraftStartEdition("post_2", "editortest", function(err, savedWap) {
+            Wap.DraftStartEdition("post_2", "editortest2222", function(err, savedWap) {
                 _expect(err).to.be.ok;
                 _expect(err.code).to.be.equal(Wap.ERROR.WAP_EDITING);
                 _expect(savedWap).to.be.ok;
@@ -486,7 +489,7 @@ describe("unit.wap", function() {
 
     describe("draftreviewapprove", function() {
         it("draft", function(done) {
-            Wap.DraftReviewApprove("history", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewApprove("history", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.null;
                 _expect(savedDraft).to.be.ok;
                 _expect(savedDraft.state).to.be.equal(Wap.STATE.APPROVED);
@@ -495,7 +498,7 @@ describe("unit.wap", function() {
         });
 
         it("nodraft", function(done) {
-            Wap.DraftReviewApprove("home", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewApprove("home", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.ok;
                 _expect(err.code).to.be.equal(Wap.ERROR.WAP_DRAFTNOTFOUND);
                 _expect(savedDraft).to.be.null;
@@ -506,7 +509,7 @@ describe("unit.wap", function() {
 
     describe("draftreviewrepprove", function() {
         it("draft", function(done) {
-            Wap.DraftReviewRepprove("history", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewRepprove("history", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.null;
                 _expect(savedDraft).to.be.ok;
                 _expect(savedDraft.state).to.be.equal(Wap.STATE.REPPROVED);
@@ -515,7 +518,7 @@ describe("unit.wap", function() {
         });
 
         it("nodraft", function(done) {
-            Wap.DraftReviewRepprove("home", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewRepprove("home", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.ok;
                 _expect(err.code).to.be.equal(Wap.ERROR.WAP_DRAFTNOTFOUND);
                 _expect(savedDraft).to.be.null;
@@ -526,11 +529,11 @@ describe("unit.wap", function() {
 
     describe("draftpublish", function() {
         it("draft-approved", function(done) {
-            Wap.DraftReviewApprove("history", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewApprove("history", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.null;
                 _expect(savedDraft).to.be.ok;
                 _expect(savedDraft.state).to.be.equal(Wap.STATE.APPROVED);
-                Wap.DraftPublish("history", null, function(err, savedWap) {
+                Wap.DraftPublish("history", usertesteditor, null, function(err, savedWap) {
                     _expect(err).to.be.null;
                     _expect(savedWap).to.be.ok;
                     _expect(savedWap.state).to.be.equal(Wap.STATE.FINISHED);
@@ -545,13 +548,13 @@ describe("unit.wap", function() {
         });
 
         it("draft-other", function(done) {
-            Wap.DraftReviewRepprove("history", "editortest", function(err, savedDraft) {
+            Wap.DraftReviewRepprove("history", usertesteditor, function(err, savedDraft) {
                 _expect(err).to.be.null;
                 _expect(savedDraft).to.be.ok;
                 _expect(savedDraft.state).to.be.equal(Wap.STATE.REPPROVED);
-                Wap.DraftPublish("history", null, function(err, savedWap) {
+                Wap.DraftPublish("history", usertest, null, function(err, savedWap) {
                     _expect(err).to.be.ok;
-                    _expect(err.code).to.be.equal(Wap.ERROR.WAP_STATE);
+                    _expect(err.code).to.be.equal(Wap.ERROR.WAP_PERMISSION);
                     _expect(savedWap).to.be.null;
                     Wap.Get("history", function(err, savedWap) {
                         _expect(err).to.be.null;
@@ -564,7 +567,7 @@ describe("unit.wap", function() {
         });
 
         it("nodraft", function(done) {
-            Wap.DraftPublish("home", null, function(err, savedDraft) {
+            Wap.DraftPublish("home", usertesteditor, null, function(err, savedDraft) {
                 _expect(err).to.be.ok;
                 _expect(err.code).to.be.equal(Wap.ERROR.WAP_DRAFTNOTFOUND);
                 _expect(savedDraft).to.be.null;
@@ -573,10 +576,155 @@ describe("unit.wap", function() {
         });
     });
 
-    describe("publishscheduled", function() {
-        it("basic", function(done) {
-            //TODO
-            done();
+    describe("content", function() {
+        it("null", function(done) {
+            var wap = {path:"home", content:null};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.null;
+                done();
+            });
+        });
+
+        it("empty", function(done) {
+            var wap = {path:"home", content:[]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                done();
+            });
+        });
+
+        it("string-single", function(done) {
+            var wap = {path:"home", content:["hello world"]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.indexOf("hello world")).to.be.equal(0);
+                done();
+            });
+        });
+
+        it("string-multiple", function(done) {
+            var wap = {path:"home", content:["a", "b", "c"]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.indexOf("a")).to.be.equal(0);
+                _expect(savedWap.content.indexOf("b")).to.be.equal(1);
+                _expect(savedWap.content.indexOf("c")).to.be.equal(2);
+                done();
+            });
+        });
+
+        it("number-single", function(done) {
+            var wap = {path:"home", content:[5]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.indexOf(5)).to.be.equal(0);
+                done();
+            });
+        });
+
+        it("number-multiple", function(done) {
+            var wap = {path:"home", content:[5, 3, 9]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.indexOf(5)).to.be.equal(0);
+                _expect(savedWap.content.indexOf(3)).to.be.equal(1);
+                _expect(savedWap.content.indexOf(9)).to.be.equal(2);
+                done();
+            });
+        });
+
+        it("bool-multiple", function(done) {
+            var wap = {path:"home", content:[true, false]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.indexOf(true)).to.be.equal(0);
+                _expect(savedWap.content.indexOf(false)).to.be.equal(1);
+                done();
+            });
+        });
+
+        it("object-single", function(done) {
+            var wap = {path:"home", content:[{test:"a", test2:"b"}]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                var obj0 = savedWap.content[0];
+                _expect(obj0).to.be.ok;
+                _expect(obj0.test).to.be.equal("a");
+                _expect(obj0.test2).to.be.equal("b");
+                done();
+            });
+        });
+
+        it("object-single", function(done) {
+            var wap = {path:"home", content:[{test:"a", test2:"b"}, {bla:"hhh", sss:"yyy"}]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                var obj0 = savedWap.content[0];
+                _expect(obj0).to.be.ok;
+                _expect(obj0.test).to.be.equal("a");
+                _expect(obj0.test2).to.be.equal("b");
+                var obj1 = savedWap.content[1];
+                _expect(obj1).to.be.ok;
+                _expect(obj1.bla).to.be.equal("hhh");
+                _expect(obj1.sss).to.be.equal("yyy");
+                done();
+            });
+        });
+
+        it("mix", function(done) {
+            var wap = {path:"home", content:[{test:"a", test2:"b"}, {bla:"hhh", sss:"yyy"}, "blablabla", 3, true, {a:"a"}]};
+            Wap.Create(wap, "usertest", function(err, savedWap) {
+                _expect(err).to.be.null;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap).to.be.ok;
+                _expect(savedWap.content).to.be.ok;
+                _expect(savedWap.content.length).to.be.equal(6);
+                var obj0 = savedWap.content[0];
+                _expect(obj0).to.be.ok;
+                _expect(obj0.test).to.be.equal("a");
+                _expect(obj0.test2).to.be.equal("b");
+                var obj1 = savedWap.content[1];
+                _expect(obj1).to.be.ok;
+                _expect(obj1.bla).to.be.equal("hhh");
+                _expect(obj1.sss).to.be.equal("yyy");
+                var obj2 = savedWap.content[2];
+                _expect(obj2).to.be.equal("blablabla");
+                var obj3 = savedWap.content[3];
+                _expect(obj3).to.be.equal(3);
+                var obj4 = savedWap.content[4];
+                _expect(obj4).to.be.equal(true);
+                var obj5 = savedWap.content[(5)];
+                _expect(obj5).to.be.ok;
+                _expect(obj5.a).to.be.equal("a");
+                done();
+            });
         });
     });
 });

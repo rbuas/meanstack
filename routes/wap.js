@@ -52,7 +52,6 @@ WapRoute.map = function(req, res) {
 WapRoute.create = function(req, res) {
     var wap = req.body.wap;
     var userid = User.VerifyLogged(req, "id");
-    console.log("USER : ", userid);
     Wap.Create(wap, userid, function(err, savedWap) {
         var response = {};
         if(err || !savedWap) {
@@ -172,8 +171,8 @@ WapRoute.draftreview = function(req, res) {
 
 WapRoute.draftrepprove = function(req, res) {
     var wid = req.body.wid;
-    var userid = User.VerifyLogged(req, "id");
-    Wap.DraftReviewRepprove(wid, userid, function (err, savedDraft) {
+    var user = User.VerifyLogged(req);
+    Wap.DraftReviewRepprove(wid, user, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftrepprove failure", err);
@@ -189,8 +188,8 @@ WapRoute.draftrepprove = function(req, res) {
 
 WapRoute.draftapprove = function(req, res) {
     var wid = req.body.wid;
-    var userid = User.VerifyLogged(req, "id");
-    Wap.DraftReviewApprove(wid, userid, function (err, savedDraft) {
+    var user = User.VerifyLogged(req);
+    Wap.DraftReviewApprove(wid, user, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftapprove failure", err);
@@ -206,8 +205,9 @@ WapRoute.draftapprove = function(req, res) {
 
 WapRoute.draftpublish = function(req, res) {
     var wid = req.body.wid;
+    var user = User.VerifyLogged(req);
     var publicdate = req.body.publicdate;
-    Wap.DraftPublish(wid, publicdate, function (err, savedDraft) {
+    Wap.DraftPublish(wid, user, publicdate, function (err, savedDraft) {
         var response = {};
         if(err || !savedDraft) {
             Log.message("wap.draftpublish failure", err);

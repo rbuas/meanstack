@@ -1,18 +1,14 @@
 var _mongoose = require("mongoose");
-var _bcrypt = require("bcrypt");
 var _moment = require("moment");
-var _querystring = require("querystring");
-var _crypto = require("crypto");
 
 var JsExt = require(ROOT_DIR + "/brain/jsext");
 var Log = require(ROOT_DIR + "/brain/log");
 var System = require(ROOT_DIR + "/brain/system");
 var E = System.error;
 var Doc = require(ROOT_DIR + "/models/doc");
+var User = require(ROOT_DIR + "/models/user");
 
 module.exports = Wap = Object.assign({}, Doc);
-
-Wap.VERBOSE = true;
 
 Wap.ERROR = System.registerErrors({
     WAP_PARAMS : "Missing required params",
@@ -29,9 +25,7 @@ Wap.ERROR = System.registerErrors({
 Wap.MESSAGE = System.registerMessages({
     WAP_SUCCESS : "Operation success"
 });
-Wap.TYPE = {
-    PAGE : "PAGE"
-};
+Wap.TYPE = "PAGE";
 Wap.STATUS = {
     BLOCKED : "BLOCKED",
     PRIVATE : "PRIVATE",
@@ -69,7 +63,7 @@ Wap.Schema = new _mongoose.Schema({
 
     type : String,
     resume : String,
-    content : [String],
+    content : [],
     category : [String],
     crosslink : [String],
     alias : [String],
@@ -161,7 +155,7 @@ Wap.Create = function (wap, userid, callback) {
     if(self.IsDraft(wap.state))
         return self.DraftCreate(wap, userid, callback);
 
-    var newwap = assertWap(new self.DB(), wap);
+    var newwap = assertWap(self, new self.DB(), wap);
 
     newwap.save(callback);
 }
@@ -295,7 +289,7 @@ Wap.DraftCreate = function (draft, userid, callback) {
     if(!userid)
         return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
 
-    var newwap = assertWap(new self.DRAFT(), draft, {lastupdate: Date.now(), state : Wap.STATE.DRAFT});
+    var newwap = assertWap(self, new self.DRAFT(), draft, {lastupdate: Date.now(), state : Wap.STATE.DRAFT});
 
     newwap.save(callback);
 }
@@ -319,7 +313,7 @@ Wap.DraftStart = function (draft, userid, callback) {
         if(err || !wap)
             return System.callback(callback, [err, wap]);
 
-        var wapConfig = assertWap({}, wap, {});
+        var wapConfig = assertWap(self, {}, wap, {});
         draft = Object.assign(wapConfig, draft);
         draft.state = Wap.STATE.DRAFT;
 
@@ -395,7 +389,7 @@ Wap.DraftStartEdition = function (id, userid, callback) {
         if(!draft)
             return self.DraftStart({id:id}, userid, callback);
 
-        if(draft.state == Wap.STATE.EDITING)
+        if(draft.state == Wap.STATE.EDITING && userid != draft.author)
             return System.callback(callback, [E(Wap.ERROR.WAP_EDITING), draft]);
 
         draft.state = Wap.STATE.EDITING;
@@ -461,48 +455,54 @@ Wap.DraftReview = function (id, userid, callback) {
 
 /**
  * DraftReviewRepprove Reprove the revision draft
- * @param id String draft id
- * @param userid String Draft chiefeditor
- * @param callback Callback(err, savedWapDraft)
+ * @param {id} String draft id
+ * @param {userid} String Draft chiefeditor
+ * @param {callback} Function signed as (err, savedWapDraft)
  */
-Wap.DraftReviewRepprove = function (id, userid, callback) {
+Wap.DraftReviewRepprove = function (id, user, callback) {
     var self = this;
     if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
 
-    if(!userid)
+    if(!user || !user.id || !user.profile)
         return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
+    if(user.profile != User.PROFILE.EDITOR && user.profile != User.PROFILE.ADMIN)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
             return System.callback(callback, [err, draft]);
 
         draft.state = Wap.STATE.REPPROVED;
-        draft.chiefeditor = userid;
+        draft.chiefeditor = user.id;
         draft.save(callback);
     });
 }
 
 /**
  * DraftReviewApprove Aprove the revision draft
- * @param id String draft id
- * @param userid String Draft chiefeditor
- * @param callback Callback(err, savedWapDraft)
+ * @param {id} String draft id
+ * @param {user} User session object
+ * @param {callback} Function signed as (err, savedWapDraft)
  */
-Wap.DraftReviewApprove = function (id, userid, callback) {
+Wap.DraftReviewApprove = function (id, user, callback) {
     var self = this;
     if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id, userid:userid}), null]);
 
-    if(!userid)
+    if(!user || !user.id || !user.profile)
         return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
+    if(user.profile != User.PROFILE.EDITOR && user.profile != User.PROFILE.ADMIN)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
             return System.callback(callback, [err, draft]);
 
         draft.state = Wap.STATE.APPROVED;
-        draft.chiefeditor = userid;
+        draft.chiefeditor = user.id;
         draft.save(callback);
     });
 }
@@ -510,25 +510,34 @@ Wap.DraftReviewApprove = function (id, userid, callback) {
 /**
  * DraftPublish Publish approved draft
  * @param id String draft id
+ * @param user User object with profile information
  * @param userid String Draft chiefeditor
  * @param callback Callback(err, savedWapDraft)
  */
-Wap.DraftPublish = function (id, publicdate, callback) {
+Wap.DraftPublish = function (id, user, publicdate, callback) {
     var self = this;
     if(!id)
         return System.callback(callback, [E(Wap.ERROR.WAP_PARAMS, {id:id}), null]);
+
+    if(!user || !user.id || !user.profile)
+        return System.callback(callback, [E(Wap.ERROR.WAP_NOUSER), null]);
+
+    if(user.profile != User.PROFILE.EDITOR && user.profile != User.PROFILE.ADMIN)
+        return System.callback(callback, [E(Wap.ERROR.WAP_PERMISSION), null]);
 
     self.DraftGet(id, function(err, draft) {
         if(err || !draft)
             return System.callback(callback, [err, draft]);
 
-        if(draft.state != Wap.STATE.APPROVED)
-            return System.callback(callback, [E(Wap.ERROR.WAP_STATE), null]);
-
+        draft.publicdate = publicdate;
         draft.state = dateInFuture(publicdate) ? Wap.STATE.SCHEDULED : Wap.STATE.FINISHED;
-        self.Create(draft, draft.chiefeditor, function (err, wap) {
+
+        self.Create(draft, user.id, function (err, wap) {
+            if(err && err.code != 11000 && !wap)
+                return System.callback(callback, [err, draft]);
+
             if(err && err.code == 11000 && wap) {
-                wap = assertWap(wap, draft);
+                wap = assertWap(self, wap, draft);
                 return wap.save(function(err, savedWap) {
                     if(err || !savedWap)
                         return System.callback(callback, [err, savedWap]);
@@ -536,8 +545,6 @@ Wap.DraftPublish = function (id, publicdate, callback) {
                     draft.remove();
                     return System.callback(callback, [null, wap]);
                 });
-            } else if(err || !wap) {
-                return System.callback(callback, [err, draft]);
             }
 
             draft.remove();
@@ -567,7 +574,9 @@ Wap.PublishScheduled = function (callback) {
         waps.forEach(function(wap, index) {
             if(!wap) return;
 
-            wap.STATE = Wap.STATE.PUBLIC;
+            wap.status = Wap.STATUS.PUBLIC;
+            wap.state = Wap.STATE.FINISHED;
+
             wap.save(function(err, savedWap) {
                 if(--pending <= 0) System.callback(callback, [err, waps]);
             });
@@ -578,7 +587,10 @@ Wap.PublishScheduled = function (callback) {
 
 
 //PRIVATE
-function assertWap (wap, config, defaultConfig) {
+function assertWap (self, wap, config, defaultConfig) {
+    if(!self)
+        return;
+
     if(!wap || !config)
         return wap;
 
@@ -587,8 +599,8 @@ function assertWap (wap, config, defaultConfig) {
         lastupdate : datenow,
         since : datenow,
         publicdate : datenow,
-        status : Wap.STATUS.BLOCKED,
-        type : Wap.TYPE.PAGE
+        status : Wap.STATUS.PUBLIC,
+        type : self.TYPE
     });
  
     wap.id = config.id || config.path;
@@ -625,7 +637,7 @@ function assertStateMachine (wap) {
     if(wap.state == Wap.STATE.PUBLIC) {
         var isPublicDateInFuture = dateInFuture(wap.publicdate);
         if(isPublicDateInFuture)
-            wap.STATE = Wap.STATE.SCHEDULED;
+            wap.state = Wap.STATE.SCHEDULED;
     }
     return wap;
 }
