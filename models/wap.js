@@ -166,8 +166,8 @@ Wap.IsDraft = function (state) {
 
 /**
  * Get wap in all STATEs
- * @param wap object
- * @param callback function Callback params (error, savedWap)
+ * @param {string} id Wap id
+ * @param {function} callback - Callback signed as (error, savedWap)
  */
 Wap.Get = function (id, callback) {
     var self = this;
@@ -343,8 +343,9 @@ Wap.DraftGet = function (id, callback) {
 
 /**
  * DraftUpdate
- * @param draft {wap} Draft wap version to update (need id)
- * @param callback function Callback params (error, savedDraf)
+ * @param {Wap} draft - Draft wap version to update (need id)
+ * @param {string} userid - Author user id
+ * @param {function} callback - Callback params (error, savedDraf)
  */
 Wap.DraftUpdate = function (draft, userid, callback) {
     var self = this;
@@ -455,9 +456,9 @@ Wap.DraftReview = function (id, userid, callback) {
 
 /**
  * DraftReviewRepprove Reprove the revision draft
- * @param {id} String draft id
- * @param {userid} String Draft chiefeditor
- * @param {callback} Function signed as (err, savedWapDraft)
+ * @param {string} id - Draft id
+ * @param {user} user - User session object
+ * @param {function} callback - Callback signed as (err, savedWapDraft)
  */
 Wap.DraftReviewRepprove = function (id, user, callback) {
     var self = this;
@@ -482,9 +483,9 @@ Wap.DraftReviewRepprove = function (id, user, callback) {
 
 /**
  * DraftReviewApprove Aprove the revision draft
- * @param {id} String draft id
- * @param {user} User session object
- * @param {callback} Function signed as (err, savedWapDraft)
+ * @param {string} id - Draft id
+ * @param {user} user - User session object
+ * @param {function} callback - Callback signed as (err, savedWapDraft)
  */
 Wap.DraftReviewApprove = function (id, user, callback) {
     var self = this;
