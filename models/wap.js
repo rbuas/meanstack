@@ -245,14 +245,14 @@ Wap.GetMap = function (where, callback) {
  * @param callback function Callback params (error, savedStats)
  */
 Wap.StockStats = function (stats, callback) {
+    var self = this;
     if(!stats || !stats.path)
         return System.callback(callback);
 
     Wap.STATS.findOne({path : stats.path}, {}, function(err, wapstats) {
         if(err || !wapstats) {
             //stock new stats
-            var newstats = new Wap.STATS();
-            newstats = Object.assign(newstats, stats);
+            newstats = assertWap(self, new Wap.STATS(), stats);
             newstats.save(callback); 
         } else {
             //keep last info
