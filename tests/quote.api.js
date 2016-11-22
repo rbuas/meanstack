@@ -26,13 +26,13 @@ function TestQuoteApi (options) {
 TestQuoteApi.prototype.quotes = function (category, callback) {
     var self = this;
     category = category || "";
-    self.request({path : "/s/quotes/" + category, method : "GET"}, callback);
+    self.request({path : "/q/list/" + category, method : "GET"}, callback);
 }
 
 TestQuoteApi.prototype.quote = function (quoteid, callback) {
     var self = this;
     quoteid = quoteid || "";
-    self.request({path : "/s/quote/" + quoteid, method : "GET"}, callback);
+    self.request({path : "/q/get/" + quoteid, method : "GET"}, callback);
 }
 
 describe("api.quote", function() {

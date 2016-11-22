@@ -22,46 +22,51 @@ brain.get("/s/reset", PageRoute.reset);
 //USER
 var UserRoute = require(ROOT_DIR + "/routes/user");
 //PUBLIC ROUTES
-brain.post("/s/user-register", UserRoute.register);
-brain.post("/s/user-unregister", UserRoute.unregister);
-brain.get("/s/user-confirm/:token", UserRoute.confirm);
-brain.post("/s/user-login", UserRoute.login);
-brain.post("/s/user-logout", UserRoute.logout);
-brain.post("/s/user-askresetpassword", UserRoute.askResetPassword);
-brain.post("/s/user-resetpassword", UserRoute.resetPassword);
-brain.post("/s/user-update", UserRoute.update);
+brain.post("/u/register", UserRoute.register);
+brain.post("/u/unregister", UserRoute.unregister);
+brain.get("/u/confirm/:token", UserRoute.confirm);
+brain.post("/u/login", UserRoute.login);
+brain.post("/u/logout", UserRoute.logout);
+brain.post("/u/askresetpassword", UserRoute.askResetPassword);
+brain.post("/u/resetpassword", UserRoute.resetPassword);
+brain.post("/u/update", UserRoute.update);
 //ADMIN ROUTES
-brain.post("/s/user-addpassport", UserRoute.addPassport);
-brain.post("/s/user-removepassport", UserRoute.remPassport);
-brain.get("/s/user-find", UserRoute.find);
+brain.post("/u/addpassport", UserRoute.addPassport);
+brain.post("/u/removepassport", UserRoute.remPassport);
+brain.get("/u/find", UserRoute.find);
 
 brain.usocket("connection", ChatRoute.broadcast);
 
 //QUOTES
 var QuoteRoute = require(ROOT_DIR + "/routes/quote");
-brain.get("/s/quotes/:category", QuoteRoute.quotes);
-brain.get("/s/quote/:quote", QuoteRoute.quote);
+brain.get("/q/list/:category", QuoteRoute.quotes);
+brain.get("/q/get/:quote", QuoteRoute.quote);
 
 //WAP
 var WapRoute = require(ROOT_DIR + "/routes/wap");
-brain.get("/s/waps/:state/:category/:type", WapRoute.list);
-brain.get("/s/waps/:state/:category", WapRoute.list);
-brain.get("/s/waps/:state", WapRoute.list);
-brain.get("/s/waps", WapRoute.list);
-brain.get("/s/wapmap/:category/:type?", WapRoute.map);
-brain.get("/s/wap/:wapid/:state?", WapRoute.get);
-brain.post("/s/wap-create", WapRoute.create);
-brain.post("/s/wap-startedition", WapRoute.startedition);
-brain.post("/s/wap-update", WapRoute.update);
-brain.post("/s/wap-endedition", WapRoute.endedition);
-brain.post("/s/wap-review", WapRoute.draftreview);
-brain.post("/s/wap-repprove", WapRoute.draftrepprove);
-brain.post("/s/wap-approve", WapRoute.draftapprove);
-brain.post("/s/wap-publish", WapRoute.draftpublish);
+brain.get("/w/list/:state/:category/:type", WapRoute.list);
+brain.get("/w/list/:state/:category", WapRoute.list);
+brain.get("/w/list/:state", WapRoute.list);
+brain.get("/w/list", WapRoute.list);
+brain.get("/w/map/:category/:type?", WapRoute.map);
+brain.get("/w/get/:wapid/:state?", WapRoute.get);
+brain.post("/w/create", WapRoute.create);
+brain.post("/w/startedition", WapRoute.startedition);
+brain.post("/w/update", WapRoute.update);
+brain.post("/w/endedition", WapRoute.endedition);
+brain.post("/w/review", WapRoute.draftreview);
+brain.post("/w/repprove", WapRoute.draftrepprove);
+brain.post("/w/approve", WapRoute.draftapprove);
+brain.post("/w/publish", WapRoute.draftpublish);
 
+//MIDIA
+var MidiaRoute = require(ROOT_DIR + "/routes/media");
+brain.get("/a/:library", MidiaRoute.library);
+brain.get("/a/:album", MidiaRoute.album);
+brain.get("/c/:collection", MidiaRoute.collection);
+brain.get("/g/:gallery", MidiaRoute.gallery);
+brain.get("/m/:midia\.:ext", MidiaRoute.midia);
 
-// brain.get("/login", _marksRoutes.login);
-// brain.get("/register", _marksRoutes.register);
 // brain.get("/marks", _marksRoutes.marks);
 // brain.get("/about", _marksRoutes.about);
 // brain.get("/stories", _marksRoutes.stories);
@@ -72,5 +77,3 @@ brain.post("/s/wap-publish", WapRoute.draftpublish);
 // brain.get("/cities", _citiesRoutes.cities);
 // brain.get("/city/:city", _citiesRoutes.city);
 // brain.get("/download", _resRoutes.download);
-// brain.get("/session", _resRoutes.stest);
-// brain.get("/session/:test", _resRoutes.stest);

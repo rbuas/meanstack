@@ -25,7 +25,7 @@ function TestWapApi (options) {
 
 TestWapApi.prototype.list = function (state, category, type, callback) {
     var self = this;
-    var path = "/s/waps";
+    var path = "/w/list";
     if(state) path += "/" + state;
     if(category) path += "/" + category;
     if(type) path += "/" + type;
@@ -36,7 +36,7 @@ TestWapApi.prototype.map = function (category, type, callback) {
     var self = this;
     category = category || "";
     type = type || "";
-    var path = "/s/wapmap/{0}/{1}".format(category, type);
+    var path = "/w/map/{0}/{1}".format(category, type);
     self.request({path : path , method : "GET"}, callback);
 }
 
@@ -44,55 +44,55 @@ TestWapApi.prototype.get = function (wapid, state, callback) {
     var self = this;
     category = category || "";
     state = state || "";
-    var path = "/s/wap/{0}/{1}".format(wapid, state);
+    var path = "/w/get/{0}/{1}".format(wapid, state);
     self.request({path : path , method : "GET"}, callback);
 }
 
 TestWapApi.prototype.create = function (wap, callback) {
     var self = this;
-    var path = "/s/wap-create";
+    var path = "/w/create";
     self.request({path : path , method : "POST", data : {wap:wap}}, callback);
 }
 
 TestWapApi.prototype.update = function (wap, callback) {
     var self = this;
-    var path = "/s/wap-update";
+    var path = "/w/update";
     self.request({path : path , method : "POST", data : {wap:wap}}, callback);
 }
 
 TestWapApi.prototype.startedition = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-startedition";
+    var path = "/w/startedition";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 TestWapApi.prototype.endedition = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-endedition";
+    var path = "/w/endedition";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 TestWapApi.prototype.review = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-review";
+    var path = "/w/review";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 TestWapApi.prototype.repprove = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-repprove";
+    var path = "/w/repprove";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 TestWapApi.prototype.approve = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-approve";
+    var path = "/w/approve";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
 TestWapApi.prototype.publish = function (wid, callback) {
     var self = this;
-    var path = "/s/wap-publish";
+    var path = "/w/publish";
     self.request({path : path , method : "POST", data : {wid:wid}}, callback);
 }
 
@@ -100,7 +100,7 @@ TestWapApi.prototype.loginUser = function (user, callback) {
     var self = this;
     self.request(
         {
-            path : "/s/user-login/", 
+            path : "/u/login/", 
             method : "POST", 
             data : user
         }, 

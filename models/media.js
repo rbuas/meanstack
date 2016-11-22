@@ -5,7 +5,7 @@ var JsExt = require(ROOT_DIR + "/brain/jsext");
 var Log = require(ROOT_DIR + "/brain/log");
 var System = require(ROOT_DIR + "/brain/system");
 var E = System.error;
-var Doc = require(ROOT_DIR + "/models/Doc");
+var Doc = require(ROOT_DIR + "/models/doc");
 
 module.exports = Media = Object.assign({}, Doc);
 
@@ -56,23 +56,35 @@ Media.VERSIONS = {
     thumb : {quality : 60, width : 120}
 };
 
-Media.ScrapDir = function (dir, callback) {
-
+Media.ScrapDir = function (dir) {
+    //TODO
 }
 
-Media.ReadInfo = function (filepath, callback) {
+Media.ReadInfo = function (filepath) {
+    //TODO
+}
 
+Media.GenerateVersion = function (version) {
+    var self = this;
+    if(!version)
+        return;
+
+    var config = self.VERSIONS[version];
+    if(!config)
+        return;
+
+    //TODO generate version with config.quality et config.width 
 }
 
 Media.StockInfo = function (midia, callback) {
     var self = this;
-    self.Create(media, function(err, savedMidia) {
+    self.Create(media, function(err, savedMedia) {
         if(err && err.code != 11000)
             return System.callback(callback, [err, null]);
 
         if(err && err.code == 11000)
             return self.Update(media, callback);
 
-        return System.callback(callback, [null, savedMidia]);
+        return System.callback(callback, [null, savedMedia]);
     });
 }

@@ -29,39 +29,39 @@ function TestUserApi (options) {
 
 TestUserApi.prototype.register = function (data, callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-register", method : forcemethod || "POST", data : data}, callback);
+    self.request({path : "/u/register", method : forcemethod || "POST", data : data}, callback);
 }
 
 TestUserApi.prototype.unregister = function (email, password, callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-unregister", method : forcemethod || "POST", data : {email : email, password : password}}, callback);
+    self.request({path : "/u/unregister", method : forcemethod || "POST", data : {email : email, password : password}}, callback);
 }
 
 TestUserApi.prototype.confirm = function (token, callback) {
     var self = this;
-    self.request({path : "/s/user-confirm/" + token || "", method : "GET"}, callback);
+    self.request({path : "/u/confirm/" + token || "", method : "GET"}, callback);
 }
 
 TestUserApi.prototype.login = function (email, password, callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-login/", method : forcemethod || "POST", data : {email:email, password:password}}, callback);
+    self.request({path : "/u/login/", method : forcemethod || "POST", data : {email:email, password:password}}, callback);
 }
 
 TestUserApi.prototype.logout = function (callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-logout", method : forcemethod || "POST"}, callback);
+    self.request({path : "/u/logout", method : forcemethod || "POST"}, callback);
 }
 
 TestUserApi.prototype.askResetPassword = function (email, callback, forcemethod) {
     var self = this;
-    self.request({path : "/s/user-askresetpassword", method : forcemethod || "POST", data : {email : email}}, callback);
+    self.request({path : "/u/askresetpassword", method : forcemethod || "POST", data : {email : email}}, callback);
 }
 
 TestUserApi.prototype.resetPassword = function (userid, token, newpassword, callback, forcemethod) {
     var self = this;
     self.request(
         {
-            path : "/s/user-resetpassword", 
+            path : "/u/resetpassword", 
             method : forcemethod || "POST", 
             data : {
                 userid : userid, 
@@ -75,22 +75,22 @@ TestUserApi.prototype.resetPassword = function (userid, token, newpassword, call
 
 TestUserApi.prototype.find = function (criteria, callback) {
     var self = this;
-    self.request({path : "/s/user-find", method : "GET", data : criteria}, callback);
+    self.request({path : "/u/find", method : "GET", data : criteria}, callback);
 }
 
 TestUserApi.prototype.addpassport = function (email, passport, callback) {
     var self = this;
-    self.request({path : "/s/user-addpassport", method : "POST", data : {email:email, passport:passport}}, callback);
+    self.request({path : "/u/addpassport", method : "POST", data : {email:email, passport:passport}}, callback);
 }
 
 TestUserApi.prototype.removepassport = function (email, passport, callback) {
     var self = this;
-    self.request({path : "/s/user-removepassport", method : "POST", data : {email:email, passport:passport}}, callback);
+    self.request({path : "/u/removepassport", method : "POST", data : {email:email, passport:passport}}, callback);
 }
 
 TestUserApi.prototype.update = function (user, callback) {
     var self = this;
-    self.request({path : "/s/user-update", method : "POST", data : {user:user}}, callback);
+    self.request({path : "/u/update", method : "POST", data : {user:user}}, callback);
 }
 
 describe("api.user", function() {
