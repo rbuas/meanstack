@@ -1,4 +1,5 @@
 var _querystring = require("querystring");
+var _fs = require("fs");
 
 module.exports = JsExt = {};
 
@@ -114,4 +115,19 @@ JsExt.first = function(obj) {
 
         return obj[i];
     }
+}
+
+JsExt.loadJsonFile = function(file) {
+    if(!file)
+        return;
+
+    var filecontent = _fs.readFileSync(file, 'utf8');
+    if(!filecontent)
+        return;
+
+    var fileobject = JSON.parse(filecontent);
+    if(!fileobject)
+        return;
+
+    return fileobject;
 }
