@@ -42,7 +42,8 @@ Media.Schema = new _mongoose.Schema({
     region : String,
     country : String,
 
-    authorrating : Number
+    authorrating : Number,
+    publicrating : Number,
 }, { strict: true });
 
 Media.ERROR = System.registerErrors({
