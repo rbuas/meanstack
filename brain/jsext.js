@@ -1,5 +1,6 @@
 var _querystring = require("querystring");
 var _fs = require("fs");
+var _path = require("path");
 
 module.exports = JsExt = {};
 
@@ -130,4 +131,29 @@ JsExt.loadJsonFile = function(file) {
         return;
 
     return fileobject;
+}
+
+JsExt.listDir = function(path, extfilter) {
+    if(!path)
+        return;
+
+    extfilter = extfilter || [];
+    if(typeof(extfilter) == "string") extfilter = [extfilter];
+
+    var files = _fs.readdirSync(path);
+    if(!files)
+        return;
+
+    files = files.filter(function (file) {
+        var fullfile = path + "/" + file;
+        var stats = _fs.statSync(fullfile);
+        if(!stats.isFile())
+            return false;
+
+        var extension = _path.extname(fullfile || "");
+        extension = extension.replace(".", "");
+        var inFilter = extfilter.indexOf(extension.toUpperCase()) >= 0 || extfilter.indexOf(extension.toLowerCase()) >= 0;
+        return inFilter;
+    });
+    return files;
 }
