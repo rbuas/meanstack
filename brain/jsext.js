@@ -133,12 +133,29 @@ JsExt.loadJsonFile = function(file) {
     return fileobject;
 }
 
-JsExt.listDir = function(path, extfilter) {
+JsExt.isDir = function (path) {
+    if(!path)
+        return false;
+
+    if(!_fs.existsSync(path))
+        return false;
+
+    var dirstats = _fs.statSync(path);
+    if(!dirstats || !dirstats.isDirectory())
+        return false;
+
+    return true;
+}
+
+JsExt.listDir = function (path, extfilter) {
     if(!path)
         return;
 
     extfilter = extfilter || [];
     if(typeof(extfilter) == "string") extfilter = [extfilter];
+
+    if(!JsExt.isDir(path))
+        return;
 
     var files = _fs.readdirSync(path);
     if(!files)

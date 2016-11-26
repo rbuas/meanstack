@@ -22,7 +22,9 @@ describe.only("unit.media", function() {
     });
 
     after(function(done){
-        m.disconnect(done);
+        Media.Remove({}, function() {
+            m.disconnect(done);
+        });
     });
 
     describe("scrapdir", function() {
@@ -30,6 +32,15 @@ describe.only("unit.media", function() {
             Media.ScrapDir(null, function(err, files) {
                 _expect(err).to.be.ok;
                 _expect(err.code).to.equal(Media.ERROR.MEDIA_PARAMS);
+                _expect(files).to.be.null;
+                done();
+            });
+        });
+
+        it("nodir", function(done) {
+            Media.ScrapDir(ROOT_DIR + "/tests/input/media-nodir", function(err, files) {
+                _expect(err).to.be.ok;
+                _expect(err.code).to.equal(Media.ERROR.MEDIA_NODIR);
                 _expect(files).to.be.null;
                 done();
             });
@@ -48,7 +59,8 @@ describe.only("unit.media", function() {
             Media.ScrapDir(ROOT_DIR + "/tests/input/media-images", function(err, files) {
                 _expect(err).to.be.null;
                 _expect(files).to.be.ok;
-                _expect(files.length).to.be.equal(5);
+                var count = Object.keys(files).length;
+                _expect(count).to.be.equal(5);
                 done();
             });
         });
