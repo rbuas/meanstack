@@ -2,8 +2,10 @@ var _mongoose = require("mongoose");
 var _moment = require("moment");
 var _path = require("path");
 var _fs = require("fs");
+var _sharp = require("sharp");
 
 var JsExt = require(ROOT_DIR + "/brain/jsext");
+var MediaExt = require(ROOT_DIR + "/brain/mediaext");
 var Log = require(ROOT_DIR + "/brain/log");
 var System = require(ROOT_DIR + "/brain/system");
 var E = System.error;
@@ -24,26 +26,31 @@ Media.Schema = new _mongoose.Schema({
     email : String,
     site : String,
     copyright : String,
+    orientation : Number,
     h : Number,
     w : Number,
     model : String,
+    modelserial : String,
     focal : Number,
     lens : String,
     wb : String,
-    k : Number,
     xres : Number,
     yres : Number,
     iso : Number,
     ex : String,
     fn : Number,
+
+    title : String,
     caption : String,
     tags : [String],
 
-    latitude : String,
-    longitude : String,
+    altitude : Number,
+    latitude : [],
+    longitude : [],
     city : String,
-    region : String,
+    state : String,
     country : String,
+    countrycode : String,
 
     authorrating : Number,
     publicrating : Number,
@@ -73,7 +80,7 @@ Media.ScrapDir = function (dir, callback) {
     if(!dir)
         return System.callback(callback, [E(Media.ERROR.MEDIA_PARAMS), null]);
 
-    var pending = 0;
+    dir = _path.normalize(dir);
     var dirmaster = _path.normalize(_path.join(dir, self.VERSIONAMSTER));
     if(!JsExt.isDir(dirmaster))
         return System.callback(callback, [E(Media.ERROR.MEDIA_NODIR), null]);
@@ -83,73 +90,79 @@ Media.ScrapDir = function (dir, callback) {
         return System.callback(callback, [null, files]);
 
     var medias = {};
-    var error = null;
+    var error = [];
+    var pending = 0;
     files.forEach(function(file, index, arr) {
-        var info = self.ReadInfo(dirmaster, file);
-        var versions = self.GenerateVersions(dir, file);
-        pending++;
-        self.StockInfo(info, function(err, savedMedia) {
-            error = error || err;
-            if(err || !savedMedia || !savedMedia.id)
+        var fileinput = _path.join(dirmaster, file);
+        MediaExt.readFile(fileinput, function(err, mediainfo) {
+            if(err) error.push(err);
+
+            if(!mediainfo)
                 return;
 
-            medias[savedMedia.id] = savedMedia;
-            if(--pending <= 0) System.callback(callback, [error, medias]);
+            var stockinfo = mediainfo;
+            stockinfo.path = dir;
+            stockinfo.lastscrap = Date.now;
+
+            var versions = self.GenerateVersions(dir, file, function(err, versions) {
+                if(err) return error.push(err);
+
+                pending++;
+                self.StockInfo(stockinfo, function(err, savedMedia) {
+                    if(err) error.push(err);
+                    if(err || !savedMedia || !savedMedia.id)
+                        return;
+
+                    medias[savedMedia.id] = savedMedia;
+                    if(--pending <= 0) System.callback(callback, [error.length && error, medias]);
+                });
+            });
         });
     });
+    if(pending == 0) System.callback(callback, [error.length && error, medias]);
 }
 
-Media.ReadInfo = function (dir, file) {
-    if(!dir || !file)
-        return;
-
-    var filepath = _path.normalize(_path.join(dir, file));
-    var extension = _path.extname(filepath);
-    var filetype = extension.replace(".", "");
-    var fileid = _path.basename(filepath, extension);
-    var filedir = _path.dirname(filepath);
-
-    var stats = _fs.statSync(filepath);
-    var since = stats.birthtime;
-
-    //TODO read exif info
-
-    return {
-        path : filedir,
-        id : fileid,
-        type : filetype,
-        since : since
-    };
-}
-
-Media.GenerateVersions = function (dir, file) {
+Media.GenerateVersions = function (dir, file, callback) {
     var self = this;
     if(!dir || !file)
         return;
 
     var filepath = _path.normalize(_path.join(dir, self.VERSIONAMSTER, file));
+    var pending = 0;
+    var error = [];
 
     var versions = [];
     for(var version in self.VERSIONS) {
-        if(!self.VERSIONS.hasOwnProperty(version)) continue;
+        if(!self.VERSIONS.hasOwnProperty(version) || version == self.VERSIONAMSTER) continue;
 
         var config = self.VERSIONS[version];
         if(!config) continue;
 
-        var destination = _path.normalize(_path.join(dir, version));
-        if(self.GenerateVersion(filepath, config, destination))
-            versions.push(version);
+        pending++;
+        var destination = _path.normalize(_path.join(dir, version, file));
+        self.GenerateVersion(filepath, config, destination, function (err, info) {
+            if(err) error.push(err);
+            else versions.push(version);
+            if(--pending == 0 && callback) callback(error, versions); 
+        });
     }
-    return versions;
 }
 
-Media.GenerateVersion = function (filepath, config, destination) {
+Media.GenerateVersion = function (filepath, config, destination, callback) {
     var self = this;
     if(!filepath || !config || !destination)
-        return false;
+        return callback && callback("missing parameters", null);
 
-    //TODO generate version with config.quality et config.width
-    return true; 
+    var destinationDir = _path.dirname(destination);
+    try {
+        var stats = _fs.statSync(destinationDir);
+    } catch (e) {
+        _fs.mkdirSync(destinationDir);
+    }
+
+    _sharp(filepath)
+    .resize(config.width)
+    .toFile(destination, callback);
 }
 
 Media.StockInfo = function (media, callback) {

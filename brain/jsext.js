@@ -81,6 +81,52 @@ JsExt.getObjectValues = function (dataObject) {
     return dataArray;
 }
 
+JsExt.formatObject = function (input, format) {
+    if(!input || !format)
+        return input;
+
+    var output = {};
+    for(var outformat in format) {
+        if(!format.hasOwnProperty(outformat)) continue;
+
+        var informat = format[outformat];
+        var value = JsExt.getObjectDeepValue(input, informat);
+        JsExt.setObjectDeepValue(output, outformat, value);
+    }
+    return output;
+}
+
+JsExt.setObjectDeepValue = function (obj, path, value, separator) {
+    if(!obj || !path)
+        return;
+
+    separator = separator || ".";
+    var parts = path.split(separator);
+    if (parts.length == 1) {
+        obj[parts[0]] = value;
+        return;
+    }
+
+    var subpath = parts.slice(1).join(separator);
+    var firstkey = parts[0];
+    obj[firstkey] = {};
+    JsExt.setObjectDeepValue(obj[firstkey], subpath, value, separator);
+}
+
+JsExt.getObjectDeepValue = function (obj, path, separator) {
+    if(!obj || !path)
+        return obj;
+
+    separator = separator || ".";
+    var parts = path.split(separator);
+    if (parts.length == 1)
+        return obj[parts[0]];
+
+    var subpath = parts.slice(1).join(separator);
+    var firstkey = parts[0];
+    return JsExt.getObjectDeepValue(obj[firstkey], subpath);
+}
+
 JsExt.serializeDictionary = function (obj, connector) {
     if(!obj)
         return;
@@ -173,4 +219,38 @@ JsExt.listDir = function (path, extfilter) {
         return inFilter;
     });
     return files;
+}
+
+JsExt.fileToBuffer = function (filename, bufferlimit) {
+    bufferlimit = bufferlimit || 1048576;
+    return new Promise(function (resolve, reject) {
+        _fs.open(filename, 'r', function (err, fd) {
+            if (err) reject(err);
+            else {
+                var buffer = new Buffer(bufferlimit);
+                _fs.read(fd, buffer, 0, bufferlimit, 0, function (err, bytesRead, buffer) {
+                    if (err) reject(err);
+                    else resolve(buffer);
+                });
+            }
+        });
+    });
+}
+
+JsExt.extractFromFile = function (filename, markBegin, markEnd, bufferlimit) {
+    return new Promise( function (resolve, reject) {
+        JsExt.fileToBuffer(filename, bufferlimit)
+            .then(function (buffer) {
+                if (!Buffer.isBuffer(buffer)) {
+                    reject("input is not a buffer");
+                    return;
+                }
+                var data = {raw: {}};
+                var offsetBegin = buffer.indexOf(markBegin);
+                var offsetEnd = buffer.indexOf(markEnd);
+                var extractBuffer = offsetBegin && offsetEnd && buffer.slice(offsetBegin, offsetEnd + markEnd.length);
+                var extract = extractBuffer && extractBuffer.toString("utf-8", 0, extractBuffer.length);
+                resolve(extract);
+            });
+    });
 }
