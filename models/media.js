@@ -26,9 +26,9 @@ Media.Schema = new _mongoose.Schema({
     email : String,
     site : String,
     copyright : String,
-    orientation : Number,
-    h : Number,
-    w : Number,
+    orientation : String,
+    height : Number,
+    width : Number,
     model : String,
     modelserial : String,
     focal : Number,
@@ -37,7 +37,7 @@ Media.Schema = new _mongoose.Schema({
     xres : Number,
     yres : Number,
     iso : Number,
-    ex : String,
+    ex : Number,
     fn : Number,
 
     title : String,
@@ -93,39 +93,41 @@ Media.ScrapDir = function (dir, callback) {
     var error = [];
     var pending = 0;
     files.forEach(function(file, index, arr) {
-        var fileinput = _path.join(dirmaster, file);
-        MediaExt.readFile(fileinput, function(err, mediainfo) {
+        pending++;
+        Media.RGS(file, dir, dirmaster, function(err, savedMedia) {
             if(err) error.push(err);
+            if(savedMedia && savedMedia.id) medias[savedMedia.id] = savedMedia;
 
-            if(!mediainfo)
-                return;
+            if(--pending <= 0) response(callback, error, medias);
+        });
+    });
+}
 
-            var stockinfo = mediainfo;
-            stockinfo.path = dir;
-            stockinfo.lastscrap = Date.now;
+Media.RGS = function (file, dir, dirmaster, callback) {
+    var self = this;
+    dir = _path.normalize(dir);
+    var fileinput = _path.normalize(_path.join(dirmaster, file));
+    MediaExt.readFile(fileinput, function(err, mediainfo) {
+        if(err || !mediainfo) return response(callback, err, mediainfo);
 
-            var versions = self.GenerateVersions(dir, file, function(err, versions) {
-                if(err) return error.push(err);
+        var stockinfo = mediainfo;
+        stockinfo.path = dir;
+        stockinfo.lastscrap = Date.now();
 
-                pending++;
-                self.StockInfo(stockinfo, function(err, savedMedia) {
-                    if(err) error.push(err);
-                    if(err || !savedMedia || !savedMedia.id)
-                        return;
+        self.GenerateVersions(dir, file, function(err, versions) {
+            if(err) return response(callback, err, mediainfo);
 
-                    medias[savedMedia.id] = savedMedia;
-                    if(--pending <= 0) System.callback(callback, [error.length && error, medias]);
-                });
+            self.StockInfo(stockinfo, function(err, savedMedia) {
+                return response(callback, err, savedMedia && savedMedia._doc);
             });
         });
     });
-    if(pending == 0) System.callback(callback, [error.length && error, medias]);
 }
 
 Media.GenerateVersions = function (dir, file, callback) {
     var self = this;
     if(!dir || !file)
-        return;
+        return response(callback, "missing params", null);
 
     var filepath = _path.normalize(_path.join(dir, self.VERSIONAMSTER, file));
     var pending = 0;
@@ -143,15 +145,16 @@ Media.GenerateVersions = function (dir, file, callback) {
         self.GenerateVersion(filepath, config, destination, function (err, info) {
             if(err) error.push(err);
             else versions.push(version);
-            if(--pending == 0 && callback) callback(error, versions); 
+            if(--pending == 0) response(callback, error, versions); 
         });
     }
+    if(pending == 0) return response(callback, "no versions", null);
 }
 
 Media.GenerateVersion = function (filepath, config, destination, callback) {
     var self = this;
     if(!filepath || !config || !destination)
-        return callback && callback("missing parameters", null);
+        return response(callback, "missing params", null);
 
     var destinationDir = _path.dirname(destination);
     try {
@@ -169,12 +172,12 @@ Media.StockInfo = function (media, callback) {
     var self = this;
     self.Create(media, function(err, savedMedia) {
         if(err && err.code != 11000)
-            return System.callback(callback, [err, null]);
+            return response(callback, err, null);
 
         if(err && err.code == 11000)
             return self.Update(media, callback);
 
-        return System.callback(callback, [null, savedMedia]);
+        return response(callback, null, savedMedia);
     });
 }
 
@@ -183,14 +186,17 @@ Media.Create = function(media, callback) {
     if(!media || !media.id)
         return System.callback(callback, [E(Media.ERROR.DOC_PARAMS, media), null]);
 
-    var newmedia = new self.DB();
-    newmedia.since = media.since || Date.now();
-    newmedia.showcount = 0;
-    newmedia.id = media.id;
-    newmedia.content = media.content;
-    newmedia.authorrating = 0;
-    newmedia.publicrating = 0;
-    newmedia.ratingcount = 0;
+    var newmedia = Object.assign(new self.DB(), {
+        since : Date.now(),
+        showcount : 0,
+        authorrating : 0,
+        publicrating : 0,
+        ratingcount : 0,
+    }, media);
 
     newmedia.save(callback);
 }
+
+function response (callback, err, data) {
+    return System.callback(callback, [err && err.length ? err : null, data]);
+} 

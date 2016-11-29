@@ -25,10 +25,13 @@ Album.Scrap = function (albumid, callback) {
     var self = this;
     self.Get(albumid, function(err, savedAlbum) {
         if(err || !savedAlbum)
-            return System.callback(callback, []); //TODO
+            return System.callback(callback, [err, null]);
 
-        var scrapresult = Media.ScrapDir(savedAlbum.path);
-        savedAlbum.content = scrapresult;
-        savedAlbum.save(callback);
+        var scrapresult = Media.ScrapDir(savedAlbum.path, function(err, medias) {
+            if(err || !medias) return System.callback(callback, [err, medias]);
+
+            savedAlbum.content = Object.keys(medias);
+            savedAlbum.save(callback);
+        });
     });
 }
