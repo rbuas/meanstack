@@ -223,6 +223,55 @@ WebDroneScraper.prototype.wapmap = function (config) {
     });
 }
 
+WebDroneScraper.prototype.linksfile = function (config) {
+    var self = this;
+    if(!config)
+        return;
+
+    if(!config.mapfile)
+        return System.callback(config.endCallback);
+
+    self.mapfile = config.mapfile;
+    self.request(
+        {  
+            hostname : config.hostname, 
+            path : config.mapfile,
+            port : config.port
+        }, 
+        function(err, info, data) {
+            if(info.statusCode != 200)
+                return System.callback(config.endCallback, ["status code error", info, null]);
+
+            try {
+                self.sitemap = JSON.parse(data);
+            } catch (err) {
+                var error = E(TestRouteApi.ERROR.TEST_JSONPARSE, err);
+                return System.callback(config.endCallback, ["json parse error", info, null]);
+            }
+
+            if(!self.sitemap) {
+                Log.error("Can not load sitemap from : " + self.mapfile);
+                return System.callback(config.endCallback, ["map read error", info, null]);
+            }
+
+            var wapmap = [];
+            for(var path in self.sitemap) {
+                if(!self.sitemap.hasOwnProperty(path))
+                    continue;
+
+                var wap = self.sitemap[path];
+                wap.path = path;
+                wapmap.push(wap);
+            }
+
+            if(wapmap.length == 0)
+                return System.callback(config.endCallback, ["empty map", info, null]);
+
+            return self.scrap(wapmap, config);
+        }
+    );
+}
+
 
 // PRIVATE
 
