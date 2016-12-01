@@ -5,8 +5,12 @@ var _path = require("path");
 var _exif = require("fast-exif");
 var _imagesize = require("image-size");
 var _sax = require("sax");
+var _sharp = require("sharp");
+var _color = require("color-thief-jimp");
 
 module.exports = MediaExt = {};
+
+//DEFINES
 
 MediaExt.EXPORT_FORMAT = {
     id : "file.basename",
@@ -70,6 +74,22 @@ MediaExt.XMP_PROPERTIES = {
     "x:xmpmeta/rdf:RDF/rdf:Description/Iptc4xmpCore:CreatorContactInfo/Iptc4xmpCore:CiUrlWork" : "authorsite",
 };
 
+MediaExt.CONVERTION = {
+    authorrating : function(val) { return val && Number(val); }
+}
+
+MediaExt.VERSIONAMSTER = "web";
+MediaExt.VERSIONS = {
+    web : {quality : 100, width : 2048},
+    low : {quality : 100, width : 1024},
+    mob : {quality : 90, width : 480},
+    thumb : {quality : 80, width : 120},
+    tiny : {quality : 60, width : 3}
+};
+
+
+
+// PUBLIC
 
 MediaExt.readFile = function (mediafile, callback) {
     if(!mediafile)
@@ -148,6 +168,56 @@ MediaExt.readXMP = function (mediafile, callback) {
     });
 }
 
+MediaExt.generateVersion = function (filepath, version, destination, callback) {
+    if(!filepath || !version || !destination)
+        return response(callback, "missing params", null);
+
+    var config = version && MediaExt.VERSIONS[version];
+    if(!config)
+        return response(callback, "unknown config", null);
+
+    var destinationDir = _path.dirname(destination);
+    try {
+        var stats = _fs.statSync(destinationDir);
+    } catch (e) {
+        _fs.mkdirSync(destinationDir);
+    }
+
+    _sharp(filepath)
+    .resize(config.width)
+    .quality(config.quality || 100)
+    .toFile(destination, function (err, info) {
+        return response(callback, err, {version:version, info:info});
+    });
+}
+
+MediaExt.generateVersions = function (dir, file, callback) {
+    if(!dir || !file)
+        return response(callback, "missing params", null);
+
+    var filepath = _path.normalize(_path.join(dir, MediaExt.VERSIONAMSTER, file));
+    var pending = 0;
+    var error = [];
+
+    var versions = [];
+    for(var version in MediaExt.VERSIONS) {
+        if(!MediaExt.VERSIONS.hasOwnProperty(version) || version == MediaExt.VERSIONAMSTER) continue;
+
+        pending++;
+        var destination = _path.normalize(_path.join(dir, version, file));
+        MediaExt.generateVersion(filepath, version, destination, function (err, data) {
+            var vers = data && data.version ? data.version : null;
+            if(err) error.push(err);
+            else versions.push(vers);
+            if(--pending == 0) response(callback, error, versions); 
+        });
+    }
+    if(pending == 0) return response(callback, "no versions", null);
+}
+
+
+// PRIVATE
+
 function response (callback, err, info) {
     if(callback) callback(err, info);
 
@@ -206,6 +276,11 @@ function setOutdata (nodepath, value, outdata) {
     var prop = currentpath && MediaExt.XMP_PROPERTIES[currentpath];
     if(!currentpath || !prop)
         return;
+
+    var convertion = MediaExt.CONVERTION[prop];
+    if(convertion) {
+        value = convertion(value);
+    }
 
     var old = outdata[prop];
     if(!old)

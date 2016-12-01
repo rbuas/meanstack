@@ -18,7 +18,7 @@ Collection.TYPE = "COLLECTION";
 
 Collection.Find = function (where, callback) {
     var self = this;
-    where.type = self.TYPE;
+    where.type = where.type || self.TYPE;
     return Wap.Find(where, callback);
 }
 

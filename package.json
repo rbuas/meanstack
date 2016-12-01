@@ -18,11 +18,7 @@
     "test-proofvalidator": "./brain/testproofvalidator.js",
     "install-drivers": "cp /Users/rbuas/RBUAS/nodejs/projectzero/drivers/ /usr/local/lib/"
   },
-  "keywords": [
-    "projectzero",
-    "basic",
-    "configs"
-  ],
+  "keywords": [],
   "author": "Rodrigo Buas",
   "license": "MIT",
   "dependencies": {
