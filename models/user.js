@@ -628,6 +628,7 @@ User.saveUserSession = function(req, user) {
         email : user.email,
         lang : user.lang,
         profile : user.profile,
+        status : user.status,
         logged : user.status == User.STATUS.ON
     };
 }

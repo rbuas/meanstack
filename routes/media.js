@@ -9,17 +9,27 @@ var User = require(ROOT_DIR + "/models/user");
 
 module.exports = MediaRoute = {};
 
-MediaRoute.library = function(req, res) {
-    var library = req.params.library;
-    var response = {};
-    if(!User.VerifyProfile(req, User.PROFILE.ADMIN)) {
-        Log.message("user not authorized user", req.session.user);
-        response.error = E(User.ERROR.USER_NOTAUTHORIZED, req.session.user);
+MediaRoute.albums = function(req, res) {
+    var category = req.params.category || "";
+    category = category.split("|");
+
+    var where = {status:Wap.STATUS.PUBLIC};
+    if(User.VerifyProfile(req, User.PROFILE.ADMIN))
+        where = { $or : [{status : Wap.STATUS.PUBLIC}, {status : Wap.STATUS.PRIVATE}, {state : Wap.STATE.SCHEDULED}] };
+
+    if(category)
+        where.category 
+
+    Album.Find(where, function(err, albums) {
+        var response = {};
+        if(err) {
+            Log.message("error in search for albums", albums);
+            response.error = err;
+        } else {
+            response.albums = albums;
+        }
         res.json(response);
-        return;
-    }
-    //TODO test referer
-    //TODO
+    });
 }
 
 MediaRoute.album = function(req, res) {
