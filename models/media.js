@@ -65,9 +65,12 @@ Media.DB = _mongoose.model("Media", Media.Schema);
 Media.ERROR = System.registerErrors({
     MEDIA_PARAMS : "Missing required params",
     MEDIA_NODIR : "No directory",
+    MEDIA_MISSINGTYPE : "Can not identify the media type"
 });
 
-
+Media.MESSAGE = System.registerMessages({
+    MEDIA_SUCCESS : "Operation success"
+});
 
 Media.READEDFILES = ["jpg"];
 

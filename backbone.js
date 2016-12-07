@@ -61,19 +61,18 @@ brain.post("/w/publish", WapRoute.draftpublish);
 
 //MIDIA
 var MidiaRoute = require(ROOT_DIR + "/routes/media");
-brain.get("/a/:library", MidiaRoute.library);
-brain.get("/a/:album", MidiaRoute.album);
-brain.get("/c/:collection", MidiaRoute.collection);
-brain.get("/g/:gallery", MidiaRoute.gallery);
-brain.get("/m/:midia\.:ext", MidiaRoute.midia);
+brain.get("/m/library/:type/:category", MidiaRoute.library);
+brain.get("/m/album/:album", MidiaRoute.album);
+brain.get("/m/collection/:collection", MidiaRoute.collection);
+brain.get("/m/gallery/:gallery", MidiaRoute.gallery);
+brain.get("/m/:media\.:ext", MidiaRoute.media);
+brain.post("/m/create", MidiaRoute.create);
+brain.post("/m/remove", MidiaRoute.remove);
+brain.post("/m/update", MidiaRoute.update);
 
-// brain.get("/marks", _marksRoutes.marks);
-// brain.get("/about", _marksRoutes.about);
 // brain.get("/stories", _marksRoutes.stories);
 // brain.get("/stories/:story", _marksRoutes.story);
 // brain.post("/stories/:story/:comment", _marksRoutes.createcomment);
 // brain.get("/newstory", _marksRoutes.newstory);
 // brain.post("/createstory", _marksRoutes.createstory);
-// brain.get("/cities", _citiesRoutes.cities);
-// brain.get("/city/:city", _citiesRoutes.city);
 // brain.get("/download", _resRoutes.download);

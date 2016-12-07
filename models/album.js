@@ -16,11 +16,6 @@ Album.ERROR = System.registerErrors({
 
 Album.TYPE = "ALBUM";
 
-// Album.GetLibrary = function (where, callback) {
-//     where.$or = [{type : Album.TYPE}, {type : Album.GALLERY}, {type : Album.COLLECTION}];
-//     return Wap.Find(where, callback);
-// }
-
 Album.Scrap = function (albumid, callback) {
     var self = this;
     self.Get(albumid, function(err, savedAlbum) {

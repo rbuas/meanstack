@@ -629,6 +629,7 @@ User.saveUserSession = function(req, user) {
         lang : user.lang,
         profile : user.profile,
         status : user.status,
+        passport : user.passport,
         logged : user.status == User.STATUS.ON
     };
 }
@@ -647,11 +648,18 @@ User.VerifyProfile = function(req, profile) {
         return false;
 
     var userProfile = user.profile;
-    if(typeof(profile) == "string") {
+    if(typeof(profile) == "string")
         return profile == userProfile;
-    }
 
     return profile.indexOf(userProfile) >= 0;
+}
+
+User.VerifyPassport = function (req, wapid) {
+    var user = User.VerifyLogged(req);
+    if(!user || !user.passport)
+        return false;
+
+    return user.passport.indefOf(wapid) >= 0;
 }
 
 

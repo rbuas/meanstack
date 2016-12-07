@@ -9,24 +9,42 @@ var User = require(ROOT_DIR + "/models/user");
 
 module.exports = MediaRoute = {};
 
-MediaRoute.albums = function(req, res) {
-    var category = req.params.category || "";
-    category = category.split("|");
+MediaRoute.library = function(req, res) {
+    var type = req.params.type;
+    var category = req.params.category;
 
-    var where = {status:Wap.STATUS.PUBLIC};
-    if(User.VerifyProfile(req, User.PROFILE.ADMIN))
-        where = { $or : [{status : Wap.STATUS.PUBLIC}, {status : Wap.STATUS.PRIVATE}, {state : Wap.STATE.SCHEDULED}] };
+    var response = {};
+    if(!type) {
+        response.error = E(Media.ERROR.MEDIA_PARAMS, {type:type, category:category});
+        res.json(response);
+        return;
+    }
 
-    if(category)
-        where.category 
+    var where = {category:category};
 
-    Album.Find(where, function(err, albums) {
-        var response = {};
+    var typeclass = null;
+    switch(type) {
+        case(Album.TYPE): typeclass = Album; break;
+        case(Gallery.TYPE): typeclass = Gallery; break;
+        case(Collection.TYPE): typeclass = Collection; break;
+        default: 
+            typeclass = Collection;
+            where.$or = [{type : Album.TYPE}, {type : Collection.TYPE}, {type : Gallery.TYPE}];
+            break;
+    }
+    if(!typeclass) {
+        response.error = E(Media.ERROR.MEDIA_MISSINGTYPE);
+        res.json(response);
+        return;
+    }
+
+    typeclass.FindByUser(where, req, function(err, library) {
         if(err) {
-            Log.message("error in search for albums", albums);
+            Log.message("error in search for ", type, library);
             response.error = err;
         } else {
-            response.albums = albums;
+            response.success = Media.MESSAGE.MEDIA_SUCCESS;
+            response.library = library;
         }
         res.json(response);
     });
@@ -34,35 +52,69 @@ MediaRoute.albums = function(req, res) {
 
 MediaRoute.album = function(req, res) {
     var album = req.params.album;
-    var user = User.VerifyLogged(req);
-    //TODO test referer
-    Album.Find({id:album}, function(err, savedAlbum) {
-        //TODO
+    var where = album ? {} : {id:album};
+
+    Album.FindByUser(where, req, function(err, library) {
+        if(err) {
+            Log.message("error in search for ", type, library);
+            response.error = err;
+        } else {
+            response.success = Media.MESSAGE.MEDIA_SUCCESS;
+            if(album && library.length >= 1)
+                response.album = library[0];
+            else
+                response.library = library;
+        }
+        res.json(response);
     });
 }
 
 MediaRoute.collection = function(req, res) {
     var collection = req.params.collection;
-    var user = User.VerifyLogged(req);
-    //TODO test referer
-    Collection.Find({id:collection}, function(err, savedAlbum) {
-        //TODO
+    var where = collection ? {} : {id:collection};
+
+    Collection.FindByUser(where, req, function(err, library) {
+        if(err) {
+            Log.message("error in search for ", type, library);
+            response.error = err;
+        } else {
+            response.success = Media.MESSAGE.MEDIA_SUCCESS;
+            if(collection && library.length >= 1)
+                response.collection = library[0];
+            else
+                response.library = library;
+        }
+        res.json(response);
     });
 }
 
 MediaRoute.gallery = function(req, res) {
     var gallery = req.params.gallery;
-    var user = User.VerifyLogged(req);
-    //TODO test referer
-    Collection.Find({id:gallery}, function(err, savedAlbum) {
-        //TODO
+    var where = gallery ? {} : {id:gallery};
+
+    Gallery.FindByUser(where, req, function(err, library) {
+        if(err) {
+            Log.message("error in search for ", type, library);
+            response.error = err;
+        } else {
+            response.success = Media.MESSAGE.MEDIA_SUCCESS;
+            if(gallery && library.length >= 1)
+                response.gallery = library[0];
+            else
+                response.library = library;
+        }
+        res.json(response);
     });
 }
 
-MediaRoute.midia = function(req, res) {
-    var midia = req.params.midia;
+MediaRoute.media = function(req, res) {
+    var media = req.params.media;
     var ext = req.params.ext;
     var user = User.VerifyLogged(req);
     //TODO test referer
     //TODO
 }
+
+MediaRoute.create = function (req, res) {}
+MediaRoute.remove = function (req, res) {}
+MediaRoute.update = function (req, res) {}

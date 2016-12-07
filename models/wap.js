@@ -204,6 +204,8 @@ Wap.Find = function (where, callback) {
     if(where.since) where.since = {$gt : where.since};
     if(where.publicdate) where.publicdate = {$gt : where.publicdate};
     if(where.lastupdate) where.lastupdate = {$gt : where.lastupdate};
+    if(where.category) where.category = category && category.split("|");
+
     self.DB.find(where, self.PUBLIC_PROPERTIES, function(err, waps) {
         if(err)
             return System.callback(callback, [err, waps]);
